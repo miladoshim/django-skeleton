@@ -1,14 +1,44 @@
-from django.contrib.auth.models import Group, User
-from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer, HyperlinkedModelSerializer
+from .models import (Address, Bank, City, Province,
+                     OtpRequest, ActivationCode, User,
+                     Wallet, UserProfile, UserMeta,)
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class AddressSerializer(ModelSerializer):
+    class Meta:
+        model = Address
+
+
+class BankSerializer(ModelSerializer):
+    class Meta:
+        model = Bank
+
+
+class CitySerializer(ModelSerializer):
+    class Meta:
+        model = City
+
+
+class ProvinceSerializer(ModelSerializer):
+    class Meta:
+        model = Province
+
+
+class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ['url', 'username', 'email', 'groups']
 
 
-class GroupSerializer(serializers.HyperlinkedModelSerializer):
+class WalletSerializer(ModelSerializer):
     class Meta:
-        model = Group
-        fields = ['url', 'name']
+        model = Wallet
+
+
+class UserProfileSerializer(ModelSerializer):
+    class Meta:
+        model = UserProfile
+
+
+class UserMetaSerializer(ModelSerializer):
+    class Meta:
+        model = UserMeta

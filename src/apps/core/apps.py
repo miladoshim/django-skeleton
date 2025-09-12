@@ -7,4 +7,5 @@ class CoreConfig(AppConfig):
     label = 'مشترک'
 
     def ready(self):
+        # import apps.core.signals
         pass
