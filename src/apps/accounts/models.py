@@ -1,9 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils.translation import gettext_lazy as _
 
 
 
 class User(AbstractUser):
+    pass
     # mobile = models.CharField(null=True, blank=True,
     #                           unique=True, max_length=11)
     # mobile_verified = models.BooleanField(default=False)
@@ -12,8 +14,8 @@ class User(AbstractUser):
 
     # objects = UserManager()
 
-    def __str__(self):
-        return self.username
+    # def __str__(self):
+    #     return self.username
 
 
 # class UserProfile(BaseModel):

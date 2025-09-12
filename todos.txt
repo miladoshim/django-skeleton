@@ -1,0 +1,2 @@
+https://django-debug-toolbar.readthedocs.io/en/latest/index.html
+https://pytest-django.readthedocs.io/en/latest/index.html
