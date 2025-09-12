@@ -5,6 +5,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from hitcount.models import HitCountMixin
 from hitcount.settings import MODEL_HITCOUNT
 from meta.models import ModelMeta
+from taggit.managers import TaggableManager
 
 
 class Tag(BaseModel,ModelMeta, HitCountMixin):
@@ -47,7 +48,6 @@ class Tag(BaseModel,ModelMeta, HitCountMixin):
 # from apps.core.managers import PublishedManager
 # from apps.core.models import PublishStatusChoice, BaseModel
 # from utils.utils import jalali_converter
-# from taggit.managers import TaggableManager
 # from colorfield.fields import ColorField
 
 
@@ -64,7 +64,8 @@ class Tag(BaseModel,ModelMeta, HitCountMixin):
 #         ]
 
 
-# class Post(BaseModel):
+class Post(BaseModel):
+    pass
 #     objects = models.Manager()
 #     published = PublishedManager()
 

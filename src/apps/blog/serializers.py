@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework.serializers import HyperlinkedModelSerializer
 from taggit.serializers import (TagListSerializerField,
                                 TaggitSerializer)
+
 from .models import BlogCategory, Post, Comment
 from apps.core.models import Tag
 
@@ -50,10 +51,10 @@ class TagSerializer(HyperlinkedModelSerializer):
 
 
 # TaggitSerializer
-class PostSerializer(HyperlinkedModelSerializer):
+class PostSerializer(HyperlinkedModelSerializer, TaggitSerializer):
     category = CategorySerializer(many=False)
-    # tags = TagSerializer(many=True)
-    # tags = TagListSerializerField()
+
+    tags = TagListSerializerField()
 
     class Meta:
         model = Post

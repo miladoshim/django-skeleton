@@ -1,10 +1,12 @@
 from import_export.formats.base_formats import CSV, XLSX
 import os
+import locale
 import sys
 from pathlib import Path
 from django.conf import settings
 from os.path import join
 from decouple import config
+from django_components import ComponentsSettings
 
 PROJECT_ROOT = os.path.dirname(__file__)
 
@@ -45,10 +47,14 @@ INSTALLED_APPS = [
     "django.contrib.sitemaps",
     "django.contrib.humanize",
     "django.contrib.postgres",
+    
+    
     # Local apps
     "apps.core.apps.CoreConfig",
     "apps.accounts.apps.AccountsConfig",
     "apps.blog.apps.BlogConfig",
+    
+    
     # Third-party apps
     "channels",
     "rest_framework",
@@ -57,17 +63,29 @@ INSTALLED_APPS = [
     "import_export",
     "debug_toolbar",
     "drf_spectacular",
+    'drf_spectacular_sidecar',
     "guardian",
     "csp",
     "django_extensions",
     "hitcount",
     "meta",
+    'django_filters',
+    'drf_api_logger',
+    'django_guid',
+    "taggit" ,
+    "compressor",
+    'django_components',
+	'jalali_date',
+
+    
+    
     "utils",
     "django_cleanup.apps.CleanupConfig",
 ]
 
 MIDDLEWARE = [
     # "django.middleware.cache.UpdateCacheMiddleware",
+    'django_guid.middleware.guid_middleware',
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -82,6 +100,8 @@ MIDDLEWARE = [
     # Third-party middlewares
     "csp.middleware.CSPMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    'drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware',
+
 ]
 
 ROOT_URLCONF = "skeleton.urls"
@@ -89,7 +109,6 @@ ROOT_URLCONF = "skeleton.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "APP_DIRS": True,
         "DIRS": [TEMPLATE_DIR],
         "OPTIONS": {
             "context_processors": [
@@ -98,10 +117,29 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
             ],
+            'loaders':[(
+                'django.template.loaders.cached.Loader', [
+                    # Default Django loader
+                    'django.template.loaders.filesystem.Loader',
+                    # Including this is the same as APP_DIRS=True
+                    'django.template.loaders.app_directories.Loader',
+                    # Components loader
+                    'django_components.template_loader.Loader',
+                ],
+            )],
+            'builtins': [
+                'django_components.templatetags.component_tags',
+            ],
         },
     },
 ]
 
+COMPONENTS = ComponentsSettings(
+    app_dirs=[
+        # ...,
+        "components",
+    ],
+)
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",  # this is default
     "guardian.backends.ObjectPermissionBackend",
@@ -161,9 +199,11 @@ LANGUAGE_CODE = "fa-IR"
 
 TIME_ZONE = "Asia/Tehran"
 
-# import locale
-# locale.setlocale(locale.LC_ALL, "fa_IR.UTF-8")
-
+if sys.platform.startswith('win32'):
+    locale.setlocale(locale.LC_ALL, "Persian_Iran.UTF-8")
+else:
+    locale.setlocale(locale.LC_ALL, "fa_IR.UTF-8")
+    
 USE_I18N = True
 
 USE_TZ = True
@@ -177,6 +217,13 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 
 CKEDITOR_UPLOAD_PATH = "uploads/"
+
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'compressor.finders.CompressorFinder',
+    "django_components.finders.ComponentsFileSystemFinder",
+)
 
 LOGIN_REDIRECT_URL = "home_view"
 LOGOUT_REDIRECT_URL = "home_view"
@@ -207,7 +254,13 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 24,
 }
 
+DRF_API_LOGGER_DATABASE = True
+DRF_API_LOGGER_SIGNAL = False
+
 SPECTACULAR_SETTINGS = {
+    'SWAGGER_UI_DIST': 'SIDECAR',
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    'REDOC_DIST': 'SIDECAR',
     "TITLE": "skeleton API",
     "DESCRIPTION": "Your project description",
     "VERSION": "1.0.0",
@@ -229,15 +282,30 @@ CACHES = {
     }
 }
 
+# LOGGING = {
+#     'filters': {
+#         'correlation_id': {
+#             '()': 'django_guid.log_filters.CorrelationId'
+#         }
+#     },
+#     'handlers': {
+#         'console': {
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'medium',
+#             'filters': ['correlation_id'],
+#         }
+#     }
+# }
+
 JALALI_DATE_DEFAULTS = {
+    'LIST_DISPLAY_AUTO_CONVERT': True,
     "Strftime": {
         "date": "%y/%m/%d",
         "datetime": "%H:%M:%S _ %y/%m/%d",
     },
     "Static": {
         "js": [
-            # loading datepicker
-            "admin/js/django_jalali.min.js",
+            'admin/js/django_jalali.min.js',
             # OR
             # 'admin/jquery.ui.datepicker.jalali/scripts/jquery.ui.core.js',
             # 'admin/jquery.ui.datepicker.jalali/scripts/calendar.js',
@@ -247,7 +315,9 @@ JALALI_DATE_DEFAULTS = {
         ],
         "css": {
             "all": [
-                "admin/jquery.ui.datepicker.jalali/themes/base/jquery-ui.min.css",
+                'admin/css/django_jalali.min.css',
+
+                # "admin/jquery.ui.datepicker.jalali/themes/base/jquery-ui.min.css",
             ]
         },
     },

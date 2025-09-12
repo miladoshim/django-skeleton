@@ -1,12 +1,13 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin
-from import_export.admin import ImportExportModelAdmin
+from import_export.admin import ImportExportModelAdmin, ExportActionMixin
 from unfold.contrib.import_export.forms import ExportForm, ImportForm, SelectableFieldsExportForm
 
 from apps.blog.models import Tag
+from apps.blog.resources import PostResource
 
 @admin.register(Tag)
-class TagAdmin(ModelAdmin, ImportExportModelAdmin):
+class TagAdmin(ModelAdmin, ImportExportModelAdmin, ExportActionMixin):
     list_display = ['id', 'title', 'slug']
     import_form_class = ImportForm
     export_form_class = ExportForm
@@ -18,7 +19,7 @@ class TagAdmin(ModelAdmin, ImportExportModelAdmin):
 # @admin.register(Post)
 # class PostAdmin(ImportExportModelAdmin):
 #     list_display = ['id', 'title', 'category',
-#                     'author', 'published_status', 'created_at',]
+#                     'author', 'published_status', 'created_at', 'tag_list']
 #     list_filter = ['published_status', 'author','created_at']
 #     search_fields = ['title', 'author__username']
 #     list_display_links = ['id', 'title']
@@ -37,6 +38,12 @@ class TagAdmin(ModelAdmin, ImportExportModelAdmin):
 #     def tags_to_str(self, obj):
 #         return ", ".join(tag.title for tag in obj.tags.all())
 #     tags_to_str.short_description = _('برسب ها')
+
+        # def get_queryset(self, request):
+        #     return super().get_queryset(request).prefetch_related('tags')
+
+        # def tag_list(self, obj):
+        #     return u", ".join(o.name for o in obj.tags.all())
 
 
 # @admin.register(RecyclePost)

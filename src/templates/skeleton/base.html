@@ -22,6 +22,7 @@
     />
 
     {% block styles %} {% endblock styles %} 
+    {% component_css_dependencies %}
 
   </head>
   <body>
@@ -37,6 +38,7 @@
     test ...
 
     {% block scripts %} {% endblock scripts %}
+    {% component_js_dependencies %}
 
   </body>
 </html>

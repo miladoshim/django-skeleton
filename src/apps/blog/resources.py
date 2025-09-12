@@ -1,7 +1,7 @@
-from import_export import resources
-from .models import Post, Category, Tag
+from import_export.resources import Resource as ImportExportResource
+from .models import Post, Tag
 
-class PostResource(resources.ModelResource):
+class PostResource(ImportExportResource):
     class Meta:
         model = Post
-        fields = ['title', 'author__username', 'created_at']
+        fields = ['id','title','slug', 'author__username', 'created_at']

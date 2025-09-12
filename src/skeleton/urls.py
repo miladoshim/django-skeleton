@@ -8,7 +8,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     path('accounts/', include('apps.accounts.urls')),
+    path('api/v1/', include('apps.api.urls')),
     path('api-auth/', include('rest_framework.urls')),
+    path("", include("django_components.urls")),
+
     # path('api/', include('apps.api.urls')),
 ] + debug_toolbar_urls()
 
