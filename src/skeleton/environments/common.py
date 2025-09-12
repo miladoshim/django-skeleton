@@ -34,9 +34,9 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     "daphne",
-    "admin_interface",
-    "colorfield",
-    "admin_notification",
+    # "admin_interface",
+    # "colorfield",
+    # "admin_notification",
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -49,20 +49,20 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
 
     # Local apps
-    'apps.core.apps.CoreConfig',
-    'apps.api.apps.ApiConfig',
+    'apps.accounts.apps.AccountsConfig',
+    # 'apps.api.apps.ApiConfig',
 
 
 
 
 
     # Third-party apps
-    'channels',
+    # 'channels',
     'rest_framework',
-    'rest_framework_simplejwt',
+    # 'rest_framework_simplejwt',
     'corsheaders',
 
-    'utils',
+    # 'utils',
 ]
 
 MIDDLEWARE = [
@@ -192,7 +192,7 @@ DEFAULT_FROM_EMAIL = "info@skeleton.com"
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_HOST = 'localhost'
 EMAIL_POST = 25
-# EMAIL_HOST_USER = config('')
+# EMAIL_HOST_USER = config('EMAIL_HOST')
 EMAIL_HOST_PASSWORD = ''
 EMAIL_USE_TLS = True
 
@@ -339,6 +339,16 @@ AZ_IRANIAN_BANK_GATEWAYS = {
     'IS_SAFE_GET_GATEWAY_PAYMENT': True,  # اختیاری، بهتر است True بزارید.
     'CUSTOM_APP': None,  # اختیاری
 }
+
+# CORS_ALLOWED_ORIGINS = [
+#     "https://example.com",
+#     "https://sub.example.com",
+#     "http://localhost:8080",
+#     "http://127.0.0.1:9000",
+# ]
+
+CORS_ALLOW_ALL_ORIGINS: bool
+
 
 # ELASTICSEARCH_DSL = {
 #     "default": {"hosts": "elasticsearch:9200"},

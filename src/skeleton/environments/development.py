@@ -2,6 +2,7 @@ from .common import *
 
 if DEBUG:
     pass
+
     # INSTALLED_APPS = [
     #  'daphne',
     #  'drf_spectacular'
