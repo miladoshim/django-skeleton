@@ -1,87 +1,71 @@
-# import uuid
-# from rest_framework_simplejwt.tokens import RefreshToken
-# import datetime
-# # import requests
-# from django.shortcuts import get_object_or_404
+import datetime
+
 # from django.contrib.auth import authenticate, login, logout
 # from django.db.models import Q
 # from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
-# from rest_framework.throttling import UserRateThrottle
-# from rest_framework import status, generics, mixins, viewsets
-# from rest_framework.viewsets import ModelViewSet
-# from rest_framework.exceptions import NotAcceptable
-# from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import AuthenticationFailed
+from rest_framework.viewsets import ModelViewSet
+
+# from rest_framework.exceptions import NotAcceptable, AuthenticationFailed
+from rest_framework.views import APIView
+
 # from rest_framework.response import Response
-# from rest_framework.exceptions import AuthenticationFailed
-# from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+
 # from apps.api.renderers import UserRenderer
-# from apps.api.serializers import RequestOtpResponseSerializer, RequestOtpSerializer, UserChangePasswordSerializer, UserForgotPasswordSerializer, UserLoginSerializer, UserRegisterSerializer, VerifyOtpSerializer
-# # from apps.shop.models import Brand, Cart, Product
-# # from apps.shop.serializers import BrandSerializer, ProductSerializer
-# # from apps.blog.models import BlogCategory, Post
-# # from apps.payments.models import Payment
-# # from apps.payments.serializers import PaymentSerializer
-# # from apps.blog.serializers import (CategoryTreeSerializer, CreateCategoryNodeSerializer,
-# #                                    PostSerializer, CategorySerializer, TagSerializer)
-# # from apps.accounts.models import OtpRequest, User
-# # from apps.core.models import Tag
-# # from apps.vendors.models import Vendor
-# # from apps.vendors.serializers import VendorSerializer
+from apps.blog.models import Category, Post, Tag
+from apps.blog.serializers import (
+    CategoryTreeSerializer,
+    CreateCategoryNodeSerializer,
+    PostSerializer,
+    CategorySerializer,
+    TagSerializer,
+)
 
 
-# # class ProductListView(APIView):
-# #     permission_classes = [IsAuthenticatedOrReadOnly]
-
-# #     def get(self, request):
-# #         # products = Product.objects.all().select_related('category')
-# #         products = Product.objects.all()
-# #         serializer = ProductSerializer(products, many=True)
-# #         return Response(serializer.data)
+class TagViewSet(ModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 
-# # class ProductDetailView(APIView):
-
-# #     def get(self, request, pk):
-# #         product = get_object_or_404(Product, pk=pk)
-# #         serializer = ProductSerializer(product)
-# #         return Response(serializer.data)
-
-# #     def delete(self, request, pk):
-# #         product = get_object_or_404(Product, pk=pk)
-# #         product.delete()
-# #         return Response(status=status.HTTP_204_NO_CONTENT)
-
-# # # class ProductSearch(APIView):
-# # #     serializer_class = ProductSerializer
-# # #     document_class = ProductDocument
-
-# # #     def generate_q_expression(self, query):
-# # #         return Q("match", name={"query": query, "fuzziness": "auto"})
-
-# # #     def get(self, request, query):
-# # #         q = self.generate_q_expression(query)
-# # #         search = self.document_class.search().query(q)
-# # #         return Response(self.serializer_class(search.to_queryset(), many=True).data)
+class PostViewSet(ModelViewSet):
+    queryset = Post.objects.all().order_by("-created_at")
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 
-# # class CategoryListView(APIView):
+# class ProductSearch(APIView):
+#     serializer_class = ProductSerializer
+#     document_class = ProductDocument
+
+#     def generate_q_expression(self, query):
+#         return Q("match", name={"query": query, "fuzziness": "auto"})
+
+#     def get(self, request, query):
+#         q = self.generate_q_expression(query)
+#         search = self.document_class.search().query(q)
+#         return Response(self.serializer_class(search.to_queryset(), many=True).data)
+
+# class CategoryListView(APIView):
 # #     def get_queryset(self):
-# #         return BlogCategory.objects.all()
+# #         return Category.objects.all()
 
 # #     def get(self, request):
 
-# #         categories = BlogCategory.objects.all()
+# #         categories = Category.objects.all()
 # #         serializer = CategorySerializer(categories, many=True)
 # #         return Response(serializer.data)
 
 
-# # class BlogCategoryViewSet(ModelViewSet):
+# # class CategoryViewSet(ModelViewSet):
 
 # #     def get_queryset(self):
 # #         if self.action == 'list':
-# #             return BlogCategory.objects.filter(depth=1)
+# #             return Category.objects.filter(depth=1)
 # #         else:
-# #             return BlogCategory.objects.all()
+# #             return Category.objects.all()
 
 # #     def get_serializer_class(self):
 
@@ -96,69 +80,48 @@
 # #                 raise NotAcceptable()
 
 
-# # class TagViewSet(ModelViewSet):
-# #     queryset = Tag.objects.all()
-# #     serializer_class = TagSerializer
-# #     permission_classes = [IsAuthenticatedOrReadOnly]
+# class RegisterView(APIView):
+#     def post(self, request):
+#         mobile = request.data.get('mobile')
+#         if not mobile:
+#             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+#         user, created = User.objects.get_or_create(mobile=mobile)
+#         if not created:
+#             return Response({'data': 'user registered'}, status=status.HTTP_400_BAD_REQUEST)
+
+#         code = random.randint(10000, 99999)
+
+#         # send sms
+
+#         return Response({'code': code})
 
 
-# # class PostViewSet(ModelViewSet):
-# #     queryset = Post.published.select_related('category').all()
-# #     serializer_class = PostSerializer
-# #     permission_classes = [IsAuthenticatedOrReadOnly]
+# def get_tokens_for_user(user):
+#     refresh = RefreshToken.for_user(user)
+#     return {
+#         'refresh': str(refresh),
+#         'access': str(refresh.access_token)
+#     }
 
 
-# # class ProductViewSet(ModelViewSet):
-# #     queryset = Product.objects.all()
-# #     serializer_class = ProductSerializer
-# #     permission_classes = [IsAuthenticatedOrReadOnly]
-
-# # # class RegisterView(APIView):
-# # #     def post(self, request):
-# # #         mobile = request.data.get('mobile')
-# # #         if not mobile:
-# # #             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-# # #         user, created = User.objects.get_or_create(mobile=mobile)
-# # #         if not created:
-# # #             return Response({'data': 'user registered'}, status=status.HTTP_400_BAD_REQUEST)
-
-# # #         code = random.randint(10000, 99999)
-
-# # #         # send sms
-
-# # #         return Response({'code': code})
+# class UserRegisterView(APIView):
+#     def post(self, request):
+#         serializer = UserRegisterSerializer(data=request.data)
+#         if serializer.is_valid(raise_exception=True):
+#             user = serializer.save()
+#             token = get_tokens_for_user(user)
+#             context = {
+#                 'token': token,
+#                 'user': user,
+#                 'message': 'registration is successful'
+#             }
+#             return Response(context, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# # def get_tokens_for_user(user):
-# #     refresh = RefreshToken.for_user(user)
-# #     return {
-# #         'refresh': str(refresh),
-# #         'access': str(refresh.access_token)
-# #     }
-
-
-# # class UserRegisterView(APIView):
-# #     def post(self, request):
-# #         serializer = UserRegisterSerializer(data=request.data)
-# #         if serializer.is_valid(raise_exception=True):
-# #             user = serializer.save()
-# #             token = get_tokens_for_user(user)
-# #             context = {
-# #                 'token': token,
-# #                 'user': user,
-# #                 'message': 'registration is successful'
-# #             }
-# #             return Response(context, status=status.HTTP_201_CREATED)
-# #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# # from rest_framework_simplejwt.tokens import RefreshToken
-# # from rest_framework_simplejwt.exceptions import AuthenticationFailed
-
-
-# # class UserLoginView(APIView):
-# #     renderer_classes = [UserRenderer]
+# class UserLoginView(APIView):
+#     renderer_classes = [UserRenderer]
 
 # #     def post(self, request):
 # #         serializer = UserLoginSerializer(data=request.data)
@@ -177,7 +140,7 @@
 # #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# # class LoginView(APIView):
+# class LoginView(APIView):
 # #     renderer_classes = [UserRenderer]
 
 # #     def post(self, request):
@@ -272,65 +235,6 @@
 # #         code = request.data.get('code')
 
 
-# # class PaymentView(APIView):
-# #     permission_classes = [IsAuthenticated]
-
-# #     def get(self, request):
-
-# #         payment = Payment.objects.create(
-# #             user=request.user,
-# #             price=0,
-# #             token=str(uuid.uuid4)
-# #         )
-
-# #         return Response({'token': payment.token, 'callback_url': ''})
-
-# #     def post(self, request):
-# #         token = request.data.get('token')
-# #         status = request.data.get('status')
-
-# #         try:
-# #             payment = Payment.objects.get(token=token)
-# #         except Payment.DoesNotExist:
-# #             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-# #         if status != 10:
-# #             payment.status = Payment.STATUS_CANCELED
-# #             payment.save()
-# #             return Response({'data': "payment failed"})
-
-# #         req = requests.post('bank_verification_url', data={})
-
-# #         if req.status_code == 100:
-# #             payment.status = Payment.STATUS_ERROR
-# #             payment.save()
-# #             return Response({'data': "payment failed"})
-
-# #         payment.status = Payment.STATUS_PAID
-# #         payment.save()
-
-# #         # save order
-# #         return Response()
-
-
-# # # class UserProfileView(APIView):
-
-# # #     permission_classes = [IsAuthenticated]
-
-# # #     def get(self, request):
-# # #         pass
-
-# # #     def put(self, request, pk):
-# # #         user_profile = UserProfile.objects.get(pk=pk)
-# # #         serializer = UserProfileSerializer(
-# # #             instance=user_profile,
-# # #             data=request.data
-# # #         )
-
-# # #         serializer.is_valid(raise_exception=True)
-# # #         serializer.save()
-# # #         return Response('profile updated')
-
 # # def search(request):
 # #     if request.method == 'POST':
 # #         query = request.POST.get('q')
@@ -342,120 +246,3 @@
 # #             posts = Post.objects.published.annotate(search=search_vector, rank=search_rank) \
 # #                 .filter(search=query_for_search).order_by('-rank')
 # #             return Response({'posts': posts})
-
-
-# # def add_to_cart(request):
-# #     if request.method == 'POST':
-# #         user = request.user
-# #         if user.is_authenticated:
-# #             product_id = request.POST.get('product_id')
-# #             product = Product.objects.get(id=product_id)
-# #             if product:
-# #                 if Cart.objects.filter(user=user, product_id=product_id):
-# #                     return 'product is already in card'
-# #                 else:
-# #                     quantity = 1
-# #                     Cart.objects.create(
-# #                         user=user, product_id=product_id, quantity=quantity)
-# #                     return 'added'
-# #             else:
-# #                 return 'product not found'
-# #         else:
-# #             pass
-
-
-# # def update_cart_quantity(request):
-# #     product_id = request.POST.get('product_id')
-# #     action = request.POST.get('action')
-
-# #     cart_item = Cart.objects.filter(
-# #         user=request.user, product_id=product_id)[0]
-# #     if cart_item:
-# #         if action == 'add':
-# #             cart_item.quantity += 1
-# #         elif action == 'decrease':
-# #             cart_item -= 1
-
-# #         cart_item.save()
-
-# #     return 'update'
-
-
-# # def checkout(request):
-# #     context = {}
-# #     user = request.user
-# #     cart_items = Cart.objects.filter(user=user)
-
-# #     context['cart_items'] = cart_items
-# #     context['cart_items_count'] = cart_items.count()
-
-# #     total_price = 0
-# #     if cart_items:
-# #         for item in cart_items:
-# #             total_price += item.product.price
-
-# #         context['total_price'] = total_price
-
-
-# # ############ OTP ############
-
-
-# # class OncePerMinuteThrottle(UserRateThrottle):
-# #     rate = '1/minute'
-
-
-# # class RequestOtpAPIView(APIView):
-
-# #     # throttle_classes = [OncePerMinuteThrottle]
-
-# #     def post(self, request):
-# #         serializer = RequestOtpSerializer(data=request.data)
-# #         if serializer.is_valid():
-# #             mobile = serializer.validated_data['mobile']
-# #             channel = serializer.validated_data['channel']
-# #             otp_request = OtpRequest(mobile=mobile, channel=channel)
-# #             otp_request.generate_otp()
-# #             otp_request.save()
-
-# #             # Send sms
-
-# #             return Response(RequestOtpResponseSerializer(otp_request).data)
-# #         else:
-# #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# # class VerifyOtpAPIView(APIView):
-# #     def post(self, request):
-# #         serializer = VerifyOtpSerializer(data=request.data)
-# #         if serializer.is_valid():
-# #             request_id = serializer.validated_data['request_id']
-# #             mobile = serializer.validated_data['mobile']
-# #             password = serializer.validated_data['password']
-
-# #             otp_request = OtpRequest.objects.filter(
-# #                 request_id=request_id,
-# #                 mobile=mobile,
-# #                 valid_until__gte=timezone.now()
-# #             )
-# #             if otp_request.exists():
-# #                 userq = User.objects.filter(mobile=mobile)
-# #                 if userq.exists():
-# #                     user = userq.first()
-# #                     token, created = Token.objects.get_or_create(user=user)
-# #                     return Response({'token': token, 'new_user': False})
-# #                 else:
-# #                     user = User.objects.create(mobile=mobile)
-# #                     token, created = Token.objects.get_or_create(user=user)
-# #                     return Response({'token': token, 'new_user': True})
-
-# #             else:
-# #                 return Response(serializer.errors, status=status.HTTP_403_FORBIDDEN)
-
-# #         else:
-# #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# # class PostListAPIView(ModelViewSet):
-# #     queryset = Post.objects.all()
-# #     serializer_class = PostSerializer
-# #     permission_classes = [IsAuthenticatedOrReadOnly]

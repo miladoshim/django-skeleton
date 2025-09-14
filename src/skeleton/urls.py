@@ -5,15 +5,14 @@ from django.conf.urls.static import static
 from debug_toolbar.toolbar import debug_toolbar_urls
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('blog/', include('apps.blog.urls')),
-    path('accounts/', include('django.contrib.auth.urls')),
-    path('accounts/', include('apps.accounts.urls')),
-    path('api/v1/', include('apps.api.urls')),
-    path('api-auth/', include('rest_framework.urls')),
+    path("admin/", admin.site.urls),
+    path("blog/", include("apps.blog.urls")),
+    path("accounts/", include("django.contrib.auth.urls")),
+    path("accounts/", include("apps.accounts.urls")),
+    path("api/v1/", include("apps.api.urls")),
+    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("", include("django_components.urls")),
-    path('ckeditor/', include('ckeditor_uploader.urls')),
-
+    path("ckeditor/", include("ckeditor_uploader.urls")),
 ] + debug_toolbar_urls()
 
 

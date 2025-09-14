@@ -1,7 +1,5 @@
 from django.contrib import admin
-from unfold.admin import ModelAdmin
 from import_export.admin import ImportExportModelAdmin, ExportActionMixin
-from unfold.contrib.import_export.forms import ExportForm, ImportForm, SelectableFieldsExportForm
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
 from apps.blog.models import Category, Tag, Post
@@ -9,26 +7,23 @@ from apps.blog.resources import PostResource
 
 
 @admin.register(Tag)
-class TagAdmin(ModelAdmin, ImportExportModelAdmin, ExportActionMixin):
-    list_display = ['id', 'title', 'slug']
-    import_form_class = ImportForm
-    export_form_class = ExportForm
-    search_fields = ['title']
-    prepopulated_fields = {
-            'slug' : ['title']
-    }
-    
-# @admin.register(Post)
-# class PostAdmin(ImportExportModelAdmin):
-#     list_display = ['id', 'title', 'published_status', 'created_at']
-#     list_filter = ['published_status', 'author','created_at']
-#     search_fields = ['title', 'author__username']
-#     list_display_links = ['id', 'title']
-#     inlines = [CommentInline]
-#     prepopulated_fields = {
-#         'slug' : ['title']
-#     }
-#     # fields = ['title', 'body', 'published_status']
+class TagAdmin(ImportExportModelAdmin, ExportActionMixin):
+    list_display = ["id", "title", "slug"]
+    search_fields = ["title"]
+    prepopulated_fields = {"slug": ["title"]}
+
+
+@admin.register(Post)
+class PostAdmin(ImportExportModelAdmin):
+    list_display = ["id", "title", "published_status", "created_at"]
+    list_filter = ["published_status", "created_at"]
+    #     search_fields = ['title', 'author__username']
+    list_display_links = ["id", "title"]
+    #     inlines = [CommentInline]
+    prepopulated_fields = {"slug": ["title"]}
+    fields = ["title", "body", "published_status"]
+
+
 #     fieldsets = (
 #         (None, {'fields': ('title','slug', 'body','thumbnail', 'author', 'category')}),
 #         ("وضعیت", {'fields': ('published_status',)})
@@ -38,13 +33,14 @@ class TagAdmin(ModelAdmin, ImportExportModelAdmin, ExportActionMixin):
 
 #     def tags_to_str(self, obj):
 #         return ", ".join(tag.title for tag in obj.tags.all())
+
 #     tags_to_str.short_description = _('برسب ها')
 
-        # def get_queryset(self, request):
-        #     return super().get_queryset(request).prefetch_related('tags')
+# def get_queryset(self, request):
+#     return super().get_queryset(request).prefetch_related('tags')
 
-        # def tag_list(self, obj):
-        #     return u", ".join(o.name for o in obj.tags.all())
+# def tag_list(self, obj):
+#     return u", ".join(o.name for o in obj.tags.all())
 
 
 # @admin.register(RecyclePost)
@@ -77,6 +73,4 @@ class TagAdmin(ModelAdmin, ImportExportModelAdmin, ExportActionMixin):
 @admin.register(Category)
 class CategoryAdmin(TreeAdmin):
     form = movenodeform_factory(Category)
-#     prepopulated_fields = {
-#         'slug' : ['name']
-#     }
+    prepopulated_fields = {"slug": ["name"]}

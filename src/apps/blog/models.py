@@ -44,19 +44,6 @@ class Tag(BaseModel, ModelMeta, HitCountMixin):
         return self.title
 
 
-# class Rate(BaseModel):
-#     rate = models.PositiveBigIntegerField(default=0, validators=[MinValueValidator(0), MaxValuesValidator(5)])
-#     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-#     object_id = models.PositiveBigIntegerField()
-#     content_object = GenericForeignKey()
-
-#     class Meta:
-#         db_table = 'rates'
-#         indexes = [
-#             models.Index(fields=['content_type', 'object_id'])
-#         ]
-
-
 class Category(MP_Node):
     parent = models.ForeignKey(
         "self",
@@ -91,9 +78,10 @@ class Category(MP_Node):
     def get_absolute_url(self):
         return reverse("blog_category_detail", args=[str(self.slug)])
 
+
 class Post(BaseModel):
-    #     objects = models.Manager()
-    #     published = PublishedManager()
+    # objects = models.Manager()
+    # published = PublishedManager()
 
     # author = models.ForeignKey(
     #     User, on_delete=models.CASCADE, limit_choices_to={'is_staff': True}, related_name='posts', verbose_name=_('نویسنده'), blank=True, null=True)
@@ -101,14 +89,14 @@ class Post(BaseModel):
     slug = models.SlugField(
         unique=True, verbose_name=_("اسلاگ"), allow_unicode=True, default=None
     )
-    body = RichTextUploadingField(_('متن مقاله'))
-    # thumbnail = models.ImageField(upload_to="posts/%Y/%m/%d")
-    # published_status = models.CharField(
-    #     max_length=1,
-    #     choices=PublishStatusChoice.choices,
-    #     default="d",
-    #     verbose_name=_("وضعیت انتشار"),
-    # )
+    body = RichTextUploadingField(_("متن مقاله"))
+    thumbnail = models.ImageField(upload_to="posts/%Y/%m/%d")
+    published_status = models.CharField(
+        max_length=1,
+        choices=PublishStatusChoice.choices,
+        default="d",
+        verbose_name=_("وضعیت انتشار"),
+    )
     # category = models.ForeignKey(
     #     "Category",
     #     verbose_name=_("دسته بندی"),
@@ -116,33 +104,32 @@ class Post(BaseModel):
     # )
     # tags = models.ManyToManyField("Tag", verbose_name=_('برچسب ها'), related_name='posts')
 
-    # tags = TaggableManager()
+    tags = TaggableManager()
 
     # likes = models.PositiveBigIntegerField(default=0)
     # dislikes = models.PositiveBigIntegerField(default=0)
-    # rates = GenericRelation(Rate)
 
-    # body_character_count = models.GeneratedFiled(
+    # body_character_count = models.GeneratedField(
     #     expression=Length('body'),
     #     output_field=models.IntegerField(),
     #     db_persist=True
     # )
 
-    # class Meta:
-    #     db_table = "posts"
-    #     ordering = ["-created_at"]
-    #     verbose_name = _("مقاله")
-    #     verbose_name_plural = _("مقاله ها")
+    class Meta:
+        db_table = "posts"
+        ordering = ["-created_at"]
+        verbose_name = _("مقاله")
+        verbose_name_plural = _("مقاله ها")
 
-    # def __str__(self) -> str:
-    #     return self.title
+    def __str__(self) -> str:
+        return self.title
 
 
-#     def get_absolute_url(self):
-#         return reverse("post_detail",  args=[str(self.slug)])
+    def get_absolute_url(self):
+        return reverse("post_detail",  args=[str(self.slug)])
 
-#     def posts_was_published_recently(self):
-#         return self.created_at >= timezone.now() - datetime.timedelta(days=1)
+    def posts_was_published_recently(self):
+        return self.created_at >= timezone.now() - datetime.timedelta(days=1)
 
 #     def jcreated_at(self):
 #         return jalali_converter(self.created_at)
@@ -165,7 +152,7 @@ class Post(BaseModel):
 
 #         return thumbnail
 
-# 
+#
 
 # class Comment(BaseModel):
 #     user = models.ForeignKey(User, related_name='users',
@@ -198,27 +185,6 @@ class Post(BaseModel):
 
 #     class Meta:
 #         proxy = True
-
-
-# class Vote(BaseModel):
-#     class VoteChoice(models.TextChoices):
-#         like = 'l', _('like')
-#         dislike = 'd', _('dislike')
-
-#     post = models.ForeignKey(
-#         Post, on_delete=models.CASCADE, related_name='votes')
-#     vote = models.CharField(max_length=12, choices=VoteChoice.choices)
-#     created_at = models.DateTimeField(auto_now_add=True)
-
-#     class Meta:
-#         db_table = 'votes'
-#         verbose_name = _('Vote')
-#         verbose_name_plural = _("Votes")
-
-
-# class Attachment(BaseModel):
-#     file = models.FileField(_('file'), upload_to='')
-#     # attachmentable = GenericForeignKey()
 
 
 # class NewsletterSubscriber(BaseModel):

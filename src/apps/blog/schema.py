@@ -2,12 +2,12 @@ from graphene import relay, ObjectType, Mutation
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.forms.mutation import DjangoFormMutation
-from .models import Post, BlogCategory, Comment
+from .models import Post, Category, Comment
 
 
-class BlogCategoryNode(DjangoObjectType):
+class CategoryNode(DjangoObjectType):
     class Meta:
-        model = BlogCategory
+        model = Category
         filter_fields = ("id", 'slug', "name")
         interfaces = (relay.Node,)
 
@@ -27,4 +27,4 @@ class PostNode(DjangoObjectType):
 class Query(ObjectType):
     all_posts = DjangoFilterConnectionField(PostNode)
 
-    all_blog_categories = DjangoFilterConnectionField(BlogCategoryNode)
+    all_blog_categories = DjangoFilterConnectionField(CategoryNode)

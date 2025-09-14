@@ -4,12 +4,14 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from apps.core.managers import SoftDeleteManager
+
 # from apps.accounts.models import User
 
 
 class PublishStatusChoice(models.TextChoices):
-    published = 'p', _('منتشر شده')
-    draft = 'd', _('پیش نویس')
+    published = "p", _("منتشر شده")
+    draft = "d", _("پیش نویس")
+
 
 class BaseModel(models.Model):
     class Meta:
@@ -17,16 +19,16 @@ class BaseModel(models.Model):
 
     objects = SoftDeleteManager()
 
-    uuid = models.UUIDField(
-        unique=True, default=str(uuid.uuid4()), editable=False)
-    is_deleted = models.BooleanField(default=False,null=True, blank=True, editable=False)
+    uuid = models.UUIDField(unique=True, default=str(uuid.uuid4()), editable=False)
+    is_deleted = models.BooleanField(
+        default=False, null=True, blank=True, editable=False
+    )
     deleted_at = models.DateTimeField(
-        null=True, blank=True, editable=False, verbose_name=_('تاریخ حذف'))
+        null=True, blank=True, editable=False, verbose_name=_("تاریخ حذف")
+    )
     # deleted_by = models.ForeignKey(User, null=True)
-    updated_at = models.DateTimeField(
-        auto_now=True, verbose_name=_('تاریخ بروزرسانی'))
-    created_at = models.DateTimeField(
-        auto_now_add=True, verbose_name=_('تاریخ ثبت'))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("تاریخ بروزرسانی"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("تاریخ ثبت"))
 
     def delete(self, user_id=None):
         self.is_deleted = True
