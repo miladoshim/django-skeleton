@@ -1,30 +1,8 @@
 from django import template
 import datetime
-# from ..models import BlogCategory, Post
+# from ..models import Category, Post
 
 register = template.Library()
-
-@register.simple_tag
-def title():
-    return ''
-
-
-# @register.inclusion_tag("blog/partials/category_navbar")
-# def category_navbar():
-#     return {
-#         'categories': BlogCategory.objects.all()
-#     }
-
-
-# @register.inclusion_tag('partials/link.html')
-# def link(request, link_name, content):
-#     return {
-#         'request': request,
-#         'link_name': link_name,
-#         'link': '',
-#         'content': content
-#     }
-
 
 # @register.simple_tag
 # def number_of_posts(for_today=False):
@@ -38,3 +16,19 @@ def title():
 # @register.simple_tag
 # def latest_posts(count=8):
 #     return Post.published.order_by('-created_at')[:count]
+
+
+# @register.inclusion_tag("blog/partials/category_navbar")
+# def category_navbar():
+#     return {
+#         'categories': Category.objects.all()
+#     }
+
+# @register.inclusion_tag('partials/link.html')
+# def link(request, link_name, content):
+#     return {
+#         'request': request,
+#         'link_name': link_name,
+#         'link': '',
+#         'content': content
+#     }

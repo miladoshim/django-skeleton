@@ -29,15 +29,15 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "daphne",
-    "unfold",
-    "unfold.contrib.filters",
-    "unfold.contrib.forms",
-    "unfold.contrib.inlines",
-    "unfold.contrib.import_export",
-    "unfold.contrib.guardian",
-    "unfold.contrib.simple_history",
-    "unfold.contrib.location_field",
-    "unfold.contrib.constance",
+    # "unfold",
+    # "unfold.contrib.filters",
+    # "unfold.contrib.forms",
+    # "unfold.contrib.inlines",
+    # "unfold.contrib.import_export",
+    # "unfold.contrib.guardian",
+    # "unfold.contrib.simple_history",
+    # "unfold.contrib.location_field",
+    # "unfold.contrib.constance",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "apps.core.apps.CoreConfig",
     "apps.accounts.apps.AccountsConfig",
     "apps.blog.apps.BlogConfig",
+    "apps.api.apps.ApiConfig",
     
     
     # Third-party apps
@@ -76,8 +77,11 @@ INSTALLED_APPS = [
     "compressor",
     'django_components',
 	'jalali_date',
-
-    
+    "crispy_forms",
+    "crispy_tailwind",
+    "treebeard",
+    "ckeditor",
+    "ckeditor_uploader",
     
     "utils",
     "django_cleanup.apps.CleanupConfig",
@@ -144,6 +148,11 @@ AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",  # this is default
     "guardian.backends.ObjectPermissionBackend",
 )
+
+# CRISPY_TEMPLATE_PACK = "unfold_crispy"
+# CRISPY_TEMPLATE_PACK = "tailwind"
+# CRISPY_ALLOWED_TEMPLATE_PACKS = ["unfold_crispy", "tailwind"]
+
 
 WSGI_APPLICATION = "skeleton.wsgi.application"
 ASGI_APPLICATION = "skeleton.asgi.application"
@@ -217,6 +226,37 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 
 CKEDITOR_UPLOAD_PATH = "uploads/"
+# CKEDITOR_FILENAME_GENERATOR = 'utils.get_ckeditor_filename'
+CKEDITOR_RESTRICT_BY_DATE=True
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'full',
+        'toolbar_Custom': [
+            ['Bold', 'Italic', 'Underline'],
+            ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-',
+                'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
+            ['Link', 'Unlink'],
+            ['RemoveFormat', 'Source']
+        ],
+        'extraPlugins': ','.join([
+            'uploadimage',
+            'div',
+            'autolink',
+            'autoembed',
+            'embedsemantic',
+            'autogrow',
+            # 'devtools',
+            'widget',
+            'lineutils',
+            'clipboard',
+            'dialog',
+            'dialogui',
+            'elementspath'
+        ]),
+        # 'height': 300,
+        # 'width': 300,
+    },
+}
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -389,3 +429,4 @@ UNFOLD = {
 # ELASTICSEARCH_DSL = {
 #     "default": {"hosts": "elasticsearch:9200"},
 # }
+

@@ -2,9 +2,11 @@ from django.contrib import admin
 from unfold.admin import ModelAdmin
 from import_export.admin import ImportExportModelAdmin, ExportActionMixin
 from unfold.contrib.import_export.forms import ExportForm, ImportForm, SelectableFieldsExportForm
-
-from apps.blog.models import Tag
+from treebeard.admin import TreeAdmin
+from treebeard.forms import movenodeform_factory
+from apps.blog.models import Category, Tag, Post
 from apps.blog.resources import PostResource
+
 
 @admin.register(Tag)
 class TagAdmin(ModelAdmin, ImportExportModelAdmin, ExportActionMixin):
@@ -18,8 +20,7 @@ class TagAdmin(ModelAdmin, ImportExportModelAdmin, ExportActionMixin):
     
 # @admin.register(Post)
 # class PostAdmin(ImportExportModelAdmin):
-#     list_display = ['id', 'title', 'category',
-#                     'author', 'published_status', 'created_at', 'tag_list']
+#     list_display = ['id', 'title', 'published_status', 'created_at']
 #     list_filter = ['published_status', 'author','created_at']
 #     search_fields = ['title', 'author__username']
 #     list_display_links = ['id', 'title']
@@ -73,9 +74,9 @@ class TagAdmin(ModelAdmin, ImportExportModelAdmin, ExportActionMixin):
 #         queryset.update(status="d")
 
 
-# @admin.register(BlogCategory)
-# class BlogCategoryAdmin(TreeAdmin):
-#     form = movenodeform_factory(BlogCategory)
+@admin.register(Category)
+class CategoryAdmin(TreeAdmin):
+    form = movenodeform_factory(Category)
 #     prepopulated_fields = {
 #         'slug' : ['name']
 #     }

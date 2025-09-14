@@ -3,7 +3,6 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 
-
 class PublishedManager(models.Manager):
     def get_queryset(self) -> QuerySet:
         return super(PublishedManager, self).get_queryset().filter(published_status='p')

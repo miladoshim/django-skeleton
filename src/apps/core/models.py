@@ -3,22 +3,19 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from apps.core.managers import SoftDeleteManager
 # from apps.accounts.models import User
-
-# from apps.core.managers import SoftDeleteManager
-
 
 
 class PublishStatusChoice(models.TextChoices):
     published = 'p', _('منتشر شده')
     draft = 'd', _('پیش نویس')
 
-
 class BaseModel(models.Model):
     class Meta:
         abstract = True
 
-    # objects = SoftDeleteManager()
+    objects = SoftDeleteManager()
 
     uuid = models.UUIDField(
         unique=True, default=str(uuid.uuid4()), editable=False)
@@ -64,10 +61,6 @@ class BaseModel(models.Model):
 #     message = models.TextField()
 #     read_at = models.DateTimeField(null=True, blank=True)
 #     # notif_type
-
-# class PublicNotification(BaseModel):
-#     pass
-
 
 # class ActivityHistory(LogEntry):
 #     class Meta:

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  وبلاگ
+{% endblock %}
+
+{% block content %}
+  <div class="blog-area ptb-100">
+    <div class="container">
+      <div class="row align-items-center justify-content-center">
+        <div class="col-xl-4 col-md-6">
+          <div class="blog-single-item style-two">
+            <a href="single-blog.html" class="d-block blog-img"><img src="{% static 'images/blog-1.jpg' %}" alt="blog" /></a><ul class="ps-0 list-unstyled date">
+              <li>
+                <span>27 نوامبر 2023</span>
+              </li>
+              <li>3 Minutes Read</li>
+            </ul>
+            <h3><a href="single-blog.html">یک روز در قلمروهای مد پنهان مد</a></h3>
+          </div>
+        </div>
+        <div class="col-md-12">
+          <div class="pagination">
+            <a href="blog.html" class="next page-count hover-style">
+              <div class="inner-border">
+                <i class="icofont-simple-left"></i>
+              </div>
+            </a><a href="blog.html" class="page-count current hover-style" aria-current="page"><div class="inner-border">1</div></a><a href="blog.html" class="page-count hover-style"><div class="inner-border">2</div></a><a href="blog.html" class="page-count hover-style"><div class="inner-border">3</div></a><a href="blog.html" class="page-count hover-style"><div class="inner-border">4</div></a><a href="blog.html" class="next page-count hover-style">
+              <div class="inner-border">
+                <i class="icofont-simple-right"></i>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
