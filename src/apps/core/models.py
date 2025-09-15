@@ -12,6 +12,11 @@ class PublishStatusChoice(models.TextChoices):
     published = "p", _("منتشر شده")
     draft = "d", _("پیش نویس")
 
+class GenderChoices(models.TextChoices):
+    male = 'male'
+    female = 'female'
+    unknown = 'unknown'
+    __empty__ = '(Unknown)'
 
 class BaseModel(models.Model):
     class Meta:
@@ -67,3 +72,12 @@ class BaseModel(models.Model):
 # class ActivityHistory(LogEntry):
 #     class Meta:
 #         proxy = True
+
+
+
+# class NewsletterSubscriber(BaseModel):
+#     email = models.EmailField(max_length=255)
+#     date_added = models.DateTimeField(auto_now_add=True)
+
+#     def __str__(self):
+#         return '%s' % self.email

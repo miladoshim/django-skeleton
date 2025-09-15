@@ -20,9 +20,7 @@ from treebeard.mp_tree import MP_Node
 from apps.accounts.models import User
 from apps.core.managers import PublishedManager
 from apps.core.models import PublishStatusChoice, BaseModel
-
-# from utils.utils import jalali_converter
-
+from jalali_date import date2jalali, datetime2jalali
 
 class Tag(BaseModel, ModelMeta, HitCountMixin):
     title = models.CharField(max_length=255, unique=True, verbose_name=_("عنوان"))
@@ -81,16 +79,22 @@ class Category(MP_Node):
 
 class Post(BaseModel):
     # objects = models.Manager()
-    # published = PublishedManager()
-
-    # author = models.ForeignKey(
-    #     User, on_delete=models.CASCADE, limit_choices_to={'is_staff': True}, related_name='posts', verbose_name=_('نویسنده'), blank=True, null=True)
+    published = PublishedManager()
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        limit_choices_to={"is_staff": True},
+        related_name="posts",
+        verbose_name=_("نویسنده"),
+        blank=True,
+        null=True,
+    )
     title = models.CharField(_("عنوان"), max_length=150, db_index=True)
     slug = models.SlugField(
         unique=True, verbose_name=_("اسلاگ"), allow_unicode=True, default=None
     )
-    body = RichTextUploadingField(_("متن مقاله"))
-    thumbnail = models.ImageField(upload_to="posts/%Y/%m/%d")
+    body = RichTextUploadingField(_("متن مقاله"), null=True, blank=True)
+    thumbnail = models.ImageField(upload_to="posts/%Y/%m/%d", null=True, blank=True)
     published_status = models.CharField(
         max_length=1,
         choices=PublishStatusChoice.choices,
@@ -102,9 +106,8 @@ class Post(BaseModel):
     #     verbose_name=_("دسته بندی"),
     #     on_delete=models.CASCADE,
     # )
-    # tags = models.ManyToManyField("Tag", verbose_name=_('برچسب ها'), related_name='posts')
 
-    tags = TaggableManager()
+    tags = TaggableManager(verbose_name=_('برچسب ها'), related_name='posts')
 
     # likes = models.PositiveBigIntegerField(default=0)
     # dislikes = models.PositiveBigIntegerField(default=0)
@@ -124,15 +127,15 @@ class Post(BaseModel):
     def __str__(self) -> str:
         return self.title
 
-
     def get_absolute_url(self):
-        return reverse("post_detail",  args=[str(self.slug)])
+        return reverse("post_detail", args=[str(self.slug)])
 
     def posts_was_published_recently(self):
         return self.created_at >= timezone.now() - datetime.timedelta(days=1)
 
-#     def jcreated_at(self):
-#         return jalali_converter(self.created_at)
+
+    def get_jalali_date(self):
+        return datetime2jalali(self.created_at)
 
 #     def category_published(self):
 #         return self.category.filter(status=True)
@@ -185,11 +188,3 @@ class Post(BaseModel):
 
 #     class Meta:
 #         proxy = True
-
-
-# class NewsletterSubscriber(BaseModel):
-#     email = models.EmailField(max_length=255)
-#     date_added = models.DateTimeField(auto_now_add=True)
-
-#     def __str__(self):
-#         return '%s' % self.email

@@ -6,11 +6,11 @@ from apps.blog.models import Category, Tag, Post
 from apps.blog.resources import PostResource
 
 
-@admin.register(Tag)
-class TagAdmin(ImportExportModelAdmin, ExportActionMixin):
-    list_display = ["id", "title", "slug"]
-    search_fields = ["title"]
-    prepopulated_fields = {"slug": ["title"]}
+# @admin.register(Tag)
+# class TagAdmin(ImportExportModelAdmin, ExportActionMixin):
+#     list_display = ["id", "title", "slug"]
+#     search_fields = ["title"]
+#     prepopulated_fields = {"slug": ["title"]}
 
 
 @admin.register(Post)
@@ -20,7 +20,7 @@ class PostAdmin(ImportExportModelAdmin):
     #     search_fields = ['title', 'author__username']
     list_display_links = ["id", "title"]
     #     inlines = [CommentInline]
-    prepopulated_fields = {"slug": ["title"]}
+    # prepopulated_fields = {"slug": ["title"]}
     fields = ["title", "body", "published_status"]
 
 
