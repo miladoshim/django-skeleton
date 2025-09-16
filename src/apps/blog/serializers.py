@@ -50,10 +50,10 @@ class TagSerializer(HyperlinkedModelSerializer):
 
 # TaggitSerializer
 class PostSerializer(HyperlinkedModelSerializer, TaggitSerializer):
-    category = CategorySerializer(many=False)
-
+    # category = CategorySerializer(many=False)
     tags = TagListSerializerField()
+    author = serializers.ReadOnlyField(source='author.username')
 
     class Meta:
         model = Post
-        fields = ["title", "slug", "created_at", "updated_at", "category", "url"]
+        fields = ["title", "slug", "created_at", "updated_at", "url", 'tags', 'author',]

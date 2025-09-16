@@ -21,6 +21,8 @@ from apps.accounts.models import User
 from apps.core.managers import PublishedManager
 from apps.core.models import PublishStatusChoice, BaseModel
 from jalali_date import date2jalali, datetime2jalali
+from filebrowser.fields import FileBrowseField
+
 
 class Tag(BaseModel, ModelMeta, HitCountMixin):
     title = models.CharField(max_length=255, unique=True, verbose_name=_("عنوان"))
@@ -94,7 +96,11 @@ class Post(BaseModel):
         unique=True, verbose_name=_("اسلاگ"), allow_unicode=True, default=None
     )
     body = RichTextUploadingField(_("متن مقاله"), null=True, blank=True)
-    thumbnail = models.ImageField(upload_to="posts/%Y/%m/%d", null=True, blank=True)
+    thumbnail = models.ImageField(upload_to="posts/%Y/%m/%d", null=True, blank=True, verbose_name=_('تصویر شاخص'))
+    # thumbnail = FileBrowseField(
+    #     "Image", max_length=200, directory="images/", extensions=[".jpg"], blank=True
+    # )
+
     published_status = models.CharField(
         max_length=1,
         choices=PublishStatusChoice.choices,
@@ -107,10 +113,11 @@ class Post(BaseModel):
     #     on_delete=models.CASCADE,
     # )
 
-    tags = TaggableManager(verbose_name=_('برچسب ها'), related_name='posts')
+    tags = TaggableManager(verbose_name=_("برچسب ها"), related_name="posts")
 
     # likes = models.PositiveBigIntegerField(default=0)
     # dislikes = models.PositiveBigIntegerField(default=0)
+    # likes = models.ManyToManyField(User, related_name='likes', blank=True)
 
     # body_character_count = models.GeneratedField(
     #     expression=Length('body'),
@@ -133,9 +140,9 @@ class Post(BaseModel):
     def posts_was_published_recently(self):
         return self.created_at >= timezone.now() - datetime.timedelta(days=1)
 
-
     def get_jalali_date(self):
         return datetime2jalali(self.created_at)
+
 
 #     def category_published(self):
 #         return self.category.filter(status=True)
@@ -157,20 +164,22 @@ class Post(BaseModel):
 
 #
 
-# class Comment(BaseModel):
-#     user = models.ForeignKey(User, related_name='users',
-#                              on_delete=models.CASCADE, verbose_name=_('کاربر'))
-#     article = models.ForeignKey(
-#         Post, related_name='comments', on_delete=models.CASCADE)
-#     comment = models.TextField(verbose_name=_('نظر'))
-#     is_approved = models.BooleanField(default=False)
-#     approved_at = models.DateTimeField(null=True, blank=True)
 
-#     class Meta:
-#         db_table = 'comments'
-#         # ordering = ['-created_at']
-#         verbose_name = _("نظر")
-#         verbose_name_plural = _("نظرات")
+class Comment(BaseModel):
+    user = models.ForeignKey(
+        User, related_name="users", on_delete=models.CASCADE, verbose_name=_("کاربر")
+    )
+    post = models.ForeignKey(Post, related_name="comments", on_delete=models.CASCADE)
+    comment = models.TextField(verbose_name=_("نظر"))
+    is_approved = models.BooleanField(default=False)
+    approved_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "comments"
+        ordering = ["-created_at"]
+        verbose_name = _("نظر")
+        verbose_name_plural = _("نظرات")
+
 
 #     def __str__(self) -> str:
 #         return self.comment

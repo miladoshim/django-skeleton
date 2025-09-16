@@ -5,7 +5,7 @@ import datetime
 # from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 # from rest_framework.exceptions import NotAcceptable, AuthenticationFailed
 from rest_framework.views import APIView
@@ -24,14 +24,20 @@ from apps.blog.serializers import (
 )
 
 
-class TagViewSet(ModelViewSet):
+class TagViewSet(ReadOnlyModelViewSet):
+    """
+    Return a list of all tags
+    """
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
-class PostViewSet(ModelViewSet):
-    queryset = Post.objects.all().order_by("-created_at")
+class PostViewSet(ReadOnlyModelViewSet):
+    """
+    Return a list of all blog posts
+    """
+    queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 

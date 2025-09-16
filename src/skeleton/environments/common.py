@@ -29,18 +29,14 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "daphne",
-    # "unfold",
-    # "unfold.contrib.filters",
-    # "unfold.contrib.forms",
-    # "unfold.contrib.inlines",
-    # "unfold.contrib.import_export",
-    # "unfold.contrib.guardian",
-    # "unfold.contrib.simple_history",
-    # "unfold.contrib.location_field",
-    # "unfold.contrib.constance",
+    "django.contrib.contenttypes",
+    # 'grappelli.dashboard',
+    # 'grappelli',
+    'admin_interface',
+    'colorfield',
+    "filebrowser",
     "django.contrib.admin",
     "django.contrib.auth",
-    "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
@@ -82,6 +78,10 @@ INSTALLED_APPS = [
     "treebeard",
     "ckeditor",
     "ckeditor_uploader",
+    'extra_settings',
+    # 'redirects',
+    
+    
     
     "utils",
     "django_cleanup.apps.CleanupConfig",
@@ -258,6 +258,8 @@ CKEDITOR_CONFIGS = {
     },
 }
 
+FILEBROWSER_DIRECTORY='/uploads'
+
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
@@ -320,7 +322,11 @@ CACHES = {
         #     "PASSWORD": "mysecret",
         # "IGNORE_EXCEPTIONS": True,
         # }
-    }
+    },
+    "admin_interface": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "TIMEOUT": 60 * 5,
+    },
 }
 
 # LOGGING = {

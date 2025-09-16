@@ -17,19 +17,17 @@ from apps.blog.resources import PostResource
 class PostAdmin(ImportExportModelAdmin):
     list_display = ["id", "title", "published_status", "created_at"]
     list_filter = ["published_status", "created_at"]
-    #     search_fields = ['title', 'author__username']
+    search_fields = ['title',]
     list_display_links = ["id", "title"]
     #     inlines = [CommentInline]
-    # prepopulated_fields = {"slug": ["title"]}
-    fields = ["title", "body", "published_status"]
-
-
-#     fieldsets = (
-#         (None, {'fields': ('title','slug', 'body','thumbnail', 'author', 'category')}),
-#         ("وضعیت", {'fields': ('published_status',)})
-#     )
-#     # filter_horizontal = ['tags']
+    prepopulated_fields = {"slug": ["title"]}
+    # fields = ["title",'slug', "body", "published_status"]
+    fieldsets = (
+        (None, {'fields': ('title','slug', 'body','thumbnail', 'author')}),
+        ("وضعیت", {'fields': ('published_status',)})
+    )
 #     # resource_class = PostResource
+    # filter_horizontal = ['tags']
 
 #     def tags_to_str(self, obj):
 #         return ", ".join(tag.title for tag in obj.tags.all())

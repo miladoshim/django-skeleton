@@ -1,37 +1,13 @@
 from rest_framework.serializers import ModelSerializer, HyperlinkedModelSerializer
-from .models import (Address, Bank, City, Province,
-                     OtpRequest, ActivationCode, User,
-                     Wallet, UserProfile, UserMeta,)
+from rest_framework import serializers
+from .models import User, UserProfile, UserMeta
 
 
-class AddressSerializer(ModelSerializer):
-    class Meta:
-        model = Address
-
-
-class BankSerializer(ModelSerializer):
-    class Meta:
-        model = Bank
-
-
-class CitySerializer(ModelSerializer):
-    class Meta:
-        model = City
-
-
-class ProvinceSerializer(ModelSerializer):
-    class Meta:
-        model = Province
-
-
-class UserSerializer(ModelSerializer):
+class UserSerializer(HyperlinkedModelSerializer):
+    posts = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='post_detail')
     class Meta:
         model = User
-
-
-class WalletSerializer(ModelSerializer):
-    class Meta:
-        model = Wallet
+        fields = ['url', 'id', 'email']
 
 
 class UserProfileSerializer(ModelSerializer):

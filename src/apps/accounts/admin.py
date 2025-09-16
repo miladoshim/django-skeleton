@@ -1,8 +1,4 @@
 from django.contrib import admin
-from django.contrib.auth.admin import (
-    UserAdmin as BaseUserAdmin,
-    GroupAdmin as BaseGroupAdmin,
-)
 from django.contrib.auth.models import User as BaseAuthUser, Group as BaseAuthGroup
 from import_export.admin import ImportExportModelAdmin, ExportActionMixin
 

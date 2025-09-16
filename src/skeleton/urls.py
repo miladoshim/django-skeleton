@@ -3,8 +3,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from debug_toolbar.toolbar import debug_toolbar_urls
+from filebrowser.sites import site
 
 urlpatterns = [
+    path('admin/filebrowser/', site.urls),
+    path('grappelli/', include('grappelli.urls')),
     path("admin/", admin.site.urls),
     path("blog/", include("apps.blog.urls")),
     path("accounts/", include("django.contrib.auth.urls")),

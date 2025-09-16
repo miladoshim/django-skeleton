@@ -6,7 +6,7 @@ from django.urls import reverse, reverse_lazy
 from django.shortcuts import get_object_or_404, render
 from django.contrib.auth.models import User
 from .models import Category, Post
-# from .forms import CommentCreateForm
+from .forms import CommentCreateForm
 
 
 class PostListView(ListView):
@@ -28,12 +28,12 @@ class PostDetailView(DetailView):
     model = Post
     template_name = 'blog/post_detail.html'
     context_object_name = 'post'
+    form_class = CommentCreateForm
     
 #     # def get_object(self, queryset):
 #     #     slug = self.kwargs.get('post_id')
 #     #     return get_object_or_404(Post.objects.published(), slug=slug)
 
-#     # form_class = CommentCreateForm
 
 #     # def get_success_url(self) -> str:
 #     #     return reverse('post_detail', kwargs={'pk': self.object.id})
@@ -102,3 +102,12 @@ class PostDetailView(DetailView):
 
 # class SearchListView(ListView):
 #     pass
+
+
+def likePost(request, id):
+    post = Post.objects.get(id = id)
+    user = request.user
+    if user in post.likes.all():
+        return 'you are like this post'
+    post.likes.add(user)
+    return ''

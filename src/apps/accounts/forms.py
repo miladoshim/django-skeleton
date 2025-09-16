@@ -1,11 +1,10 @@
 # from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from typing import Any
 from django import forms
+from django.forms import Form, ModelForm
 from django.forms.widgets import PasswordInput
 from django.contrib.auth.forms import UserCreationForm
-
-from apps.accounts.models import UserBank
-from .models import Address, User
+from .models import User
 from jalali_date.fields import JalaliDateField
 from jalali_date.widgets import AdminJalaliDateWidget
 
@@ -21,19 +20,18 @@ class UserRegisterForm(UserCreationForm):
         fields = ['username', 'email', 'password1', 'password2']
 
 
-class LoginForm(forms.ModelForm):
-
+class LoginForm(ModelForm):
     class Meta:
         model = User
         fields = ['email', 'password']
 
 
-class UserLoginForm(forms.Form):
+class UserLoginForm(Form):
     username = forms.TextInput()
     password = forms.TextInput()
 
 
-class ChangePasswordForm(forms.Form):
+class ChangePasswordForm(Form):
     old_password = forms.PasswordInput()
     password = forms.PasswordInput()
     password_confirmation = forms.PasswordInput()
@@ -55,7 +53,7 @@ class ChangePasswordForm(forms.Form):
         return password_confirmation
 
 
-class AccountSettingForm(forms.ModelForm):
+class AccountSettingForm(ModelForm):
     class Meta:
         model = User
         fields = []
@@ -67,14 +65,3 @@ class AccountSettingForm(forms.ModelForm):
 
     def save(self, commit):
         account = super(AccountSettingForm, self).save(commit=False)
-
-class AddressForm(forms.ModelForm):
-    class Meta:
-        model = Address
-        fields = ['title']
-
-
-class UserBankForm(forms.ModelForm):
-    class Meta:
-        model = UserBank
-        fields = ['title']
