@@ -4,7 +4,6 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from apps.core.managers import SoftDeleteManager
-
 # from apps.accounts.models import User
 
 
@@ -66,9 +65,12 @@ class BaseModel(models.Model):
 #     user = models.ForeignKey(User, on_delete=models.CASCADE,
 #                              null=True,blank=True, related_name='notifications')
 #     message = models.TextField()
+#     is_read = models.BooleanField(default=False)
 #     read_at = models.DateTimeField(null=True, blank=True)
-#     # notif_type
-
+    
+#     def __str__(self):
+#         return self.message
+    
 # class ActivityHistory(LogEntry):
 #     class Meta:
 #         proxy = True

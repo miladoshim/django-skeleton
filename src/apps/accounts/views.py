@@ -22,7 +22,7 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from apps.accounts.forms import ChangePasswordForm, UserRegisterForm, UserLoginForm
-from .models import UserProfile, User, Address, Province, City, UserBank
+from .models import UserProfile, User
 
 
 class AccountView(LoginRequiredMixin, TemplateView):

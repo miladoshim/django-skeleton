@@ -32,8 +32,8 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     # 'grappelli.dashboard',
     # 'grappelli',
-    'admin_interface',
-    'colorfield',
+    "admin_interface",
+    "colorfield",
     "filebrowser",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -43,15 +43,11 @@ INSTALLED_APPS = [
     "django.contrib.sitemaps",
     "django.contrib.humanize",
     "django.contrib.postgres",
-    
-    
     # Local apps
     "apps.core.apps.CoreConfig",
     "apps.accounts.apps.AccountsConfig",
     "apps.blog.apps.BlogConfig",
     "apps.api.apps.ApiConfig",
-    
-    
     # Third-party apps
     "channels",
     "rest_framework",
@@ -60,36 +56,36 @@ INSTALLED_APPS = [
     "import_export",
     "debug_toolbar",
     "drf_spectacular",
-    'drf_spectacular_sidecar',
+    "drf_spectacular_sidecar",
     "guardian",
     "csp",
     "django_extensions",
     "hitcount",
     "meta",
-    'django_filters',
-    'drf_api_logger',
-    'django_guid',
-    "taggit" ,
+    "django_filters",
+    "drf_api_logger",
+    "django_guid",
+    "taggit",
     "compressor",
-    'django_components',
-	'jalali_date',
+    "django_components",
+    "jalali_date",
     "crispy_forms",
     "crispy_tailwind",
     "treebeard",
+    'auditlog',
     "ckeditor",
     "ckeditor_uploader",
-    'extra_settings',
+    "extra_settings",
+    'pwa',
     # 'redirects',
-    
-    
-    
+    "django_unicorn",
     "utils",
     "django_cleanup.apps.CleanupConfig",
 ]
 
 MIDDLEWARE = [
     # "django.middleware.cache.UpdateCacheMiddleware",
-    'django_guid.middleware.guid_middleware',
+    "django_guid.middleware.guid_middleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -104,8 +100,8 @@ MIDDLEWARE = [
     # Third-party middlewares
     "csp.middleware.CSPMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
-    'drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware',
-
+    "drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware",
+    'auditlog.middleware.AuditlogMiddleware',
 ]
 
 ROOT_URLCONF = "skeleton.urls"
@@ -121,38 +117,36 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
             ],
-            'loaders':[(
-                'django.template.loaders.cached.Loader', [
-                    # Default Django loader
-                    'django.template.loaders.filesystem.Loader',
-                    # Including this is the same as APP_DIRS=True
-                    'django.template.loaders.app_directories.Loader',
-                    # Components loader
-                    'django_components.template_loader.Loader',
-                ],
-            )],
-            'builtins': [
-                'django_components.templatetags.component_tags',
+            "loaders": [
+                (
+                    "django.template.loaders.cached.Loader",
+                    [
+                        # Default Django loader
+                        "django.template.loaders.filesystem.Loader",
+                        # Including this is the same as APP_DIRS=True
+                        "django.template.loaders.app_directories.Loader",
+                        # Components loader
+                        "django_components.template_loader.Loader",
+                    ],
+                )
+            ],
+            "builtins": [
+                "django_components.templatetags.component_tags",
             ],
         },
     },
 ]
 
-COMPONENTS = ComponentsSettings(
-    app_dirs=[
-        # ...,
-        "components",
-    ],
-)
+# COMPONENTS = ComponentsSettings(
+#     app_dirs=[
+#         # ...,
+#         "components",
+#     ],
+# )
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",  # this is default
     "guardian.backends.ObjectPermissionBackend",
 )
-
-# CRISPY_TEMPLATE_PACK = "unfold_crispy"
-# CRISPY_TEMPLATE_PACK = "tailwind"
-# CRISPY_ALLOWED_TEMPLATE_PACKS = ["unfold_crispy", "tailwind"]
-
 
 WSGI_APPLICATION = "skeleton.wsgi.application"
 ASGI_APPLICATION = "skeleton.asgi.application"
@@ -208,11 +202,11 @@ LANGUAGE_CODE = "fa-IR"
 
 TIME_ZONE = "Asia/Tehran"
 
-if sys.platform.startswith('win32'):
+if sys.platform.startswith("win32"):
     locale.setlocale(locale.LC_ALL, "Persian_Iran.UTF-8")
 else:
     locale.setlocale(locale.LC_ALL, "fa_IR.UTF-8")
-    
+
 USE_I18N = True
 
 USE_TZ = True
@@ -227,43 +221,55 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 
 CKEDITOR_UPLOAD_PATH = "uploads/"
 # CKEDITOR_FILENAME_GENERATOR = 'utils.get_ckeditor_filename'
-CKEDITOR_RESTRICT_BY_DATE=True
+CKEDITOR_RESTRICT_BY_DATE = True
 CKEDITOR_CONFIGS = {
-    'default': {
-        'toolbar': 'full',
-        'toolbar_Custom': [
-            ['Bold', 'Italic', 'Underline'],
-            ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-',
-                'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
-            ['Link', 'Unlink'],
-            ['RemoveFormat', 'Source']
+    "default": {
+        "toolbar": "full",
+        "toolbar_Custom": [
+            ["Bold", "Italic", "Underline"],
+            [
+                "NumberedList",
+                "BulletedList",
+                "-",
+                "Outdent",
+                "Indent",
+                "-",
+                "JustifyLeft",
+                "JustifyCenter",
+                "JustifyRight",
+                "JustifyBlock",
+            ],
+            ["Link", "Unlink"],
+            ["RemoveFormat", "Source"],
         ],
-        'extraPlugins': ','.join([
-            'uploadimage',
-            'div',
-            'autolink',
-            'autoembed',
-            'embedsemantic',
-            'autogrow',
-            # 'devtools',
-            'widget',
-            'lineutils',
-            'clipboard',
-            'dialog',
-            'dialogui',
-            'elementspath'
-        ]),
+        "extraPlugins": ",".join(
+            [
+                "uploadimage",
+                "div",
+                "autolink",
+                "autoembed",
+                "embedsemantic",
+                "autogrow",
+                # 'devtools',
+                "widget",
+                "lineutils",
+                "clipboard",
+                "dialog",
+                "dialogui",
+                "elementspath",
+            ]
+        ),
         # 'height': 300,
         # 'width': 300,
     },
 }
 
-FILEBROWSER_DIRECTORY='/uploads'
+FILEBROWSER_DIRECTORY = "/uploads"
 
 STATICFILES_FINDERS = (
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'compressor.finders.CompressorFinder',
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+    "compressor.finders.CompressorFinder",
     "django_components.finders.ComponentsFileSystemFinder",
 )
 
@@ -289,9 +295,18 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         # 'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        "rest_framework.authentication.SessionAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
+    "DEFAULT_THROTTLE_RATES": {"anon": "100/day", "user": "1000/day"},
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 24,
@@ -301,9 +316,9 @@ DRF_API_LOGGER_DATABASE = True
 DRF_API_LOGGER_SIGNAL = False
 
 SPECTACULAR_SETTINGS = {
-    'SWAGGER_UI_DIST': 'SIDECAR',
-    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
-    'REDOC_DIST': 'SIDECAR',
+    "SWAGGER_UI_DIST": "SIDECAR",
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "REDOC_DIST": "SIDECAR",
     "TITLE": "skeleton API",
     "DESCRIPTION": "Your project description",
     "VERSION": "1.0.0",
@@ -330,29 +345,22 @@ CACHES = {
 }
 
 # LOGGING = {
-#     'filters': {
-#         'correlation_id': {
-#             '()': 'django_guid.log_filters.CorrelationId'
+#     "handlers": {
+#         "console": {
+#             "class": "logging.StreamHandler",
 #         }
 #     },
-#     'handlers': {
-#         'console': {
-#             'class': 'logging.StreamHandler',
-#             'formatter': 'medium',
-#             'filters': ['correlation_id'],
-#         }
-#     }
 # }
 
 JALALI_DATE_DEFAULTS = {
-    'LIST_DISPLAY_AUTO_CONVERT': True,
+    "LIST_DISPLAY_AUTO_CONVERT": True,
     "Strftime": {
         "date": "%y/%m/%d",
         "datetime": "%H:%M:%S _ %y/%m/%d",
     },
     "Static": {
         "js": [
-            'admin/js/django_jalali.min.js',
+            "admin/js/django_jalali.min.js",
             # OR
             # 'admin/jquery.ui.datepicker.jalali/scripts/jquery.ui.core.js',
             # 'admin/jquery.ui.datepicker.jalali/scripts/calendar.js',
@@ -362,8 +370,7 @@ JALALI_DATE_DEFAULTS = {
         ],
         "css": {
             "all": [
-                'admin/css/django_jalali.min.css',
-
+                "admin/css/django_jalali.min.css",
                 # "admin/jquery.ui.datepicker.jalali/themes/base/jquery-ui.min.css",
             ]
         },
@@ -420,20 +427,58 @@ AZ_IRANIAN_BANK_GATEWAYS = {
 }
 
 # CORS_ALLOWED_ORIGINS = [
-#     "https://example.com",
-#     "https://sub.example.com",
-#     "http://localhost:8080",
-#     "http://127.0.0.1:9000",
+#     "https://frontend.com",
+#     "http://localhost:3000",
 # ]
 
-CORS_ALLOW_ALL_ORIGINS: bool
-
-
-UNFOLD = {
-    "SITE_HEADER": "کوکوند",
-}
+CORS_ALLOW_ALL_ORIGINS = True
 
 # ELASTICSEARCH_DSL = {
 #     "default": {"hosts": "elasticsearch:9200"},
 # }
 
+PWA_APP_NAME = 'Skeleton'
+PWA_APP_DESCRIPTION = "Skeleton description"
+PWA_APP_THEME_COLOR = '#0A0302'
+PWA_APP_BACKGROUND_COLOR = '#ffffff'
+PWA_APP_DISPLAY = 'standalone'
+PWA_APP_SCOPE = '/'
+PWA_APP_ORIENTATION = 'any'
+PWA_APP_START_URL = '/'
+PWA_APP_STATUS_BAR_COLOR = 'default'
+PWA_APP_DEBUG_MODE=True
+# PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'my_app', 'serviceworker.js')
+PWA_APP_ICONS = [
+    {
+        'src': '/static/images/my_app_icon.png',
+        'sizes': '160x160'
+    }
+]
+PWA_APP_ICONS_APPLE = [
+    {
+        'src': '/static/images/my_apple_icon.png',
+        'sizes': '160x160'
+    }
+]
+PWA_APP_SPLASH_SCREEN = [
+    {
+        'src': '/static/images/icons/splash-640x1136.png',
+        'media': '(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)'
+    }
+]
+PWA_APP_DIR = 'ltr'
+PWA_APP_LANG = 'fa-IR'
+PWA_APP_SHORTCUTS = [
+    {
+        'name': 'Shortcut',
+        'url': '/target',
+        'description': 'Shortcut to a page in my application'
+    }
+]
+PWA_APP_SCREENSHOTS = [
+    {
+      'src': '/static/images/icons/splash-750x1334.png',
+      'sizes': '750x1334',
+      "type": "image/png"
+    }
+]

@@ -1,3 +1,5 @@
+import time
+from django.core.exceptions import PermissionDenied
 from functools import wraps
 from django.http import HttpResponse
 from django.shortcuts import redirect
@@ -41,4 +43,39 @@ def database_debug(func):
         queries = ['{}\n'.format(query['sql']) for query in query_info]
         print('queries: \n{}'.format(''.join(queries)))
         return results
+    return wrapper
+
+
+
+def timeit(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        starttime = time.time()
+        value = func(*args, **kwargs)
+        endtime = time.time()
+        print(f"func name: {func.__name__} take time: {endtime - starttime}")
+        return value
+
+    return wrapper
+
+
+def time_of_execution(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        t_s = time.time()
+        result = func(*args, **kwargs)
+        t_e = time.time()
+        print(func.__name__, t_s - t_e)
+        return result
+
+    return wrapper
+
+
+def superuser_only(func):
+    @wraps(func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_supperuser:
+            raise PermissionDenied
+        return func(request, *args, **kwargs)
+
     return wrapper

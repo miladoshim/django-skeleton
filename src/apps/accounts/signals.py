@@ -8,7 +8,7 @@ from .models import User, UserProfile, UserMeta
 @receiver(post_save, sender=User)
 def create_user_signal(sender, instance, created, *args, **kwargs):
     if created:
-        # os.mkdir(f"statics/users/{instance.username}")
+        # os.mkdir(f"media/users/{instance.username}")
         UserProfile.objects.create(user=instance)
         UserMeta.objects.create(user=instance)
 

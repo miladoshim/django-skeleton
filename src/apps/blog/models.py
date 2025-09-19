@@ -2,7 +2,6 @@ from io import BytesIO
 from PIL import Image
 import datetime
 from django.db import models
-from apps.core.models import BaseModel
 from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.fields import GenericRelation
 from django.urls import reverse
@@ -11,6 +10,7 @@ from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.core.files import File
+from django.db.models import Count, Avg
 from hitcount.models import HitCountMixin
 from hitcount.settings import MODEL_HITCOUNT
 from meta.models import ModelMeta
@@ -18,10 +18,12 @@ from taggit.managers import TaggableManager
 from ckeditor_uploader.fields import RichTextUploadingField
 from treebeard.mp_tree import MP_Node
 from apps.accounts.models import User
+from apps.core.models import BaseModel
 from apps.core.managers import PublishedManager
 from apps.core.models import PublishStatusChoice, BaseModel
 from jalali_date import date2jalali, datetime2jalali
 from filebrowser.fields import FileBrowseField
+from auditlog.registry import auditlog
 
 
 class Tag(BaseModel, ModelMeta, HitCountMixin):
@@ -80,7 +82,7 @@ class Category(MP_Node):
 
 
 class Post(BaseModel):
-    # objects = models.Manager()
+    objects = models.Manager()
     published = PublishedManager()
     author = models.ForeignKey(
         User,
@@ -135,7 +137,7 @@ class Post(BaseModel):
         return self.title
 
     def get_absolute_url(self):
-        return reverse("post_detail", args=[str(self.slug)])
+        return reverse("apps.blog:post_detail", args=[str(self.slug)])
 
     def posts_was_published_recently(self):
         return self.created_at >= timezone.now() - datetime.timedelta(days=1)
@@ -147,8 +149,8 @@ class Post(BaseModel):
 #     def category_published(self):
 #         return self.category.filter(status=True)
 
-#     def thumbnail_tag(self):
-#         return format_html("<img width=100 src='{}' />".format(self.thumbnail.url))
+    def thumbnail_tag(self):
+        return format_html("<img width=100 src='{}' />".format(self.thumbnail.url))
 
 #     def make_thumbnail(self, image, size=(300, 200)):
 #         img = Image.open(image)
@@ -197,3 +199,8 @@ class Comment(BaseModel):
 
 #     class Meta:
 #         proxy = True
+
+
+
+
+auditlog.register(Post, serialize_data=True)

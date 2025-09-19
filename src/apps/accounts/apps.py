@@ -7,5 +7,4 @@ class AccountsConfig(AppConfig):
     # label = 'حساب کاربری'
     
     def ready(self):
-        pass
-        # from apps.accounts import signals
+        from apps.accounts import signals

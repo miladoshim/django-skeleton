@@ -1,11 +1,12 @@
-{% load static %} {% load meta %}
+{% load static %} {% load meta %} {% load unicorn %} {% load pwa %}
+
 
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
 <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
 <!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
-<html lang="ar" dir="rtl">
+<html lang="fa" dir="rtl">
   <head {% meta_namespaces %}>
     {% include "meta/meta.html" %}
     <meta charset="utf-8" />
@@ -26,6 +27,8 @@
 
     <title>Skeleton - {% block title %} {% endblock title %}</title>
      {% block styles %} {% endblock styles %} 
+    {% progressive_web_app_meta %}
+    {% unicorn_scripts %}
     {% component_css_dependencies %}
   </head>
   <body>
@@ -45,102 +48,27 @@
             <a class="navbar-brand" href="index.html"><img src="{% static 'images/white-logo.svg' %}" alt="logo" /></a><div class="collapse navbar-collapse for-mobile-menu" id="navbarSupportedContent">
               <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                  <a href="#" class="nav-link dropdown-toggle">صفحه اصلی</a><ul class="dropdown-menu">
-                    <li class="nav-item">
-                      <a href="index.html" class="nav-link">آژانس خلاق</a>
-                    </li>
-                    <li class="nav-item">
-                      <a href="index-2.html" class="nav-link">آژانس بازرگانی</a>
-                    </li>
-                    <li class="nav-item">
-                      <a href="index-3.html" class="nav-link">آژانس دیجیتال</a>
-                    </li>
-                  </ul>
+                  <a href="{% url 'post-list' %}" class="nav-link">صفحه اصلی</a>
                 </li>
                 <li class="nav-item">
-                  <a href="#" class="nav-link dropdown-toggle">صفحات</a><ul class="dropdown-menu">
-                    <li class="nav-item">
-                      <a href="about-us.html" class="nav-link">درباره ما</a>
-                    </li>
-                    <li class="nav-item">
-                      <a href="team.html" class="nav-link">تیم</a>
-                    </li>
-                    <li class="nav-item">
-                      <a href="faq.html" class="nav-link">سوالات متداول</a>
-                    </li>
-                    <li class="nav-item">
-                      <a href="testimonials.html" class="nav-link">گواهینامه ها</a>
-                    </li>
-                    <li class="nav-item">
-                      <a href="#" class="nav-link dropdown-toggle">احراز هویت</a><ul class="dropdown-menu">
-                        <li class="nav-item">
-                          <a href="sign-in.html" class="nav-link">ورود</a>
-                        </li>
-                        <li class="nav-item">
-                          <a href="sign-up.html" class="nav-link">ثبت نام</a>
-                        </li>
-                      </ul>
-                    </li>
-                    <li class="nav-item">
-                      <a href="privacy-policy.html" class="nav-link">سیاست حفظ حریم خصوصی</a>
-                    </li>
-                    <li class="nav-item">
-                      <a href="terms-conditions.html" class="nav-link">شرایط و ضوابط</a>
-                    </li>
-                    <li class="nav-item">
-                      <a href="404.html" class="nav-link">خطا</a>
-                    </li>
-                    <li class="nav-item">
-                      <a href="contact-us.html" class="nav-link">با ما تماس بگیرید</a>
-                    </li>
-                  </ul>
+                  <a href="/blog" class="nav-link">وبلاگ</a>
                 </li>
+                
                 <li class="nav-item">
-                  <a href="#" class="nav-link dropdown-toggle">خدمات</a><ul class="dropdown-menu">
-                    <li class="nav-item">
-                      <a href="services.html" class="nav-link">خدمات</a>
-                    </li>
-                    <li class="nav-item">
-                      <a href="service-details.html" class="nav-link">جزئیات خدمات</a>
-                    </li>
-                  </ul>
+                  <a href="/auth/login" class="nav-link">ورود</a>
                 </li>
+
                 <li class="nav-item">
-                  <a href="#" class="nav-link dropdown-toggle">مطالعه موردی</a><ul class="dropdown-menu">
+                  <a href="#" class="nav-link dropdown-toggle active">حساب کاربری</a><ul class="dropdown-menu">
                     <li class="nav-item">
-                      <a href="case-study.html" class="nav-link">مطالعه موردی</a>
+                      <a href="blog.html" class="nav-link active">تنظیمات</a>
                     </li>
                     <li class="nav-item">
-                      <a href="cases-study-details.html" class="nav-link">جزئیات مطالعه موردی</a>
-                    </li>
-                  </ul>
-                </li>
-                <li class="nav-item">
-                  <a href="#" class="nav-link dropdown-toggle">خرید کنید</a><ul class="dropdown-menu">
-                    <li class="nav-item">
-                      <a href="products.html" class="nav-link">محصولات</a>
-                    </li>
-                    <li class="nav-item">
-                      <a href="cart.html" class="nav-link">سبد خرید</a>
-                    </li>
-                    <li class="nav-item">
-                      <a href="checkout.html" class="nav-link">وارسی</a>
-                    </li>
-                    <li class="nav-item">
-                      <a href="product-details.html" class="nav-link">جزئیات محصول</a>
+                      <a href="single-blog.html" class="nav-link">نظرات من</a>
                     </li>
                   </ul>
-                </li>
-                <li class="nav-item">
-                  <a href="#" class="nav-link dropdown-toggle active">وبلاگ</a><ul class="dropdown-menu">
-                    <li class="nav-item">
-                      <a href="blog.html" class="nav-link active">وبلاگ</a>
-                    </li>
-                    <li class="nav-item">
-                      <a href="single-blog.html" class="nav-link">صفحه وبلاگ واحد</a>
-                    </li>
-                  </ul>
-                </li>
+                </li> 
+                
               </ul>
               <div class="nav-right-options d-flex align-items-center">
                 <div class="language position-relative z-1">
@@ -179,6 +107,7 @@
         </div>
       </div>
     </div>
+    
     <div class="page-banner-area bg-black bg-img" data-background="{% static 'images/banner-bg-shape.png' %}">
       <div class="container mw-1680">
         <div class="page-banner-content">
@@ -194,6 +123,7 @@
         </div>
       </div>
     </div>
+    
     <main class="main">{% block content %} {% endblock content %}</main>
 
     <div class="footer-area pt-100 pb-75 bg-color-030303">

@@ -7,13 +7,16 @@ from .models import User
 # admin.site.unregister(BaseAuthUser)
 admin.site.unregister(BaseAuthGroup)
 
-
+@admin.action(description="Mark selected users as verified")
+def mark_verified(modeladmin, request, queryset):
+    queryset.update(is_verified=True)
+    
 @admin.register(User)
 class UserAdmin(ImportExportModelAdmin):
     # add_form = CustomUserCreationForm
     # form = CustomUserChangeForm
     model = User
-    list_display = ['username', 'email', 'is_staff', 'is_superuser']
+    list_display = ['username', 'email', 'is_staff', 'is_superuser', 'date_joined']
     search_fields = ['username', 'email',]
     list_filter = ['is_staff', 'is_superuser']
     # fieldsets = BaseUserAdmin.fieldsets + (

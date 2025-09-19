@@ -5,17 +5,18 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse, reverse_lazy
 from django.shortcuts import get_object_or_404, render
 from django.contrib.auth.models import User
+from auditlog.mixins import LogAccessMixin
 from .models import Category, Post
 from .forms import CommentCreateForm
 
 
 class PostListView(ListView):
     model = Post
-    # queryset = Post.objects.all().select_related('category')
-    # queryset = Post.published.all()
+    # queryset = Post.objects.select_related('category').all()
+    queryset = Post.published.all()
     context_object_name = 'posts'
     template_name = 'blog/post_list.html'
-    paginate_by = 12
+    paginate_by = 24
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -24,7 +25,7 @@ class PostListView(ListView):
         return context
 
 
-class PostDetailView(DetailView):
+class PostDetailView(LogAccessMixin, DetailView):
     model = Post
     template_name = 'blog/post_detail.html'
     context_object_name = 'post'

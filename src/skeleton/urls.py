@@ -16,6 +16,9 @@ urlpatterns = [
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("", include("django_components.urls")),
     path("ckeditor/", include("ckeditor_uploader.urls")),
+    path("unicorn/", include("django_unicorn.urls")),
+    path('', include('pwa.urls')), 
+
 ] + debug_toolbar_urls()
 
 

@@ -1,21 +1,9 @@
-import time
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.core.exceptions import PermissionDenied
-from functools import wraps
+from django.utils.text import slugify
 
 
 def get_ckeditor_filename(filename, request):
     return filename.upper()
-
-
-def superuser_only(func):
-    @wraps(func)
-    def wrapper(request, *args, **kwargs):
-        if not request.user.is_supperuser:
-            raise PermissionDenied
-        return func(request, *args, **kwargs)
-
-    return wrapper
 
 
 def get_ip_address(request):
@@ -27,29 +15,20 @@ def get_ip_address(request):
     return ip
 
 
-def timeit(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        starttime = time.time()
-        value = func(*args, **kwargs)
-        endtime = time.time()
-        print(f"func name: {func.__name__} take time: {endtime - starttime}")
-        return value
+def create_unique_slug(instance, new_slug=None):
+    if new_slug is not None:
+        slug = new_slug
+    else:
+        slug = slugify(instance.title, allow_unicode=True)
 
-    return wrapper
+    instanceClass = instance.__class__
+    qs = instanceClass.objects.filter(slug=slug)
 
+    if qs.exists():
+        new_slug = f"{slug}-{qs.first().id}"
+        return create_unique_slug(instance, new_slug)
 
-def time_of_execution(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        t_s = time.time()
-        result = func(*args, **kwargs)
-        t_e = time.time()
-        print(func.__name__, t_s - t_e)
-        return result
-
-    return wrapper
-
+    return slug
 
 class TokenGenerator(PasswordResetTokenGenerator):
     pass

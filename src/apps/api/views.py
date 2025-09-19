@@ -1,19 +1,18 @@
 import datetime
-
-# from django.contrib.auth import authenticate, login, logout
-# from django.db.models import Q
-# from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+from django.contrib.auth import authenticate, login, logout
+from django.db.models import Q
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-
-# from rest_framework.exceptions import NotAcceptable, AuthenticationFailed
+from rest_framework.throttling import UserRateThrottle
+from rest_framework.exceptions import NotAcceptable, AuthenticationFailed
 from rest_framework.views import APIView
-
-# from rest_framework.response import Response
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from apps.api.renderers import UserRenderer
 
-# from apps.api.renderers import UserRenderer
+# from apps.blog.documents import PostDocument
 from apps.blog.models import Category, Post, Tag
 from apps.blog.serializers import (
     CategoryTreeSerializer,
@@ -28,6 +27,7 @@ class TagViewSet(ReadOnlyModelViewSet):
     """
     Return a list of all tags
     """
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -37,53 +37,29 @@ class PostViewSet(ReadOnlyModelViewSet):
     """
     Return a list of all blog posts
     """
+
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
-# class ProductSearch(APIView):
-#     serializer_class = ProductSerializer
-#     document_class = ProductDocument
+class PostSearch(APIView):
+    serializer_class = PostSerializer
+    # document_class = PostDocument
 
-#     def generate_q_expression(self, query):
-#         return Q("match", name={"query": query, "fuzziness": "auto"})
+    def generate_q_expression(self, query):
+        return Q("match", name={"query": query, "fuzziness": "auto"})
 
-#     def get(self, request, query):
-#         q = self.generate_q_expression(query)
-#         search = self.document_class.search().query(q)
-#         return Response(self.serializer_class(search.to_queryset(), many=True).data)
-
-# class CategoryListView(APIView):
-# #     def get_queryset(self):
-# #         return Category.objects.all()
-
-# #     def get(self, request):
-
-# #         categories = Category.objects.all()
-# #         serializer = CategorySerializer(categories, many=True)
-# #         return Response(serializer.data)
+    def get(self, request, query):
+        q = self.generate_q_expression(query)
+        search = self.document_class.search().query(q)
+        return Response(self.serializer_class(search.to_queryset(), many=True).data)
 
 
-# # class CategoryViewSet(ModelViewSet):
-
-# #     def get_queryset(self):
-# #         if self.action == 'list':
-# #             return Category.objects.filter(depth=1)
-# #         else:
-# #             return Category.objects.all()
-
-# #     def get_serializer_class(self):
-
-# #         match self.action:
-# #             case 'list':
-# #                 return CategoryTreeSerializer
-# #             case 'create':
-# #                 return CreateCategoryNodeSerializer
-# #             case 'retrieve':
-# #                 return
-# #             case _:
-# #                 raise NotAcceptable()
+class CategoryViewSet(ReadOnlyModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 
 # class RegisterView(APIView):
@@ -127,7 +103,7 @@ class PostViewSet(ReadOnlyModelViewSet):
 
 
 # class UserLoginView(APIView):
-#     renderer_classes = [UserRenderer]
+# renderer_classes = [UserRenderer]
 
 # #     def post(self, request):
 # #         serializer = UserLoginSerializer(data=request.data)
@@ -147,7 +123,7 @@ class PostViewSet(ReadOnlyModelViewSet):
 
 
 # class LoginView(APIView):
-# #     renderer_classes = [UserRenderer]
+#     renderer_classes = [UserRenderer]
 
 # #     def post(self, request):
 # #         email = request.data['email']
@@ -179,7 +155,7 @@ class PostViewSet(ReadOnlyModelViewSet):
 
 
 # # class UserProfileView(APIView):
-# #     renderer_classes = [UserRenderer]
+#     renderer_classes = [UserRenderer]
 # #     permission_classes = [IsAuthenticated]
 
 # #     def get(self,  request, format=None):
@@ -224,7 +200,7 @@ class PostViewSet(ReadOnlyModelViewSet):
 
 
 # # class UserChangePasswordAPIView(APIView):
-# #     renderer_classes = [UserRenderer]
+#     renderer_classes = [UserRenderer]
 # #     permission_classes = [IsAuthenticated]
 
 # #     def post(self, request, format=None):
@@ -241,14 +217,18 @@ class PostViewSet(ReadOnlyModelViewSet):
 # #         code = request.data.get('code')
 
 
-# # def search(request):
-# #     if request.method == 'POST':
-# #         query = request.POST.get('q')
-# #         if query:
-# #             query_for_search = SearchQuery(query)
-# #             search_vector = SearchVector(
-# #                 'title', weight='A') + SearchVector('body', weight='B')
-# #             search_rank = SearchRank(search_vector, query_for_search)
-# #             posts = Post.objects.published.annotate(search=search_vector, rank=search_rank) \
-# #                 .filter(search=query_for_search).order_by('-rank')
-# #             return Response({'posts': posts})
+def search(request):
+    if request.method == "POST":
+        query = request.POST.get("q")
+        if query:
+            query_for_search = SearchQuery(query)
+            search_vector = SearchVector("title", weight="A") + SearchVector(
+                "body", weight="B"
+            )
+            search_rank = SearchRank(search_vector, query_for_search)
+            posts = (
+                Post.objects.published.annotate(search=search_vector, rank=search_rank)
+                .filter(search=query_for_search)
+                .order_by("-rank")
+            )
+            return Response({"posts": posts})

@@ -1,12 +1,12 @@
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
-from .models import Comment, Post
-from django.utils.text import slugify
+from utils.helpers import create_unique_slug
+from .models import Post
 
 
 # @receiver(pre_save, sender=Post)
 # def create_post(sender, instance, created, *args, **kwargs):
-#     if not instance.slug:
+#     if created or not instance.slug:
 #         instance.slug = create_unique_slug(instance)
 #         instance.save()
 
@@ -16,22 +16,6 @@ from django.utils.text import slugify
 #         Post.objects.filter(id=instance.post.id).update(likes=F("likes") + 1)
 #     else:
 #         Post.objects.filter(id=instance.post.id).update(likes=F("dislikes") + 1)
-
-
-def create_unique_slug(instance, new_slug=None):
-    if new_slug is not None:
-        slug = new_slug
-    else:
-        slug = slugify(instance.title, allow_unicode=True)
-
-    instanceClass = instance.__class__
-    qs = instanceClass.objects.filter(slug=slug)
-
-    if qs.exists():
-        new_slug = f"{slug}-{qs.first().id}"
-        return create_unique_slug(instance, new_slug)
-
-    return slug
 
 # @receiver(post_save, sender=Comment)
 # def create_post_comment_reply_notification_sinal(sender, instance, created, *args, **kwargs):

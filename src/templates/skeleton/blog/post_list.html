@@ -12,14 +12,14 @@
         {% for post in posts %}
           <div class="col-xl-4 col-md-6">
             <div class="blog-single-item style-two">
-              <a href="" class="d-block blog-img"><img src="{% static 'images/blog-1.jpg' %}" alt="blog" /></a>
+              <a href="{{ post.get_absolute_url }}" class="d-block blog-img"><img src="{{ post.thumbnail.url }}" alt="blog" /></a>
               <ul class="ps-0 list-unstyled date">
                 <li>
                   <span>{{ post.create_at }}</span>
                 </li>
-                <li>3 Minutes Read</li>
+                <li>category</li>
               </ul>
-              <h3><a href="">{{ post.title }}</a></h3>
+              <h3><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h3>
             </div>
           </div>
         {% endfor %}
