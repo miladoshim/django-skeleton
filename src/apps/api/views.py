@@ -13,6 +13,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from apps.api.renderers import UserRenderer
 
 # from apps.blog.documents import PostDocument
+from apps.api.serializers import UserRegisterSerializer
 from apps.blog.models import Category, Post, Tag
 from apps.blog.serializers import (
     CategoryTreeSerializer,
@@ -62,6 +63,22 @@ class CategoryViewSet(ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
+class UserRegisterView(APIView):
+    def post(self, request):
+        serializer = UserRegisterSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            user = serializer.save()
+            token = get_tokens_for_user(user)
+            context = {
+                'token': token,
+                'user': user,
+                'message': 'registration is successful'
+            }
+            return Response(context, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 # class RegisterView(APIView):
 #     def post(self, request):
 #         mobile = request.data.get('mobile')
@@ -85,22 +102,6 @@ class CategoryViewSet(ReadOnlyModelViewSet):
 #         'refresh': str(refresh),
 #         'access': str(refresh.access_token)
 #     }
-
-
-# class UserRegisterView(APIView):
-#     def post(self, request):
-#         serializer = UserRegisterSerializer(data=request.data)
-#         if serializer.is_valid(raise_exception=True):
-#             user = serializer.save()
-#             token = get_tokens_for_user(user)
-#             context = {
-#                 'token': token,
-#                 'user': user,
-#                 'message': 'registration is successful'
-#             }
-#             return Response(context, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 # class UserLoginView(APIView):
 # renderer_classes = [UserRenderer]

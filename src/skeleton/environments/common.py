@@ -19,9 +19,9 @@ sys.path.insert(0, join(PROJECT_ROOT, "apps"))
 
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
-SECRET_KEY = "django-insecure-^q52bhy0%%xi(h9rf4ow=7h*^$8y49+g+ig#8_hx7fnba-i^h*"
+SECRET_KEY = config("SECRET_KEY")
 
-DEBUG = True
+DEBUG = config("APP_DEBUG", cast=bool)
 
 ALLOWED_HOSTS = ["*"]
 
@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "colorfield",
     "filebrowser",
     "django.contrib.admin",
+    "django.contrib.sites",
     "django.contrib.auth",
     "django.contrib.sessions",
     "django.contrib.messages",
@@ -71,12 +72,17 @@ INSTALLED_APPS = [
     "jalali_date",
     "crispy_forms",
     "crispy_tailwind",
+    "crispy_bootstrap5",
     "treebeard",
-    'auditlog',
+    "auditlog",
     "ckeditor",
     "ckeditor_uploader",
     "extra_settings",
-    'pwa',
+    "pwa",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
     # 'redirects',
     "django_unicorn",
     "utils",
@@ -101,7 +107,8 @@ MIDDLEWARE = [
     "csp.middleware.CSPMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware",
-    'auditlog.middleware.AuditlogMiddleware',
+    "auditlog.middleware.AuditlogMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "skeleton.urls"
@@ -143,6 +150,7 @@ TEMPLATES = [
 #         "components",
 #     ],
 # )
+
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",  # this is default
     "guardian.backends.ObjectPermissionBackend",
@@ -181,6 +189,36 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "EMAIL_AUTHENTICATION": True,
+        "APPS": [
+            {
+                "client_id": "123",
+                "secret": "456",
+                "key": "",
+                "settings": {
+                    "scope": [
+                        "profile",
+                        "email",
+                    ],
+                    "auth_params": {
+                        "access_type": "online",
+                    },
+                },
+            },
+        ],
+        # The following provider-specific settings will be used for all apps:
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+    }
+}
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -188,12 +226,12 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    # {
+    #     "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    # },
+    # {
+    #     "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    # },
 ]
 
 # Internationalization
@@ -399,6 +437,8 @@ SILENCED_SYSTEM_CHECKS = ["security.W019"]
 # SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 # SESSION_CACHE_ALIAS = "default"
 
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 AZ_IRANIAN_BANK_GATEWAYS = {
     "GATEWAYS": {
@@ -437,48 +477,38 @@ CORS_ALLOW_ALL_ORIGINS = True
 #     "default": {"hosts": "elasticsearch:9200"},
 # }
 
-PWA_APP_NAME = 'Skeleton'
+PWA_APP_NAME = "Skeleton"
 PWA_APP_DESCRIPTION = "Skeleton description"
-PWA_APP_THEME_COLOR = '#0A0302'
-PWA_APP_BACKGROUND_COLOR = '#ffffff'
-PWA_APP_DISPLAY = 'standalone'
-PWA_APP_SCOPE = '/'
-PWA_APP_ORIENTATION = 'any'
-PWA_APP_START_URL = '/'
-PWA_APP_STATUS_BAR_COLOR = 'default'
-PWA_APP_DEBUG_MODE=True
+PWA_APP_THEME_COLOR = "#0A0302"
+PWA_APP_BACKGROUND_COLOR = "#ffffff"
+PWA_APP_DISPLAY = "standalone"
+PWA_APP_SCOPE = "/"
+PWA_APP_ORIENTATION = "any"
+PWA_APP_START_URL = "/"
+PWA_APP_STATUS_BAR_COLOR = "default"
+PWA_APP_DEBUG_MODE = True
 # PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'my_app', 'serviceworker.js')
-PWA_APP_ICONS = [
-    {
-        'src': '/static/images/my_app_icon.png',
-        'sizes': '160x160'
-    }
-]
-PWA_APP_ICONS_APPLE = [
-    {
-        'src': '/static/images/my_apple_icon.png',
-        'sizes': '160x160'
-    }
-]
+PWA_APP_ICONS = [{"src": "/static/images/my_app_icon.png", "sizes": "160x160"}]
+PWA_APP_ICONS_APPLE = [{"src": "/static/images/my_apple_icon.png", "sizes": "160x160"}]
 PWA_APP_SPLASH_SCREEN = [
     {
-        'src': '/static/images/icons/splash-640x1136.png',
-        'media': '(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)'
+        "src": "/static/images/icons/splash-640x1136.png",
+        "media": "(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)",
     }
 ]
-PWA_APP_DIR = 'ltr'
-PWA_APP_LANG = 'fa-IR'
+PWA_APP_DIR = "ltr"
+PWA_APP_LANG = "fa-IR"
 PWA_APP_SHORTCUTS = [
     {
-        'name': 'Shortcut',
-        'url': '/target',
-        'description': 'Shortcut to a page in my application'
+        "name": "Shortcut",
+        "url": "/target",
+        "description": "Shortcut to a page in my application",
     }
 ]
 PWA_APP_SCREENSHOTS = [
     {
-      'src': '/static/images/icons/splash-750x1334.png',
-      'sizes': '750x1334',
-      "type": "image/png"
+        "src": "/static/images/icons/splash-750x1334.png",
+        "sizes": "750x1334",
+        "type": "image/png",
     }
 ]

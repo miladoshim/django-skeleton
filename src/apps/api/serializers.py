@@ -12,6 +12,7 @@ class UserRegisterSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = [
+            'username'
             "email",
             "first_name",
             "last_name",
@@ -21,9 +22,12 @@ class UserRegisterSerializer(ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
 
     def validate(self, attrs):
+        username = attrs.get('username', '')
+        if not username.isalnum():
+            raise ValidationError('The username should be contain alpha chars')
         if attrs["password"] != attrs["password_confirmation"]:
             raise ValidationError("password and password confirmation does not match!")
-        # return super.validate(attrs)
+        
         return attrs
 
     def create(self, validated_data):

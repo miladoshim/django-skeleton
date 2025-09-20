@@ -1,8 +1,4 @@
-import csv
-import datetime
-from typing import Any
 from django.forms import ValidationError
-from django.forms.models import BaseModelForm
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.contrib.sites.shortcuts import get_current_site
@@ -12,34 +8,38 @@ from django.contrib.auth.views import (
     PasswordChangeView as BasePasswordChangeView,
     LoginView as BaseLoginView,
 )
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout, forms
-from django.views import generic
-from django.views.generic import TemplateView, UpdateView, ListView, CreateView
-from django.urls import reverse_lazy, reverse
+from django.views.generic import TemplateView, CreateView
+from django.views.generic.edit import UpdateView
+from django.urls import reverse_lazy
 from django.contrib import messages
 from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_encode
 from apps.accounts.forms import ChangePasswordForm, UserRegisterForm, UserLoginForm
 from .models import UserProfile, User
+from utils.helpers import token_generator
 
 
 class AccountView(LoginRequiredMixin, TemplateView):
     template_name = "accounts/dashboard.html"
 
 
-class AccountSettingView(LoginRequiredMixin, TemplateView):
+class AccountSettingView(LoginRequiredMixin, UpdateView):
     template_name = "accounts/settings.html"
-    # model = User
-    # success_url = reverse_lazy('accounts')
-    # fields = []
+    model = User
+    success_url = reverse_lazy("accounts")
+    fields = ["username"]
 
-    # def get_object(self, queryset):
-    #     return User.objects.get(pk=self.request.user.pk)
+    def get_object(self, queryset):
+        return User.objects.get(pk=self.request.user.pk)
 
 
-class RegisterView(UserCreationForm):
+class UserRegisterView(CreateView):
+    form_class = UserRegisterForm
+    template_name = "registration/register.html"
+    success_url = reverse_lazy("accounts:login_view")
+
     class Meta:
         model = User
         fields = ["username", "email", "password1", "password2"]
@@ -52,12 +52,6 @@ class RegisterView(UserCreationForm):
             return email
         raise ValidationError(f"Email {email} is exists")
 
-
-class UserRegisterView(CreateView):
-    form_class = UserRegisterForm
-    template_name = "registration/register.html"
-    success_url = reverse_lazy("login")
-
     def form_valid(self, form):
         user = form.save(commit=False)
         user.save()
@@ -66,9 +60,9 @@ class UserRegisterView(CreateView):
             "accounts/account_verification_mail.html",
             {
                 "user": user,
-                "domail": current_site.domain,
+                "domain": current_site.domain,
                 "uid": urlsafe_base64_encode(force_bytes(user.pk)),
-                "token": account_activation_token.make_token(user),
+                "token": token_generator.make_token(user),
             },
         )
 
@@ -79,7 +73,8 @@ class UserRegisterView(CreateView):
 
 
 class UserLoginView(BaseLoginView):
-    pass
+    template_name = "authentication/login.html"
+    success_url = reverse_lazy("blog:post_list")
 
 
 def login(request):
@@ -112,7 +107,7 @@ def activate_account_mail(request, uidb64, token):
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
 
-    if user is not None and account_activation_token.check_token(user, token):
+    if user is not None and token_generator.check_token(user, token):
         user.is_active = True
         user.save()
         login(request, user)

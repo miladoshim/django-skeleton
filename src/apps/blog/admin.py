@@ -32,6 +32,8 @@ class PostAdmin(ImportExportModelAdmin):
         ("وضعیت", {"fields": ("published_status",)}),
         (None, {"fields": ("tags",)}),
     )
+    empty_value_display = "---"
+    
     # resource_class = PostResource
     # filter_horizontal = ['tags']
 
@@ -78,3 +80,5 @@ class PostAdmin(ImportExportModelAdmin):
 class CategoryAdmin(TreeAdmin):
     form = movenodeform_factory(Category)
     prepopulated_fields = {"slug": ["name"]}
+    empty_value_display = "---"
+    

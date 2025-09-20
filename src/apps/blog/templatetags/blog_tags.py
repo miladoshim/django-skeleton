@@ -1,10 +1,24 @@
-from django import template
 import datetime
-# from ..models import Category, Post
+from django import template
+from apps.blog.models import Post
 
 register = template.Library()
 
-# @register.simple_tag
+
+@register.simple_tag
+def total_posts():
+    return Post.publish.count()
+
+
+
+@register.filter(name='isNew')
+def is_new_post(value):
+    created_date = value.strftime("%d %m %y")
+    now_date = datetime.now().strftime(created_date, "%d %m %y")
+    created_date_prime = datetime.strptime(created_date, "%d %m %y")
+    now_date_prime = datetime.strptime(now_date, "%d %m %y")
+    return (now_date_prime - created_date_prime).days < 7
+
 # def number_of_posts(for_today=False):
 #     if for_today:
 #         today = datetime.date.today()

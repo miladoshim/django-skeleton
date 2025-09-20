@@ -137,7 +137,7 @@ class Post(BaseModel):
         return self.title
 
     def get_absolute_url(self):
-        return reverse("apps.blog:post_detail", args=[str(self.slug)])
+        return reverse("blog:post_detail", args=[str(self.slug)])
 
     def posts_was_published_recently(self):
         return self.created_at >= timezone.now() - datetime.timedelta(days=1)
@@ -169,12 +169,13 @@ class Post(BaseModel):
 
 class Comment(BaseModel):
     user = models.ForeignKey(
-        User, related_name="users", on_delete=models.CASCADE, verbose_name=_("کاربر")
+        User, related_name="comments", on_delete=models.CASCADE, verbose_name=_("کاربر")
     )
     post = models.ForeignKey(Post, related_name="comments", on_delete=models.CASCADE)
     comment = models.TextField(verbose_name=_("نظر"))
     is_approved = models.BooleanField(default=False)
     approved_at = models.DateTimeField(null=True, blank=True)
+    # parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
 
     class Meta:
         db_table = "comments"

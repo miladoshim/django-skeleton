@@ -1,7 +1,8 @@
 from django.urls import path, include
 from rest_framework import routers
 from .views import PostListView, PostDetailView
-app_name='apps.blog'
+
+app_name='blog'
 
 router = routers.DefaultRouter()
 # router.register(r'tags', views.UserViewSet)

@@ -1,4 +1,5 @@
-{% load static %} {% load meta %} {% load unicorn %} {% load pwa %}
+{% load static %} {% load meta %} {% load unicorn %} {% load pwa %} 
+
 
 
 <!DOCTYPE html>
@@ -48,26 +49,35 @@
             <a class="navbar-brand" href="index.html"><img src="{% static 'images/white-logo.svg' %}" alt="logo" /></a><div class="collapse navbar-collapse for-mobile-menu" id="navbarSupportedContent">
               <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                  <a href="{% url 'post-list' %}" class="nav-link">صفحه اصلی</a>
+                  <a href="/blog/" class="nav-link">صفحه اصلی</a>
                 </li>
                 <li class="nav-item">
-                  <a href="/blog" class="nav-link">وبلاگ</a>
+                  <a href="/blog/" class="nav-link">وبلاگ</a>
                 </li>
-                
-                <li class="nav-item">
-                  <a href="/auth/login" class="nav-link">ورود</a>
-                </li>
+                {% if user.is_authenticated %}
+                  <li class="nav-item">
+                    <a href="#" class="nav-link dropdown-toggle active">حساب کاربری</a><ul class="dropdown-menu">
+                      <li class="nav-item">
+                        <a href="blog.html" class="nav-link active">تنظیمات</a>
+                      </li>
+                      <li class="nav-item">
+                        <a href="single-blog.html" class="nav-link">نظرات من</a>
+                      </li>
+                    </ul>
+                  </li> 
+                  <li class="nav-item">
+                    <a href="{% url 'accounts:login_view' %}" class="nav-link">خروج</a>
 
-                <li class="nav-item">
-                  <a href="#" class="nav-link dropdown-toggle active">حساب کاربری</a><ul class="dropdown-menu">
+                  </li>
+
+                {% else %}
                     <li class="nav-item">
-                      <a href="blog.html" class="nav-link active">تنظیمات</a>
+                      <a href="{% url 'accounts:login_view' %}" class="nav-link">ورود</a>
                     </li>
-                    <li class="nav-item">
-                      <a href="single-blog.html" class="nav-link">نظرات من</a>
-                    </li>
-                  </ul>
-                </li> 
+                {% endif %}
+               
+                {{ user }}
+                
                 
               </ul>
               <div class="nav-right-options d-flex align-items-center">
@@ -111,7 +121,7 @@
     <div class="page-banner-area bg-black bg-img" data-background="{% static 'images/banner-bg-shape.png' %}">
       <div class="container mw-1680">
         <div class="page-banner-content">
-          <h2>وبلاگ</h2>
+          <h2>{% block page_title %}{% endblock page_title %}</h2>
           <ul class="ps-0 mb-0 list-unstyled justify-content-center page-breadcrumb d-flex flex-wrap gap-4">
             <li>
               <a href="index.html">صفحه اصلی</a>

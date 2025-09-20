@@ -16,6 +16,8 @@ from .views import (
     PostViewSet,
 )
 
+app_name='api'
+
 router = routers.DefaultRouter()
 router.register(r"tags", TagViewSet, basename="tag")
 router.register(r"posts", PostViewSet, basename="post")

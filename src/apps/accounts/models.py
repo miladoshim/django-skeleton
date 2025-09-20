@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.utils import timezone
@@ -9,6 +9,10 @@ from django.db.models import UniqueConstraint
 
 
 class User(AbstractUser):
+    """
+    Custom User model that have extra fields
+    """
+
     pass
     # mobile = models.CharField(null=True, blank=True,
     #                           unique=True, max_length=11)
@@ -23,21 +27,19 @@ class User(AbstractUser):
 
 
 class UserProfile(BaseModel):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     avatar = models.ImageField(
         upload_to="avatars/", blank=True, null=True, default="default_avatar.jpg"
     )
     gender = models.CharField(
         max_length=8, choices=GenderChoices.choices, default=GenderChoices.unknown
     )
+    # bio = models.CharField(max_length=255, null=True, blank=True)
+    # birthday = models.DateField(verbose_name=_("تاریخ تولد"), null=True, blank=True)
 
+    def __str__(self) -> str:
+        return self.user.username + " profile"
 
-#     bio = models.CharField(max_length=255, null=True, blank=True)
-#     birthday = models.DateField(verbose_name=_(
-#         'تاریخ تولد'), null=True, blank=True)
-
-#     def __str__(self) -> str:
-#         return self.user.username
 
 #     def get_avatar_image_path(self, filename):
 #         return f'accounts/avatars/{self.pk}/profile_image.jpg'
@@ -47,7 +49,7 @@ class UserProfile(BaseModel):
 
 
 class UserMeta(BaseModel):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     last_login_at = models.DateTimeField(null=True, blank=True)
     last_login_ip = models.GenericIPAddressField(null=True, blank=True)
     last_logout_at = models.DateTimeField(null=True, blank=True)

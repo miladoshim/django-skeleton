@@ -3,20 +3,24 @@ from typing import Any
 from django import forms
 from django.forms import Form, ModelForm
 from django.forms.widgets import PasswordInput
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import User
 from jalali_date.fields import JalaliDateField
 from jalali_date.widgets import AdminJalaliDateWidget
 
+# class CustomUserCreationForm(UserCreationForm):
+#     class Meta: 
+#         model = User
+#         fields = UserCreationForm.Meta.fields + ('mobile',)
+        
 
 class UserRegisterForm(UserCreationForm):
-    # username = forms.CharField(widget=forms.TextInput(attrs={'placeholder' : 'نام کاربری'}))
-    # email = forms.EmailField(widget=forms.EmailInput(attrs={'placeholder' : 'ایمیل'}))
-    # password1 = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder' : 'ایمیل'}))
+    username = forms.CharField(widget=forms.TextInput(attrs={'placeholder' : 'نام کاربری'}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'placeholder' : 'ایمیل'}))
+    password1 = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder' : 'رمز عبور'}))
 
     class Meta:
         model = User
-        # fields = UserCreationForm.Meta.fields + ('mobile',)
         fields = ['username', 'email', 'password1', 'password2']
 
 

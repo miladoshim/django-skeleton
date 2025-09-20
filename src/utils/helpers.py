@@ -1,3 +1,4 @@
+import uuid
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.text import slugify
 
@@ -14,6 +15,8 @@ def get_ip_address(request):
         ip = request.META.get("REMOTE_ADDR")
     return ip
 
+def generate_number(*args, **kwargs):
+    return str(uuid.uuid4()).split('-')[0].upper()
 
 def create_unique_slug(instance, new_slug=None):
     if new_slug is not None:

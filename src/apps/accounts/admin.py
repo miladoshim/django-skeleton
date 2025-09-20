@@ -1,29 +1,51 @@
 from django.contrib import admin
-from django.contrib.auth.models import User as BaseAuthUser, Group as BaseAuthGroup
 from import_export.admin import ImportExportModelAdmin, ExportActionMixin
+from django.contrib.auth import get_user_model
 
-from .models import User
+User = get_user_model()
 
-# admin.site.unregister(BaseAuthUser)
-admin.site.unregister(BaseAuthGroup)
 
 @admin.action(description="Mark selected users as verified")
 def mark_verified(modeladmin, request, queryset):
     queryset.update(is_verified=True)
-    
+
+
 @admin.register(User)
 class UserAdmin(ImportExportModelAdmin):
     # add_form = CustomUserCreationForm
     # form = CustomUserChangeForm
     model = User
-    list_display = ['username', 'email', 'is_staff', 'is_superuser', 'date_joined']
-    search_fields = ['username', 'email',]
-    list_filter = ['is_staff', 'is_superuser']
-    # fieldsets = BaseUserAdmin.fieldsets + (
-    #     (None, {'fields': ('mobile',)}),
-    # )
-    # add_fieldsets = BaseUserAdmin.fieldsets + (
-    #     (None, {'fields': ('mobile',)})
-    # )
+    list_display = [
+        "username",
+        "email",
+        "is_staff",
+        "is_active",
+        "is_superuser",
+        "date_joined",
+    ]
+    search_fields = [
+        "username",
+        "email",
+    ]
+    list_filter = ["is_staff", "is_superuser", "is_active"]
+    ordering = ["email"]
+    fieldsets = (
+        ("اطلاعات اولیه", {"fields": ("email", "password")}),
+        (
+            "سطح دسترسی ها",
+            {
+                "fields": (
+                    "is_staff",
+                    "is_active",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                )
+            },
+        ),
+    )
+    add_fieldsets = (None, {"fields": ("email",)})
+    empty_value_display = "---"
+
     class Meta:
         pass
