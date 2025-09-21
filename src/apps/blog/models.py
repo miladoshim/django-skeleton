@@ -98,7 +98,9 @@ class Post(BaseModel):
         unique=True, verbose_name=_("اسلاگ"), allow_unicode=True, default=None
     )
     body = RichTextUploadingField(_("متن مقاله"), null=True, blank=True)
-    thumbnail = models.ImageField(upload_to="posts/%Y/%m/%d", null=True, blank=True, verbose_name=_('تصویر شاخص'))
+    thumbnail = models.ImageField(
+        upload_to="posts/%Y/%m/%d", null=True, blank=True, verbose_name=_("تصویر شاخص")
+    )
     # thumbnail = FileBrowseField(
     #     "Image", max_length=200, directory="images/", extensions=[".jpg"], blank=True
     # )
@@ -145,12 +147,12 @@ class Post(BaseModel):
     def get_jalali_date(self):
         return datetime2jalali(self.created_at)
 
-
-#     def category_published(self):
-#         return self.category.filter(status=True)
+    #     def category_published(self):
+    #         return self.category.filter(status=True)
 
     def thumbnail_tag(self):
         return format_html("<img width=100 src='{}' />".format(self.thumbnail.url))
+
 
 #     def make_thumbnail(self, image, size=(300, 200)):
 #         img = Image.open(image)
@@ -183,9 +185,8 @@ class Comment(BaseModel):
         verbose_name = _("نظر")
         verbose_name_plural = _("نظرات")
 
-
-#     def __str__(self) -> str:
-#         return self.comment
+    def __str__(self) -> str:
+        return self.comment
 
 
 # class CommentReply(BaseModel):
@@ -200,8 +201,6 @@ class Comment(BaseModel):
 
 #     class Meta:
 #         proxy = True
-
-
 
 
 auditlog.register(Post, serialize_data=True)

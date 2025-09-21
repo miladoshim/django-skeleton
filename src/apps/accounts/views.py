@@ -73,7 +73,7 @@ class UserRegisterView(CreateView):
 
 
 class UserLoginView(BaseLoginView):
-    template_name = "authentication/login.html"
+    template_name = "registration/login.html"
     success_url = reverse_lazy("blog:post_list")
 
 
@@ -152,10 +152,10 @@ def register(request):
         return render(request, "registration/register.html")
 
 
-@login_required(login_url="login_view")
+@login_required(login_url="accounts:login_view")
 def user_logout(request):
     logout(request)
-    return redirect("home_view")
+    return redirect("blog:post_list")
 
 
 @login_required(login_url="login_view")

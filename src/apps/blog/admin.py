@@ -4,7 +4,7 @@ from import_export.admin import ImportExportModelAdmin, ExportActionMixin
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
 from guardian.admin import GuardedModelAdmin
-from apps.blog.models import Category, Tag, Post
+from apps.blog.models import Category, Tag, Post, Comment
 from apps.blog.resources import PostResource
 
 
@@ -14,6 +14,18 @@ from apps.blog.resources import PostResource
 #     search_fields = ["title"]
 #     prepopulated_fields = {"slug": ["title"]}
 
+    
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ['comment', 'is_approved',]
+    list_filter = ['is_approved']
+
+
+class CommentInline(admin.StackedInline):
+    model = Comment
+    extra = False
 
 @admin.register(Post)
 class PostAdmin(ImportExportModelAdmin):
@@ -25,7 +37,7 @@ class PostAdmin(ImportExportModelAdmin):
         "title",
     ]
     list_display_links = ["id", "title"]
-    #     inlines = [CommentInline]
+    inlines = [CommentInline]
     prepopulated_fields = {"slug": ["title"]}
     fieldsets = (
         (None, {"fields": ("title", "slug", "body", "thumbnail", "author",)}),
@@ -81,4 +93,3 @@ class CategoryAdmin(TreeAdmin):
     form = movenodeform_factory(Category)
     prepopulated_fields = {"slug": ["name"]}
     empty_value_display = "---"
-    

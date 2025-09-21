@@ -23,7 +23,6 @@ from apps.blog.serializers import (
     TagSerializer,
 )
 
-
 class TagViewSet(ReadOnlyModelViewSet):
     """
     Return a list of all tags

@@ -311,8 +311,8 @@ STATICFILES_FINDERS = (
     "django_components.finders.ComponentsFileSystemFinder",
 )
 
-LOGIN_REDIRECT_URL = "home_view"
-LOGOUT_REDIRECT_URL = "home_view"
+LOGIN_REDIRECT_URL = "blog:post_list"
+LOGOUT_REDIRECT_URL = "blog:post_list"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -322,8 +322,8 @@ DEFAULT_FROM_EMAIL = "info@skeleton.com"
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 EMAIL_HOST = config("EMAIL_HOST", "localhost")
 EMAIL_POST = config("EMAIL_PORT", 25)
-# EMAIL_HOST_USER = config('EMAIL_HOST')
-EMAIL_HOST_PASSWORD = ""
+# EMAIL_HOST_USER = config('EMAIL_USER')
+# EMAIL_HOST_PASSWORD = config('EMAIL_PASSWORD')
 EMAIL_USE_TLS = True
 
 REST_FRAMEWORK = {
@@ -415,6 +415,7 @@ JALALI_DATE_DEFAULTS = {
     },
 }
 
+SITE_ID=1
 IMPORT_EXPORT_FORMATS = [CSV, XLSX]
 
 CELERY_TIMEZONE = TIME_ZONE
