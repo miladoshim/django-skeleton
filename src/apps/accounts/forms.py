@@ -15,9 +15,10 @@ from jalali_date.widgets import AdminJalaliDateWidget
         
 
 class UserRegisterForm(UserCreationForm):
-    username = forms.CharField(widget=forms.TextInput(attrs={'placeholder' : 'نام کاربری'}))
-    email = forms.EmailField(widget=forms.EmailInput(attrs={'placeholder' : 'ایمیل'}))
-    password1 = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder' : 'رمز عبور'}))
+    username = forms.CharField(widget=forms.TextInput(attrs={'placeholder' : 'نام کاربری'}), label='نام کاربری')
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'placeholder' : 'ایمیل'}), label='ایمیل')
+    password1 = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder' : 'رمز عبور'}), label='رمز عبور')
+    password2 = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder' : 'تایید رمز عبور'}), label='تایید رمز عبور')
 
     class Meta:
         model = User

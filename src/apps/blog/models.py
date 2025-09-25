@@ -192,6 +192,9 @@ class Comment(BaseModel):
 # class CommentReply(BaseModel):
 #     comment = models.ForeignKey(
 #         Comment, on_delete=models.CASCADE, related_name='replies')
+    # user = models.ForeignKey(
+    #         User, related_name="comments", on_delete=models.CASCADE, verbose_name=_("کاربر")
+    #     )
 #     body = models.TextField(verbose_name=_('نظر'))
 
 

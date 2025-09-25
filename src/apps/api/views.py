@@ -1,19 +1,30 @@
 import datetime
-from django.contrib.auth import authenticate, login, logout
+from django.contrib import auth
 from django.db.models import Q
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.throttling import UserRateThrottle
-from rest_framework.exceptions import NotAcceptable, AuthenticationFailed
+from rest_framework.exceptions import NotAcceptable
+from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from apps.accounts.serializers import (
+    ObtainTokenSerializer,
+    RequestOTPSerialize,
+    VerifyOTPSerialize,
+)
 from apps.api.renderers import UserRenderer
 
 # from apps.blog.documents import PostDocument
-from apps.api.serializers import UserRegisterSerializer
+from apps.api.serializers import (
+    UserForgotPasswordSerializer,
+    UserLoginSerializer,
+    UserRegisterSerializer,
+    UserResetPasswordSerializer,
+)
 from apps.blog.models import Category, Post, Tag
 from apps.blog.serializers import (
     CategoryTreeSerializer,
@@ -22,6 +33,9 @@ from apps.blog.serializers import (
     CategorySerializer,
     TagSerializer,
 )
+
+from utils.helpers import Helpers
+
 
 class TagViewSet(ReadOnlyModelViewSet):
     """
@@ -67,15 +81,14 @@ class UserRegisterView(APIView):
         serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             user = serializer.save()
-            token = get_tokens_for_user(user)
+            token = Helpers.get_tokens_for_user(user)
             context = {
-                'token': token,
-                'user': user,
-                'message': 'registration is successful'
+                "token": token,
+                "user": user,
+                "message": "registration is successful",
             }
             return Response(context, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 # class RegisterView(APIView):
@@ -95,31 +108,16 @@ class UserRegisterView(APIView):
 #         return Response({'code': code})
 
 
-# def get_tokens_for_user(user):
-#     refresh = RefreshToken.for_user(user)
-#     return {
-#         'refresh': str(refresh),
-#         'access': str(refresh.access_token)
-#     }
+class UserLoginView(GenericAPIView):
+    renderer_classes = [UserRenderer]
+    serializer_class = UserLoginSerializer
 
-# class UserLoginView(APIView):
-# renderer_classes = [UserRenderer]
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
-# #     def post(self, request):
-# #         serializer = UserLoginSerializer(data=request.data)
-# #         if serializer.is_valid(raise_exception=True):
-# #             email = serializer.data.get('email')
-# #             password = serializer.data.get('password')
-# #             user = authenticate(email=email, password=password)
-# #             if user is not None:
-# #                 token = get_tokens_for_user(user)
-# #                 context = {'user': user, 'token': token,
-# #                            'msg': 'login successful'}
-# #                 return Response(context, status=status.HTTP_200_OK)
-# #             else:
-# #                 return Response('email or password is wrong', status=status.HTTP_404_NOT_FOUND)
-
-# #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # class LoginView(APIView):
@@ -174,29 +172,42 @@ class UserRegisterView(APIView):
 # #         return Response(serializer.data)
 
 
-# # class UserLogoutView(APIView):
-# #     def post(self, request):
-# #         response = Response()
-# #         response.delete_cookie('jwt')
-# #         response.data = {'message': 'logout'}
-# #         return Response(response)
+class UserLogoutView(GenericAPIView):
+    # serializer_class = UserLogoutSerializer
+    permission_classes = IsAuthenticated
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response("logout", status=status.HTTP_204_NO_CONTENT)
 
 
-# # class UserForgotPasswordAPIView(APIView):
-# #     def post(self, request):
-# #         serializer = UserForgotPasswordSerializer(data=request.data)
-# #         if serializer.is_valid(raise_exception=True):
-# #             return Response({'msg': 'password reset link sent'}, status=status.HTTP_200_OK)
-# #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class UserForgotPasswordAPIView(GenericAPIView):
+    serializer_class = UserForgotPasswordSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            return Response(
+                {"msg": "password reset link sent"}, status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# # class UserPasswordResetAPIView(APIView):
-# #     def post(self, request, uid, token):
-# #         serializer = UserPasswordSerializer(data=request.data)
-# #         context = {'uid': uid, 'token': token}
-# #         if serializer.is_valid(raise_exception=True):
-# #             return Response({'msg': 'password reset successfully'})
-# #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class UserPasswordResetAPIView(GenericAPIView):
+    serializer_class = UserResetPasswordSerializer
+
+    def post(self, request, uid, token):
+        serializer = self.serializer_class(data=request.data)
+        context = {"uid": uid, "token": token}
+        if serializer.is_valid(raise_exception=True):
+            return Response({"msg": "password reset successfully"})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserGoogleOAuthAuthAPIView(GenericAPIView):
+    pass
 
 
 # # class UserChangePasswordAPIView(APIView):
@@ -232,3 +243,109 @@ def search(request):
                 .order_by("-rank")
             )
             return Response({"posts": posts})
+
+
+from apps.accounts.models import OtpRequest, User
+
+
+class OTPView(APIView):
+    def get(self, request):
+        serializer = RequestOTPSerialize(data=request.query_params)
+        if serializer.is_valid():
+            data = serializer.validated_data
+            try:
+                otp = OtpRequest.objects.generate(data)
+            except Exception as e:
+                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request):
+        serializer = VerifyOTPSerialize(data=request.data)
+        if serializer.is_valid():
+            data = serializer.validated_data
+            if OtpRequest.objects.is_valid(
+                data["receiver"], data["request_id"], data["password"]
+            ):
+                return Response(self._handle_login(data))
+            else:
+                pass
+        else:
+            pass
+
+    def _handle_login(self, otp):
+        userModel = User
+        query = userModel.objects.filter(username=otp["receiver"])
+        if query.exits():
+            created = False
+            user = query.first()
+        else:
+            user = User.objects.create(username=otp["receiver"])
+            created = True
+        refresh = RefreshToken.for_user(user)
+        return ObtainTokenSerializer(
+            {
+                "refresh": str(refresh),
+                "token": str(refresh.access_token),
+                "created": created,
+            }
+        ).data
+        
+        
+
+class OncePerMinuteThrottle(UserRateThrottle):
+    rate = '1/minute'
+
+
+class RequestOtpAPIView(APIView):
+
+    # throttle_classes = [OncePerMinuteThrottle]
+
+    def post(self, request):
+        serializer = RequestOtpSerializer(data=request.data)
+        if serializer.is_valid():
+            mobile = serializer.validated_data['mobile']
+            channel = serializer.validated_data['channel']
+            otp_request = OtpRequest(mobile=mobile, channel=channel)
+            otp_request.generate_otp()
+            otp_request.save()
+
+            # Send sms
+
+            return Response(RequestOtpResponseSerializer(otp_request).data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VerifyOtpAPIView(APIView):
+    def post(self, request):
+        serializer = VerifyOtpSerializer(data=request.data)
+        if serializer.is_valid():
+            request_id = serializer.validated_data['request_id']
+            mobile = serializer.validated_data['mobile']
+            password = serializer.validated_data['password']
+
+            otp_request = OtpRequest.objects.filter(
+                request_id=request_id,
+                mobile=mobile,
+                valid_until__gte=timezone.now()
+            )
+            if otp_request.exists():
+                userq = User.objects.filter(mobile=mobile)
+                if userq.exists():
+                    user = userq.first()
+                    token, created = Token.objects.get_or_create(user=user)
+                    return Response({'token': token, 'new_user': False})
+                else:
+                    user = User.objects.create(mobile=mobile)
+                    token, created = Token.objects.get_or_create(user=user)
+                    return Response({'token': token, 'new_user': True})
+
+            else:
+                return Response(serializer.errors, status=status.HTTP_403_FORBIDDEN)
+
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+

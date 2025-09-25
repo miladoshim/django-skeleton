@@ -47,5 +47,11 @@ class UserAdmin(ImportExportModelAdmin):
     add_fieldsets = (None, {"fields": ("email",)})
     empty_value_display = "---"
 
+    def combined_title(self, obj):
+        return "{}-{}".format(obj.username, obj.email)
+    combined_title.__name__="User title"
     class Meta:
         pass
+
+
+

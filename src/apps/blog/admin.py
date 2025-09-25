@@ -14,25 +14,35 @@ from apps.blog.resources import PostResource
 #     search_fields = ["title"]
 #     prepopulated_fields = {"slug": ["title"]}
 
-    
-
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ['comment', 'is_approved',]
-    list_filter = ['is_approved']
+    list_display = [
+        'user',
+        'post',
+        "comment",
+        "is_approved",
+    ]
+    list_filter = ["is_approved"]
+    list_editable = ['is_approved']
+    search_fields = [
+        'comment',
+    ]
+    
 
 
 class CommentInline(admin.StackedInline):
     model = Comment
     extra = False
+    max_num = 3 
+
 
 @admin.register(Post)
 class PostAdmin(ImportExportModelAdmin):
     list_display = ["id", "title", "published_status", "created_at"]
     list_filter = ["published_status", "created_at"]
-    date_hierarchy = 'created_at'
-    list_editable = ['published_status']
+    date_hierarchy = "created_at"
+    list_editable = ["published_status"]
     search_fields = [
         "title",
     ]
@@ -40,11 +50,23 @@ class PostAdmin(ImportExportModelAdmin):
     inlines = [CommentInline]
     prepopulated_fields = {"slug": ["title"]}
     fieldsets = (
-        (None, {"fields": ("title", "slug", "body", "thumbnail", "author",)}),
+        (
+            None,
+            {
+                "fields": (
+                    ("title", "slug"),
+                    "body",
+                    "thumbnail",
+                    "author",
+                )
+            },
+        ),
         ("وضعیت", {"fields": ("published_status",)}),
-        (None, {"fields": ("tags",)}),
+        (None, {"classes": ("wide",), "fields": ("tags",)}),
     )
     empty_value_display = "---"
+    autocomplete_fields = ['author']
+    
     
     # resource_class = PostResource
     # filter_horizontal = ['tags']
@@ -52,7 +74,7 @@ class PostAdmin(ImportExportModelAdmin):
     def tags_to_str(self, obj):
         return ", ".join(tag.title for tag in obj.tags.all())
 
-    tags_to_str.short_description = _('برسب ها')
+    tags_to_str.short_description = _("برسب ها")
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related("tags")
@@ -60,6 +82,19 @@ class PostAdmin(ImportExportModelAdmin):
     def tag_list(self, obj):
         return ", ".join(o.name for o in obj.tags.all())
 
+    def save_model(self, request, obj, form, change):
+        obj.author = request.user
+        return super().save_model(request, obj, form, change)
+    
+    # def view_categories_list(self, obj):
+    #     count = obj.category.count()
+    #     url = (
+    #         reverse("blog:category_changelist")
+    #         + "?"
+    #         + urlencode({'categories__id': f"{obj.id}"})
+    #     )
+    #     return format_html('<a href="{}"> {} Categories </a>', url, count)
+    # view_categories_list.__name__ = 'Categories Count'
 
 # @admin.register(RecyclePost)
 # class PostAdmin(admin.ModelAdmin):

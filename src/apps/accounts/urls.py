@@ -5,7 +5,6 @@ from .views import (
     PasswordChangeView,
     PasswordChangeDoneView,
     user_logout,
-    
 )
 
 
@@ -23,4 +22,8 @@ urlpatterns = [
         PasswordChangeDoneView.as_view(),
         name="password_change_done_view",
     ),
+    
+    
+    # path('auth/otp/request/', RequestOtpAPIView.as_view()),
+    # path('auth/otp/verify/', VerifyOtpAPIView.as_view()),
 ]

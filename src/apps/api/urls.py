@@ -14,6 +14,9 @@ from drf_spectacular.views import (
 from .views import (
     TagViewSet,
     PostViewSet,
+    UserForgotPasswordAPIView,
+    UserPasswordResetAPIView,
+    UserLogoutView,
 )
 
 app_name='api'
@@ -29,11 +32,12 @@ urlpatterns = [
     path("auth/token/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("auth/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
-    # path('auth/logout/', UserLogoutView.as_view()),
+    path('auth/logout/', UserLogoutView.as_view()),
     
-    # path('auth/passwords/forgot/', UserForgotPasswordAPIView.as_view()),
-    # # path('auth/passwords/reset/<uid>/<token>/', UserForgotPasswordAPIView.as_view()),
+    path('auth/passwords/forgot/', UserForgotPasswordAPIView.as_view()),
+    path('auth/passwords/reset/<uid>/<token>/', UserPasswordResetAPIView.as_view()),
     
+    # path('auth/oauth/google/'),
     # path('auth/otp/request/', RequestOtpAPIView.as_view()),
     # path('auth/otp/verify/', VerifyOtpAPIView.as_view()),
     

@@ -154,6 +154,8 @@ TEMPLATES = [
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",  # this is default
     "guardian.backends.ObjectPermissionBackend",
+    'allauth.account.auth_backends.AuthenticationBackend',
+
 )
 
 WSGI_APPLICATION = "skeleton.wsgi.application"
@@ -192,6 +194,8 @@ INTERNAL_IPS = [
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "EMAIL_AUTHENTICATION": True,
+        'FETCH_USERINFO' : True,
+
         "APPS": [
             {
                 "client_id": "123",
@@ -208,7 +212,6 @@ SOCIALACCOUNT_PROVIDERS = {
                 },
             },
         ],
-        # The following provider-specific settings will be used for all apps:
         "SCOPE": [
             "profile",
             "email",
@@ -216,6 +219,7 @@ SOCIALACCOUNT_PROVIDERS = {
         "AUTH_PARAMS": {
             "access_type": "online",
         },
+        'OAUTH_PKCE_ENABLED': True,
     }
 }
 
@@ -263,6 +267,7 @@ CKEDITOR_RESTRICT_BY_DATE = True
 CKEDITOR_CONFIGS = {
     "default": {
         "toolbar": "full",
+        # 'skin': '',
         "toolbar_Custom": [
             ["Bold", "Italic", "Underline"],
             [
@@ -513,3 +518,8 @@ PWA_APP_SCREENSHOTS = [
         "type": "image/png",
     }
 ]
+
+from django.contrib import messages
+MESSAGE_TAGS = {
+    messages.ERROR:'danger'
+}

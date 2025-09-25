@@ -8,7 +8,7 @@
           <img src="{{ post.thumbnail.url }}" alt="{{ post.title }}" width="300" height="300"/>
         </div>
         <h2>{{ post.title }}</h2>
-        <p>سفر ما به یک عکاسی مد واقعی را دنبال کنید. از جستجوی مکان ها گرفته تا گرفتن عکس عالی، شاهد برنامه ریزی و اجرای دقیقی باشید که برای ایجاد تصاویر متقاعدکننده انجام می شود. بخش تولید صنعت مد را کاوش کنید. از فناوری‌های پیشرفته گرفته تا صنایع دستی ماهر، درک کنید که چگونه پارچه‌ها در مقیاس بزرگ به لباس‌های نفیس تبدیل می‌شوند. هیجان و هرج و مرج تمرین نمایش مد را تجربه کنید.</p>
+        <p>{{ post.body|safe }}</p>
         <div class="mb-60"></div>
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 tags-share">
           <ul class="ps-0 mb-0 list-unstyled d-flex flex-wrap gap-2 tags-list align-items-center">

@@ -73,7 +73,6 @@ class UserRegisterView(CreateView):
 
 
 class UserLoginView(BaseLoginView):
-    template_name = "registration/login.html"
     success_url = reverse_lazy("blog:post_list")
 
 
@@ -179,3 +178,5 @@ def change_password(request):
         else:
             form = ChangePasswordForm()
         return render(request, "", {"form": form})
+
+
