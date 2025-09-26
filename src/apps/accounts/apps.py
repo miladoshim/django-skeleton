@@ -4,7 +4,7 @@ from django.apps import AppConfig
 class AccountsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'apps.accounts'
-    # label = 'حساب کاربری'
+    verbose_name = 'حساب کاربری'
     
     def ready(self):
         from apps.accounts import signals

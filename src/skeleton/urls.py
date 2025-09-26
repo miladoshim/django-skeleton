@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from debug_toolbar.toolbar import debug_toolbar_urls
 from filebrowser.sites import site
+from azbankgateways.urls import az_bank_gateways_urls
 
 urlpatterns = [
     path('admin/filebrowser/', site.urls),
@@ -17,9 +18,10 @@ urlpatterns = [
     path("api/v1/", include("apps.api.urls")),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("", include("django_components.urls")),
-    path("ckeditor/", include("ckeditor_uploader.urls")),
+    path('tinymce/', include('tinymce.urls')),
     path("unicorn/", include("django_unicorn.urls")),
     path('', include('pwa.urls')), 
+    path("bankgateways/", az_bank_gateways_urls()),
 
 ] + debug_toolbar_urls()
 

@@ -17,7 +17,11 @@ class User(AbstractUser):
     Custom User model that have extra fields
     """
 
-    pass
+
+    class Meta:
+        verbose_name = _("کاربر")
+        verbose_name_plural = _("کاربر ها")
+
     # mobile = models.CharField(null=True, blank=True,
     #                           unique=True, max_length=11)
     # mobile_verified = models.BooleanField(default=False)
@@ -49,6 +53,9 @@ class UserProfile(BaseModel):
 
     def get_default_avatar_image():
         return "accounts/avatars/default_avatar.jpg"
+
+    class Meta:
+        verbose_name = "پروفایل"
 
 
 class UserMeta(BaseModel):

@@ -3,7 +3,6 @@ import os
 import locale
 import sys
 from pathlib import Path
-from django.conf import settings
 from os.path import join
 from decouple import config
 from django_components import ComponentsSettings
@@ -49,6 +48,7 @@ INSTALLED_APPS = [
     "apps.accounts.apps.AccountsConfig",
     "apps.blog.apps.BlogConfig",
     "apps.api.apps.ApiConfig",
+    "apps.financial.apps.FinancialConfig",
     # Third-party apps
     "channels",
     "rest_framework",
@@ -75,8 +75,7 @@ INSTALLED_APPS = [
     "crispy_bootstrap5",
     "treebeard",
     "auditlog",
-    "ckeditor",
-    "ckeditor_uploader",
+    'tinymce',
     "extra_settings",
     "pwa",
     "allauth",
@@ -85,6 +84,11 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     # 'redirects',
     "django_unicorn",
+    'django_celery_results',
+    'django_celery_beat',
+    "azbankgateways",
+    'django_recaptcha',
+
     "utils",
     "django_cleanup.apps.CleanupConfig",
 ]
@@ -222,6 +226,7 @@ SOCIALACCOUNT_PROVIDERS = {
         'OAUTH_PKCE_ENABLED': True,
     }
 }
+SOCIALACCOUNT_LOGIN_ON_GET=True
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -260,52 +265,6 @@ STATICFILES_DIRS = [str(BASE_BASE_DIR.joinpath("static/skeleton/"))]
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
-
-CKEDITOR_UPLOAD_PATH = "uploads/"
-# CKEDITOR_FILENAME_GENERATOR = 'utils.get_ckeditor_filename'
-CKEDITOR_RESTRICT_BY_DATE = True
-CKEDITOR_CONFIGS = {
-    "default": {
-        "toolbar": "full",
-        # 'skin': '',
-        "toolbar_Custom": [
-            ["Bold", "Italic", "Underline"],
-            [
-                "NumberedList",
-                "BulletedList",
-                "-",
-                "Outdent",
-                "Indent",
-                "-",
-                "JustifyLeft",
-                "JustifyCenter",
-                "JustifyRight",
-                "JustifyBlock",
-            ],
-            ["Link", "Unlink"],
-            ["RemoveFormat", "Source"],
-        ],
-        "extraPlugins": ",".join(
-            [
-                "uploadimage",
-                "div",
-                "autolink",
-                "autoembed",
-                "embedsemantic",
-                "autogrow",
-                # 'devtools',
-                "widget",
-                "lineutils",
-                "clipboard",
-                "dialog",
-                "dialogui",
-                "elementspath",
-            ]
-        ),
-        # 'height': 300,
-        # 'width': 300,
-    },
-}
 
 FILEBROWSER_DIRECTORY = "/uploads"
 
@@ -363,7 +322,7 @@ SPECTACULAR_SETTINGS = {
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "REDOC_DIST": "SIDECAR",
     "TITLE": "skeleton API",
-    "DESCRIPTION": "Your project description",
+    "DESCRIPTION": "skeleton api project description",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
@@ -428,18 +387,22 @@ CELERY_ENABLE_UTC = True
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
 # CELERY_BROKER_URL = broker_url = 'amqp://myuser:mypassword@localhost:5672/myvhost'
+# CELERY_CACHE_BACKEND = 'default'
 CELERY_BROKER_URL = "redis://localhost:6379"
-CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_DEFAULT_QUEUE = "default"
+CELERY_RESULT_EXTENDED = True
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 TAGGIT_CASE_INSENSITIVE = True
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
 SILENCED_SYSTEM_CHECKS = ["security.W019"]
-
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 # SESSION_CACHE_ALIAS = "default"
 
@@ -449,27 +412,21 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 AZ_IRANIAN_BANK_GATEWAYS = {
     "GATEWAYS": {
         "ZARINPAL": {
-            "MERCHANT_CODE": "<YOUR MERCHANT CODE>",
-            "SANDBOX": 1,  # 0 disable, 1 active
-        },
-        "IDPAY": {
-            "MERCHANT_CODE": "<YOUR MERCHANT CODE>",
-            "METHOD": "POST",  # GET or POST
-            "X_SANDBOX": 1,  # 0 disable, 1 active
+            "MERCHANT_CODE": "",
+            "SANDBOX": True,
         },
     },
-    "IS_SAMPLE_FORM_ENABLE": True,  # اختیاری و پیش فرض غیر فعال است
+    "IS_SAMPLE_FORM_ENABLE": True, 
     "DEFAULT": "ZARINPAL",
-    "CURRENCY": "IRT",  # اختیاری
-    "TRACKING_CODE_QUERY_PARAM": "tc",  # اختیاری
+    "CURRENCY": "IRT",  
+    "TRACKING_CODE_QUERY_PARAM": "tc",
     "TRACKING_CODE_LENGTH": 16,  # اختیاری
     "SETTING_VALUE_READER_CLASS": "azbankgateways.readers.DefaultReader",  # اختیاری
-    "BANK_PRIORITIES": [
-        "ZARINPAL",
-        "IDPAY",
-    ],  # اختیاری
-    "IS_SAFE_GET_GATEWAY_PAYMENT": True,  # اختیاری، بهتر است True بزارید.
-    "CUSTOM_APP": None,  # اختیاری
+    "IS_SAFE_GET_GATEWAY_PAYMENT": True, 
+    # 'GO_TO_BANK_GATEWAY_NAMESPACE': 'api:payment:go-to-bank-gateway',
+    # 'CALLBACK_NAMESPACE': 'api:payment:callback',
+    # 'SAMPLE_RESULT_NAMESPACE': 'api:payment:sample-result',
+    # "CUSTOM_APP" : 'api:payment',
 }
 
 # CORS_ALLOWED_ORIGINS = [
@@ -518,6 +475,11 @@ PWA_APP_SCREENSHOTS = [
         "type": "image/png",
     }
 ]
+
+RECAPTCHA_PUBLIC_KEY = 'MyRecaptchaKey123'
+RECAPTCHA_PRIVATE_KEY = 'MyRecaptchaPrivateKey456'
+RECAPTCHA_REQUIRED_SCORE = 0.85
+SILENCED_SYSTEM_CHECKS = ['django_recaptcha.recaptcha_test_key_error']
 
 from django.contrib import messages
 MESSAGE_TAGS = {

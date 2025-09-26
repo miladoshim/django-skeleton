@@ -2,6 +2,7 @@ import uuid
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.text import slugify
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.views import exception_handler
 
 
 class Helpers:
@@ -21,6 +22,11 @@ class Helpers:
             'access': str(refresh.access_token)
         }
 
+    # @staticmethod
+    # def generate_filename(instance, filename):
+    #     ext = filename.split(".")[-1]
+    #     random_filename = f"{uuid.uuid4()}.{ext}"
+    #     return os.path.join('avatars/',random_filename)
 
 def get_ip_address(request):
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
@@ -47,6 +53,17 @@ def create_unique_slug(instance, new_slug=None):
         return create_unique_slug(instance, new_slug)
 
     return slug
+
+def custom_exception_handler(exc, context):
+    # Call REST framework's default exception handler first, 
+    # to get the standard error response.
+    response = exception_handler(exc, context)
+
+    # Now add the HTTP status code to the response.
+    if response is not None:
+        response.data['status_code'] = response.status_code
+
+    return response
 
 class TokenGenerator(PasswordResetTokenGenerator):
     pass

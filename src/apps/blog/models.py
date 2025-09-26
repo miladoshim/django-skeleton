@@ -15,7 +15,6 @@ from hitcount.models import HitCountMixin
 from hitcount.settings import MODEL_HITCOUNT
 from meta.models import ModelMeta
 from taggit.managers import TaggableManager
-from ckeditor_uploader.fields import RichTextUploadingField
 from treebeard.mp_tree import MP_Node
 from apps.accounts.models import User
 from apps.core.models import BaseModel
@@ -24,8 +23,7 @@ from apps.core.models import PublishStatusChoice, BaseModel
 from jalali_date import date2jalali, datetime2jalali
 from filebrowser.fields import FileBrowseField
 from auditlog.registry import auditlog
-
-
+from tinymce.models import HTMLField
 class Tag(BaseModel, ModelMeta, HitCountMixin):
     title = models.CharField(max_length=255, unique=True, verbose_name=_("عنوان"))
     slug = models.SlugField(
@@ -97,7 +95,7 @@ class Post(BaseModel):
     slug = models.SlugField(
         unique=True, verbose_name=_("اسلاگ"), allow_unicode=True, default=None
     )
-    body = RichTextUploadingField(_("متن مقاله"), null=True, blank=True)
+    body = HTMLField(_("متن مقاله"), null=True, blank=True)
     thumbnail = models.ImageField(
         upload_to="posts/%Y/%m/%d", null=True, blank=True, verbose_name=_("تصویر شاخص")
     )

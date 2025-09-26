@@ -1,11 +1,10 @@
 import os
-
 from celery import Celery
 
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'djshop.envs.common')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'skeleton.environments.development')
 
-app = Celery('djshop')
+app = Celery('skeleton')
 
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
