@@ -4,18 +4,22 @@ from django.db.models import Q
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
+from rest_framework import status
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.exceptions import NotAcceptable
 from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
+
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from apps.accounts.serializers import (
     ObtainTokenSerializer,
     RequestOTPSerialize,
     VerifyOTPSerialize,
 )
+from apps.accounts.models import OtpRequest, User
+from apps.api.pagination import CustomPagination
 from apps.api.renderers import UserRenderer
 
 # from apps.blog.documents import PostDocument
@@ -72,7 +76,7 @@ class PostSearch(APIView):
 
 class CategoryViewSet(ReadOnlyModelViewSet):
     queryset = Category.objects.all()
-    serializer_class = CategorySerializer
+    serializer_class = CategoryTreeSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
@@ -116,60 +120,27 @@ class UserLoginView(GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
             return Response(serializer.data, status=status.HTTP_200_OK)
-        print('----------------------------------------------------')
         return Response(serializer.errors)
 
 
-# class LoginView(APIView):
-#     renderer_classes = [UserRenderer]
+# class UserProfileView(APIView):
+# renderer_classes = [UserRenderer]
+#     permission_classes = [IsAuthenticated]
 
-# #     def post(self, request):
-# #         email = request.data['email']
-# #         password = request.data['password']
+#     def get(self,  request, format=None):
+#         token = request.COOKIES.get('jwt')
 
-# #         user = User.objects.get(email=email)
-# #         if user is None:
-# #             raise AuthenticationFailed('user not found')
+#         if not token:
+#             raise AuthenticationFailed('unauthenticate')
 
-# #         if not user.check_password(password):
-# #             raise AuthenticationFailed('password wrong')
+#         try:
+#             payload = jwt.decode(token, 'secret', algorithm='HS256')
+#         except jwt.ExpiredSignatureError:
+#             raise AuthenticationFailed('un authenticate')
 
-# #         payload = {
-# #             'id': user.id,
-# #             'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=50),
-# #             'iat': datetime.datetime.utcnow()
-# #         }
-
-# #         # PyJwt
-# #         token = jwt.encode(payload, 'secret',
-# #                            algorithm='HS256').decode('utf-8')
-
-# #         response = Response()
-# #         response.set_cookie(key='jwt', value=token, httponly=True)
-# #         response.data = {
-# #             'jwt': token
-# #         }
-# #         return response
-
-
-# # class UserProfileView(APIView):
-#     renderer_classes = [UserRenderer]
-# #     permission_classes = [IsAuthenticated]
-
-# #     def get(self,  request, format=None):
-# #         token = request.COOKIES.get('jwt')
-
-# #         if not token:
-# #             raise AuthenticationFailed('unauthenticate')
-
-# #         try:
-# #             payload = jwt.decode(token, 'secret', algorithm='HS256')
-# #         except jwt.ExpiredSignatureError:
-# #             raise AuthenticationFailed('un authenticate')
-
-# #         user = User.objects.get(id=payload['id'])
-# #         serializer = UserProfileSerializer(user)
-# #         return Response(serializer.data)
+#         user = User.objects.get(id=payload['id'])
+#         serializer = UserProfileSerializer(user)
+#         return Response(serializer.data)
 
 
 class UserLogoutView(GenericAPIView):
@@ -210,22 +181,22 @@ class UserGoogleOAuthAuthAPIView(GenericAPIView):
     pass
 
 
-# # class UserChangePasswordAPIView(APIView):
-#     renderer_classes = [UserRenderer]
-# #     permission_classes = [IsAuthenticated]
+# class UserChangePasswordAPIView(APIView):
+# renderer_classes = [UserRenderer]
+#     permission_classes = [IsAuthenticated]
 
-# #     def post(self, request, format=None):
-# #         serializer = UserChangePasswordSerializer(data=request.data)
-# #         context = {'user': request.user, 'msg': 'password changed'}
-# #         if serializer.is_valid(raise_exception=True):
-# #             return Response(context, status=status.HTTP_200_OK)
-# #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#     def post(self, request, format=None):
+#         serializer = UserChangePasswordSerializer(data=request.data)
+#         context = {'user': request.user, 'msg': 'password changed'}
+#         if serializer.is_valid(raise_exception=True):
+#             return Response(context, status=status.HTTP_200_OK)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# # class GetTokenView(APIView):
-# #     def post(self, request):
-# #         mobile = request.data.get('mobile')
-# #         code = request.data.get('code')
+# class GetTokenView(APIView):
+#     def post(self, request):
+#         mobile = request.data.get('mobile')
+#         code = request.data.get('code')
 
 
 def search(request):
@@ -243,9 +214,6 @@ def search(request):
                 .order_by("-rank")
             )
             return Response({"posts": posts})
-
-
-from apps.accounts.models import OtpRequest, User
 
 
 class OTPView(APIView):
@@ -291,11 +259,10 @@ class OTPView(APIView):
                 "created": created,
             }
         ).data
-        
-        
+
 
 class OncePerMinuteThrottle(UserRateThrottle):
-    rate = '1/minute'
+    rate = "1/minute"
 
 
 class RequestOtpAPIView(APIView):
@@ -305,8 +272,8 @@ class RequestOtpAPIView(APIView):
     def post(self, request):
         serializer = RequestOtpSerializer(data=request.data)
         if serializer.is_valid():
-            mobile = serializer.validated_data['mobile']
-            channel = serializer.validated_data['channel']
+            mobile = serializer.validated_data["mobile"]
+            channel = serializer.validated_data["channel"]
             otp_request = OtpRequest(mobile=mobile, channel=channel)
             otp_request.generate_otp()
             otp_request.save()
@@ -322,30 +289,26 @@ class VerifyOtpAPIView(APIView):
     def post(self, request):
         serializer = VerifyOtpSerializer(data=request.data)
         if serializer.is_valid():
-            request_id = serializer.validated_data['request_id']
-            mobile = serializer.validated_data['mobile']
-            password = serializer.validated_data['password']
+            request_id = serializer.validated_data["request_id"]
+            mobile = serializer.validated_data["mobile"]
+            password = serializer.validated_data["password"]
 
             otp_request = OtpRequest.objects.filter(
-                request_id=request_id,
-                mobile=mobile,
-                valid_until__gte=timezone.now()
+                request_id=request_id, mobile=mobile, valid_until__gte=timezone.now()
             )
             if otp_request.exists():
                 userq = User.objects.filter(mobile=mobile)
                 if userq.exists():
                     user = userq.first()
                     token, created = Token.objects.get_or_create(user=user)
-                    return Response({'token': token, 'new_user': False})
+                    return Response({"token": token, "new_user": False})
                 else:
                     user = User.objects.create(mobile=mobile)
                     token, created = Token.objects.get_or_create(user=user)
-                    return Response({'token': token, 'new_user': True})
+                    return Response({"token": token, "new_user": True})
 
             else:
                 return Response(serializer.errors, status=status.HTTP_403_FORBIDDEN)
 
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-

@@ -1,5 +1,7 @@
 from django import forms
 from .models import Comment
+from taggit.forms import TagField
+from taggit_labels.widgets import LabelWidget
 
 
 class CommentCreateForm(forms.ModelForm):
@@ -10,3 +12,8 @@ class CommentCreateForm(forms.ModelForm):
             'post': forms.HiddenInput(),
             'user': forms.HiddenInput(),
         }
+
+
+
+class TagsForm(forms.ModelForm):
+    tags = TagField(required=False, widget=LabelWidget)

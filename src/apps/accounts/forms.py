@@ -1,14 +1,12 @@
-# from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from typing import Any
 from django import forms
 from django.forms import Form, ModelForm
-from django.forms.widgets import PasswordInput
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from .models import User
 from jalali_date.fields import JalaliDateField
 from jalali_date.widgets import AdminJalaliDateWidget
 from django_recaptcha.fields import ReCaptchaField
 from django_recaptcha.widgets import ReCaptchaV3
+from .models import User, UserProfile
 
 # class CustomUserCreationForm(UserCreationForm):
 #     class Meta:
@@ -82,3 +80,9 @@ class AccountSettingForm(ModelForm):
 
     def save(self, commit):
         account = super(AccountSettingForm, self).save(commit=False)
+
+
+class UserProfileForm(ModelForm):
+    class Meta:
+        model = UserProfile
+        exclude = []

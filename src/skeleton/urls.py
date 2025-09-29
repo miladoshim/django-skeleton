@@ -7,22 +7,21 @@ from filebrowser.sites import site
 from azbankgateways.urls import az_bank_gateways_urls
 
 urlpatterns = [
-    path('admin/filebrowser/', site.urls),
-    path('grappelli/', include('grappelli.urls')),
+    path("admin/filebrowser/", site.urls),
+    path("grappelli/", include("grappelli.urls")),
     path("admin/", admin.site.urls),
+    path("", include("apps.core.urls")),
     path("blog/", include("apps.blog.urls")),
     path("accounts/", include("apps.accounts.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
     # path('accounts/', include('allauth.urls')),
-
     path("api/v1/", include("apps.api.urls")),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("", include("django_components.urls")),
-    path('tinymce/', include('tinymce.urls')),
+    path("tinymce/", include("tinymce.urls")),
     path("unicorn/", include("django_unicorn.urls")),
-    path('', include('pwa.urls')), 
+    path("", include("pwa.urls")),
     path("bankgateways/", az_bank_gateways_urls()),
-
 ] + debug_toolbar_urls()
 
 

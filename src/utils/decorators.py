@@ -38,10 +38,13 @@ def database_debug(func):
         reset_queries()
         results = func()
         query_info = connection.queries
+        st = time.time()
+        et = time.time()
         print('function_name: {}'.format(func.__name__))
         print('query_count: {}'.format(len(query_info)))
         queries = ['{}\n'.format(query['sql']) for query in query_info]
         print('queries: \n{}'.format(''.join(queries)))
+        print(f"take time : {(st - et):.3f}")
         return results
     return wrapper
 

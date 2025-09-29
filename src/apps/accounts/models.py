@@ -8,8 +8,9 @@ from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from apps.core.models import BaseModel, GenderChoices
 from django.db.models import UniqueConstraint
+from django.core.validators import FileExtensionValidator
+from apps.core.models import BaseModel, GenderChoices
 
 
 class User(AbstractUser):
@@ -34,10 +35,13 @@ class User(AbstractUser):
     #     return self.username
 
 
+
+image_ext_validator = FileExtensionValidator(['png', 'jpg', 'jpeg']) 
+
 class UserProfile(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     avatar = models.ImageField(
-        upload_to="avatars/", blank=True, null=True, default="default_avatar.jpg"
+        upload_to="avatars/", blank=True, null=True, default="default_avatar.jpg",
     )
     gender = models.CharField(
         max_length=8, choices=GenderChoices.choices, default=GenderChoices.unknown

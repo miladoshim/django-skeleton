@@ -14,6 +14,7 @@ from drf_spectacular.views import (
 from .views import (
     TagViewSet,
     PostViewSet,
+    CategoryViewSet,
     UserForgotPasswordAPIView,
     UserPasswordResetAPIView,
     UserLogoutView,
@@ -25,6 +26,7 @@ app_name='api'
 router = routers.DefaultRouter()
 router.register(r"tags", TagViewSet, basename="tag")
 router.register(r"posts", PostViewSet, basename="post")
+router.register(r"categories", CategoryViewSet, basename="category")
 
 urlpatterns = [
     path("", include(router.urls)),

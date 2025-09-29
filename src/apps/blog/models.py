@@ -7,42 +7,23 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils import timezone
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.files import File
-from django.db.models import Count, Avg
+from django.db.models.functions import Length
 from hitcount.models import HitCountMixin
 from hitcount.settings import MODEL_HITCOUNT
 from meta.models import ModelMeta
 from taggit.managers import TaggableManager
+from taggit.models import Tag
 from treebeard.mp_tree import MP_Node
 from apps.accounts.models import User
 from apps.core.models import BaseModel
 from apps.core.managers import PublishedManager
 from apps.core.models import PublishStatusChoice, BaseModel
-from jalali_date import date2jalali, datetime2jalali
+from jalali_date import datetime2jalali
 from filebrowser.fields import FileBrowseField
 from auditlog.registry import auditlog
 from tinymce.models import HTMLField
-class Tag(BaseModel, ModelMeta, HitCountMixin):
-    title = models.CharField(max_length=255, unique=True, verbose_name=_("عنوان"))
-    slug = models.SlugField(
-        max_length=255, unique=True, verbose_name=_("اسلاگ"), blank=True
-    )
-    hit_count_generic = GenericRelation(
-        MODEL_HITCOUNT,
-        object_id_field="object_pk",
-        related_query_name="hit_count_generic_relation",
-    )
-
-    class Meta:
-        db_table = "tags"
-        verbose_name = _("برچسب")
-        verbose_name_plural = _("برچسب ها")
-
-    def __str__(self) -> str:
-        return self.title
-
 
 class Category(MP_Node):
     parent = models.ForeignKey(
@@ -56,7 +37,11 @@ class Category(MP_Node):
         max_length=255, unique=True, db_index=True, verbose_name=_("عنوان")
     )
     slug = models.SlugField(
-        max_length=255, unique=True, verbose_name=_("اسلاگ"), allow_unicode=True
+        max_length=255,
+        unique=True,
+        verbose_name=_("اسلاگ"),
+        allow_unicode=True,
+        help_text="به صورت خودکار ایجاد می شود!",
     )
     description = models.TextField(
         blank=True, null=True, max_length=2048, verbose_name=_("توضیحات")
@@ -75,13 +60,14 @@ class Category(MP_Node):
     def __str__(self) -> str:
         return self.name
 
-    def get_absolute_url(self):
-        return reverse("blog_category_detail", args=[str(self.slug)])
+    # def get_absolute_url(self):
+    #     return reverse("blog:category-detail", args=[str(self.slug)])
 
 
-class Post(BaseModel):
+class Post(BaseModel, HitCountMixin):
     objects = models.Manager()
     published = PublishedManager()
+
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -109,11 +95,12 @@ class Post(BaseModel):
         default="d",
         verbose_name=_("وضعیت انتشار"),
     )
-    # category = models.ForeignKey(
-    #     "Category",
-    #     verbose_name=_("دسته بندی"),
-    #     on_delete=models.CASCADE,
-    # )
+
+    category = models.ForeignKey(
+        "Category",
+        verbose_name=_("دسته بندی"),
+        on_delete=models.CASCADE,
+    )
 
     tags = TaggableManager(verbose_name=_("برچسب ها"), related_name="posts")
 
@@ -126,6 +113,12 @@ class Post(BaseModel):
     #     output_field=models.IntegerField(),
     #     db_persist=True
     # )
+
+    hit_count_generic = GenericRelation(
+        MODEL_HITCOUNT,
+        object_id_field="object_pk",
+        related_query_name="hit_count_generic_relation",
+    )
 
     class Meta:
         db_table = "posts"
@@ -145,26 +138,24 @@ class Post(BaseModel):
     def get_jalali_date(self):
         return datetime2jalali(self.created_at)
 
-    #     def category_published(self):
-    #         return self.category.filter(status=True)
-
     def thumbnail_tag(self):
         return format_html("<img width=100 src='{}' />".format(self.thumbnail.url))
 
+    def make_thumbnail(self, image, size=(300, 200)):
+        img = Image.open(image)
+        img.convert("RGB")
+        img.thumbnail(size)
 
-#     def make_thumbnail(self, image, size=(300, 200)):
-#         img = Image.open(image)
-#         img.convert('RGB')
-#         img.thumbnail(size)
+        thumb_io = BytesIO()
+        img.save(thumb_io, "JPEG", quality=85)
 
-#         thumb_io = BytesIO()
-#         img.save(thumb_io, 'JPEG', quality=85)
+        thumbnail = File(thumb_io, name=image.name)
 
-#         thumbnail = File(thumb_io, name=image.name)
+        return thumbnail
 
-#         return thumbnail
-
-#
+    def delete(self):
+        self.thumbnail.delete()
+        return super().delete()
 
 
 class Comment(BaseModel):
@@ -190,18 +181,16 @@ class Comment(BaseModel):
 # class CommentReply(BaseModel):
 #     comment = models.ForeignKey(
 #         Comment, on_delete=models.CASCADE, related_name='replies')
-    # user = models.ForeignKey(
-    #         User, related_name="comments", on_delete=models.CASCADE, verbose_name=_("کاربر")
-    #     )
+# user = models.ForeignKey(
+#         User, related_name="comments", on_delete=models.CASCADE, verbose_name=_("کاربر")
+#     )
 #     body = models.TextField(verbose_name=_('نظر'))
 
 
-# class RecyclePost(Post):
-
-#     deleted = models.Manager()
-
-#     class Meta:
-#         proxy = True
+class RecyclePost(Post):
+    deleted = models.Manager()
+    class Meta:
+        proxy = True
 
 
 auditlog.register(Post, serialize_data=True)

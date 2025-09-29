@@ -30,7 +30,19 @@ class UserAdmin(ImportExportModelAdmin):
     list_filter = ["is_staff", "is_superuser", "is_active"]
     ordering = ["email"]
     fieldsets = (
-        ("اطلاعات اولیه", {"fields": ("email", "password")}),
+        (
+            "اطلاعات اولیه",
+            {
+                "fields": (
+                    (
+                        "first_name",
+                        "last_name",
+                    ),
+                    "email",
+                    "password",
+                )
+            },
+        ),
         (
             "سطح دسترسی ها",
             {
@@ -49,9 +61,8 @@ class UserAdmin(ImportExportModelAdmin):
 
     def combined_title(self, obj):
         return "{}-{}".format(obj.username, obj.email)
-    combined_title.__name__="User title"
+
+    combined_title.__name__ = "User title"
+
     class Meta:
         pass
-
-
-

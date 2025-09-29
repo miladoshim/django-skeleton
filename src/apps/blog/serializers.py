@@ -1,15 +1,15 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.serializers import HyperlinkedModelSerializer
+from rest_framework.serializers import HyperlinkedModelSerializer, ModelSerializer
 from taggit.serializers import TagListSerializerField, TaggitSerializer
+from taggit.models import Tag
+from .models import Category, Post
 
-from .models import Category, Post, Tag
 
-
-class CategorySerializer(HyperlinkedModelSerializer):
+class CategorySerializer(ModelSerializer):
     class Meta:
         model = Category
-        fields = ["name", "slug", "url"]
+        fields = ["id", "name", "slug"]
 
 
 class CreateCategoryNodeSerializer(HyperlinkedModelSerializer):
@@ -28,7 +28,7 @@ class CreateCategoryNodeSerializer(HyperlinkedModelSerializer):
 
     class Meta:
         model = Category
-        fields = ["id", "name", "description", "is_active", "url", "parent"]
+        fields = ["id", "name", "description", "url", "parent"]
 
 
 class CategoryTreeSerializer(serializers.ModelSerializer):
@@ -39,21 +39,32 @@ class CategoryTreeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ["id", "name", "description", "is_active", "children"]
+        fields = ["id", "name", "slug", "description", "children"]
 
 
-class TagSerializer(HyperlinkedModelSerializer):
+class TagSerializer(ModelSerializer):
     class Meta:
         model = Tag
-        fields = ["id", "name", "url"]
+        fields = ["id", "name", "slug"]
 
 
-# TaggitSerializer
-class PostSerializer(HyperlinkedModelSerializer, TaggitSerializer):
-    # category = CategorySerializer(many=False)
+class PostSerializer(ModelSerializer, TaggitSerializer):
+    category = CategorySerializer(many=False)
     tags = TagListSerializerField()
-    author = serializers.ReadOnlyField(source='author.username')
+    author = serializers.ReadOnlyField(source="author.username")
 
     class Meta:
         model = Post
-        fields = ["title", "slug", "created_at", "updated_at", "url", 'tags', 'author',]
+        fields = [
+            "id",
+            "uuid",
+            "title",
+            "slug",
+            "body",
+            "thumbnail",
+            "created_at",
+            "updated_at",
+            "category",
+            "tags",
+            "author",
+        ]

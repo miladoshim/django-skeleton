@@ -1,11 +1,12 @@
-from import_export.formats.base_formats import CSV, XLSX
 import os
 import locale
 import sys
 from pathlib import Path
 from os.path import join
 from decouple import config
+from import_export.formats.base_formats import CSV, XLSX
 from django_components import ComponentsSettings
+from django.contrib import messages
 
 PROJECT_ROOT = os.path.dirname(__file__)
 
@@ -15,16 +16,13 @@ TEMPLATE_DIR = str(BASE_BASE_DIR.joinpath("templates/skeleton/"))
 
 sys.path.insert(0, join(PROJECT_ROOT, "apps"))
 
-
-# See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
-
 SECRET_KEY = config("SECRET_KEY")
 
 DEBUG = config("APP_DEBUG", cast=bool)
 
+DOMAIN = 'skeleton.com'
+SITE_NAME = 'Skeleton'
 ALLOWED_HOSTS = ["*"]
-
-# SECURE_SSL_REDIRECT=True
 
 INSTALLED_APPS = [
     "daphne",
@@ -67,6 +65,7 @@ INSTALLED_APPS = [
     "drf_api_logger",
     "django_guid",
     "taggit",
+    'taggit_labels',
     "compressor",
     "django_components",
     "jalali_date",
@@ -88,6 +87,8 @@ INSTALLED_APPS = [
     'django_celery_beat',
     "azbankgateways",
     'django_recaptcha',
+    'widget_tweaks',
+    'django_quill',
 
     "utils",
     "django_cleanup.apps.CleanupConfig",
@@ -249,10 +250,10 @@ LANGUAGE_CODE = "fa-IR"
 
 TIME_ZONE = "Asia/Tehran"
 
-if sys.platform.startswith("win32"):
-    locale.setlocale(locale.LC_ALL, "Persian_Iran.UTF-8")
-else:
-    locale.setlocale(locale.LC_ALL, "fa_IR.UTF-8")
+# if sys.platform.startswith("win32"):
+#     locale.setlocale(locale.LC_ALL, "Persian_Iran.UTF-8")
+# else:
+#     locale.setlocale(locale.LC_ALL, "fa_IR.UTF-8")
 
 USE_I18N = True
 
@@ -401,8 +402,12 @@ TAGGIT_CASE_INSENSITIVE = True
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
 SILENCED_SYSTEM_CHECKS = ["security.W019"]
-USE_X_FORWARDED_HOST = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# USE_X_FORWARDED_HOST = True
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_COOKIE_SECURE=True
+SESSION_COOKIE_SECURE=True
+# SECURE_SSL_REDIRECT=True
+
 # SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 # SESSION_CACHE_ALIAS = "default"
 
@@ -481,7 +486,27 @@ RECAPTCHA_PRIVATE_KEY = 'MyRecaptchaPrivateKey456'
 RECAPTCHA_REQUIRED_SCORE = 0.85
 SILENCED_SYSTEM_CHECKS = ['django_recaptcha.recaptcha_test_key_error']
 
-from django.contrib import messages
 MESSAGE_TAGS = {
     messages.ERROR:'danger'
+}
+
+QUILL_CONFIGS = {
+    'default':{
+        'theme': 'snow',
+        'modules': {
+            'syntax': True,
+            'toolbar': [
+                [
+                    {'header': []},
+                    {'align': []},
+                    'bold', 'italic', 'underline', 'strike', 'blockquote',
+                    {'color': []},
+                    {'background': []},
+                ],
+                [{'direction' : 'rtl'}],
+                ['code-block', 'link'],
+                ['clean'],
+            ]
+        }
+    }
 }

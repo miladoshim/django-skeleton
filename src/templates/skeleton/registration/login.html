@@ -28,9 +28,7 @@
             <form method="POST">
               {% csrf_token %}
               {{ form|crispy }}
-              {% comment %} <div class="form-group mb-4">
-                <input type="email" class="form-control" placeholder="پست الکترونیک" />
-              </div>
+              {% comment %} 
               <div class="form-group mb-4">
                 <div class="password-wrapper">
                   <input type="password" class="form-control" id="password" /><i class="fa fa-eye-slash password-toggle-icon" aria-hidden="true"></i>

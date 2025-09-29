@@ -1,12 +1,10 @@
 from django.urls import reverse
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from django.utils.encoding import smart_str,force_bytes, force_str, DjangoUnicodeDecodeError
+from django.utils.encoding import smart_str, force_bytes
 from django.contrib import auth
 from django.contrib.auth import tokens
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer, Serializer, ValidationError
-from django.contrib.auth.password_validation import validate_password
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 
 from apps.accounts.models import User
@@ -17,11 +15,12 @@ class UserRegisterSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "username" "email",
+            "username",
+            "email",
             "first_name",
             "last_name",
             "password",
-            "password_confirmation",
+            "password2",
         ]
         extra_kwargs = {"password": {"write_only": True}}
 
@@ -29,7 +28,7 @@ class UserRegisterSerializer(ModelSerializer):
         username = attrs.get("username", "")
         if not username.isalnum():
             raise ValidationError("The username should be contain alpha chars")
-        if attrs["password"] != attrs["password_confirmation"]:
+        if attrs["password"] != attrs["password2"]:
             raise ValidationError("password and password confirmation does not match!")
 
         return attrs
@@ -44,19 +43,19 @@ class UserRegisterSerializer(ModelSerializer):
 
 
 class UserLoginSerializer(ModelSerializer):
-    email = serializers.EmailField()
+    username = serializers.CharField(max_length=255)
     password = serializers.CharField(min_length=4, max_length=64, write_only=True)
 
     class Meta:
         model = User
-        fields = ["email", "password"]
+        fields = ["username", "password"]
 
     def validate(self, attrs):
-        email = attrs.get("email", "")
+        username = attrs.get("username", "")
         password = attrs.get("password", "")
 
-        user = auth.authenticate(email=email, password=password)
-        
+        user = auth.authenticate(username=username, password=password)
+
         if not user:
             raise AuthenticationFailed("Invalid credentials!")
 
@@ -72,7 +71,7 @@ class UserLoginSerializer(ModelSerializer):
         #         "email or password is wrong", status=status.HTTP_404_NOT_FOUND
         #     )
         return {
-            "email": email,
+            "email": username,
             "username": user.username,
             "tokens": Helpers.get_tokens_for_user(user),
         }
@@ -113,19 +112,20 @@ class RegisterSerializer(Serializer):
         user.set_password(validated_data["password_1"])
         user.save()
 
+
 class UserLogoutSerializer(Serializer):
     refresh = serializers.CharField()
-    
+
     def validate(self, attrs):
-        self.token = attrs.get('refresh')
+        self.token = attrs.get("refresh")
         return attrs
-    
+
     def save(self, **kwargs):
         RefreshToken(self.token).blacklist()
-        
+
         return super().save(**kwargs)
-    
-    
+
+
 class UserProfileSerializer(ModelSerializer):
     class Meta:
         model = User
@@ -173,8 +173,8 @@ class UserForgotPasswordSerializer(Serializer):
             uid = urlsafe_base64_encode(force_bytes(user.id))
             token = tokens.PasswordResetTokenGenerator().make_token(user)
             currentSite = get_current_site().domain
-            relativeLink = reverse('')
-            link = 'https://localhost:3000/api/password_reset/'+uid+'/'+token
+            relativeLink = reverse("")
+            link = "https://localhost:3000/api/password_reset/" + uid + "/" + token
             return attrs
         else:
             raise ValidationError("email not found")

@@ -1,21 +1,15 @@
-from django.db.models.signals import pre_save, post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from utils.helpers import create_unique_slug
+from utils.helpers import Helpers
 from .models import Post
 
 
-# @receiver(pre_save, sender=Post)
-# def create_post(sender, instance, created, *args, **kwargs):
-#     if created or not instance.slug:
-#         instance.slug = create_unique_slug(instance)
-#         instance.save()
+@receiver(post_save, sender=Post)
+def create_post(sender, instance, created, *args, **kwargs):
+    if created or not instance.slug:
+        instance.slug = Helpers.create_unique_slug(instance)
+        instance.save()
 
-# @receiver(post_save, sender=Vote)
-# def update_votes(sender,instance, **kwargs):
-#     if instance.vote = Vote.VoteChoice.like:
-#         Post.objects.filter(id=instance.post.id).update(likes=F("likes") + 1)
-#     else:
-#         Post.objects.filter(id=instance.post.id).update(likes=F("dislikes") + 1)
 
 # @receiver(post_save, sender=Comment)
 # def create_post_comment_reply_notification_sinal(sender, instance, created, *args, **kwargs):
@@ -38,5 +32,5 @@ from .models import Post
 #         message = f''
 #         post = instance
 #         users = User.objects.all()
-#         brodcastNotification = BrodcastNotification.objects.create(message=message)
-#         brodcastNotification.users.set(users)
+#         broadcastNotification = BroadcastNotification.objects.create(message=message)
+#         broadcastNotification.users.set(users)
