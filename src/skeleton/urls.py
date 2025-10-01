@@ -22,6 +22,7 @@ urlpatterns = [
     path("unicorn/", include("django_unicorn.urls")),
     path("", include("pwa.urls")),
     path("bankgateways/", az_bank_gateways_urls()),
+    path('silk/', include('silk.urls', namespace='silk')),
 ] + debug_toolbar_urls()
 
 

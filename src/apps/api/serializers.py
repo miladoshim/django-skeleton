@@ -6,40 +6,36 @@ from django.contrib.auth import tokens
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer, Serializer, ValidationError
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
-
 from apps.accounts.models import User
 from utils.helpers import Helpers
 
 
-class UserRegisterSerializer(ModelSerializer):
-    class Meta:
-        model = User
-        fields = [
-            "username",
-            "email",
-            "first_name",
-            "last_name",
-            "password",
-            "password2",
-        ]
-        extra_kwargs = {"password": {"write_only": True}}
+# class UserRegisterSerializer(ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = [
+#             "username",
+#             "email",
+#             "password",
+#         ]
+#         extra_kwargs = {"password": {"write_only": True}}
 
-    def validate(self, attrs):
-        username = attrs.get("username", "")
-        if not username.isalnum():
-            raise ValidationError("The username should be contain alpha chars")
-        if attrs["password"] != attrs["password2"]:
-            raise ValidationError("password and password confirmation does not match!")
+#     def validate(self, attrs):
+#         username = attrs.get("username", "")
+#         if not username.isalnum():
+#             raise ValidationError("The username should be contain alpha chars")
+#         if attrs["password"] != attrs["password2"]:
+#             raise ValidationError("password and password confirmation does not match!")
 
-        return attrs
+#         return attrs
 
-    def create(self, validated_data):
-        password = validated_data.pop("password", None)
-        instance = self.Meta.model(**validated_data)
-        if password is not None:
-            instance.set_password(password)
-        instance.save()
-        return instance
+#     def create(self, validated_data):
+#         password = validated_data.pop("password", None)
+#         instance = self.Meta.model(**validated_data)
+#         if password is not None:
+#             instance.set_password(password)
+#         instance.save()
+#         return instance
 
 
 class UserLoginSerializer(ModelSerializer):
@@ -78,38 +74,34 @@ class UserLoginSerializer(ModelSerializer):
 
 
 class RegisterSerializer(Serializer):
-    # email = serializers.EmailField(required=True, validator=[UniqueValidator])
-    password_1 = serializers.CharField(required=True)
-    password_2 = serializers.CharField(required=True)
+    username = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(required=True)
+    password2 = serializers.CharField(required=True)
 
     class Meta:
         model = User
         fields = (
             "email",
             "username",
-            "password_1",
-            "password_2",
-            "firsts_name",
-            "last_name",
+            "password",
+            "password2",
         )
         extra_kwargs = {
-            "first_name": {"required": False},
-            "last_name": {"required": False},
+            "password": {"write_only": True},
         }
 
     def validate(self, attrs):
-        if attrs["password_1"] != attrs["password_2"]:
-            raise ValidationError({"password": "Passwords not same"})
+        if attrs["password"] != attrs["password2"]:
+            raise ValidationError({"password": "رمز عبور یکسان نیست!"})
         return attrs
 
     def create(self, validated_data):
         user = User.objects.create(
             username=validated_data["username"],
             email=validated_data["email"],
-            first_name=validated_data["first_name"],
-            last_name=validated_data["last_name"],
         )
-        user.set_password(validated_data["password_1"])
+        user.set_password(validated_data["password"])
         user.save()
 
 
@@ -160,7 +152,26 @@ class UserChangePasswordSerializer(Serializer):
         return attrs
 
 
-class UserForgotPasswordSerializer(Serializer):
+class UserForgotPasswordPhoneSerializer(Serializer):
+    phone = serializers.CharField(max_length=11)
+
+    class Meta:
+        fields = ["phone"]
+
+    def validate(self, attrs):
+        phone = attrs.get("phone", "")
+        if User.objects.filter(phone=phone).exists():
+            user = User.objects.get(phone=phone)
+
+            # generate otp
+            # send otp to sms
+
+            return attrs
+        else:
+            raise ValidationError("phone not found")
+
+
+class UserForgotPasswordEmailSerializer(Serializer):
     email = serializers.EmailField(min_length=2)
 
     class Meta:

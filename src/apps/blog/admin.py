@@ -8,13 +8,6 @@ from apps.blog.models import Category, RecyclePost, Tag, Post, Comment
 from apps.blog.resources import PostResource
 from apps.blog.forms import TagsForm
 
-# @admin.register(Tag)
-# class TagAdmin(ImportExportModelAdmin, ExportActionMixin):
-#     list_display = ["id", "title", "slug"]
-#     search_fields = ["title"]
-#     prepopulated_fields = {"slug": ["title"]}
-
-
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
     list_display = [

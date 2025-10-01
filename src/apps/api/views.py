@@ -1,40 +1,43 @@
-import datetime
-from django.contrib import auth
+import jwt
 from django.db.models import Q
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie, vary_on_headers
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from rest_framework import status
-from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.throttling import UserRateThrottle
-from rest_framework.exceptions import NotAcceptable
 from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from django_filters import filters
 from apps.accounts.serializers import (
     ObtainTokenSerializer,
+    RequestOTPResponseSerializer,
     RequestOTPSerialize,
+    UserProfileSerializer,
     VerifyOTPSerialize,
 )
 from apps.accounts.models import OtpRequest, User
+from apps.api.filters import PostFilter
 from apps.api.pagination import CustomPagination
 from apps.api.renderers import UserRenderer
 
 # from apps.blog.documents import PostDocument
 from apps.api.serializers import (
-    UserForgotPasswordSerializer,
+    RegisterSerializer,
+    UserForgotPasswordEmailSerializer,
+    UserForgotPasswordPhoneSerializer,
     UserLoginSerializer,
-    UserRegisterSerializer,
     UserResetPasswordSerializer,
 )
 from apps.blog.models import Category, Post, Tag
 from apps.blog.serializers import (
     CategoryTreeSerializer,
-    CreateCategoryNodeSerializer,
     PostSerializer,
-    CategorySerializer,
     TagSerializer,
 )
 
@@ -59,6 +62,13 @@ class PostViewSet(ReadOnlyModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+    filterset_class = PostFilter
+    # filter_backends = [filters.OrderingFilter]
+    search_fields = ["title", "body"]
+
+    @method_decorator(cache_page(60 * 15, key_prefix="post_list"))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class PostSearch(APIView):
@@ -82,7 +92,7 @@ class CategoryViewSet(ReadOnlyModelViewSet):
 
 class UserRegisterView(APIView):
     def post(self, request):
-        serializer = UserRegisterSerializer(data=request.data)
+        serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             user = serializer.save()
             token = Helpers.get_tokens_for_user(user)
@@ -95,7 +105,7 @@ class UserRegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# class RegisterView(APIView):
+# class UserRegisterMobileView(APIView):
 #     def post(self, request):
 #         mobile = request.data.get('mobile')
 #         if not mobile:
@@ -123,24 +133,24 @@ class UserLoginView(GenericAPIView):
         return Response(serializer.errors)
 
 
-# class UserProfileView(APIView):
-# renderer_classes = [UserRenderer]
-#     permission_classes = [IsAuthenticated]
+class UserProfileView(APIView):
+    renderer_classes = [UserRenderer]
+    permission_classes = [IsAuthenticated]
 
-#     def get(self,  request, format=None):
-#         token = request.COOKIES.get('jwt')
+    def get(self, request, format=None):
+        token = request.COOKIES.get("jwt")
 
-#         if not token:
-#             raise AuthenticationFailed('unauthenticate')
+        if not token:
+            raise AuthenticationFailed("unauthenticated")
 
-#         try:
-#             payload = jwt.decode(token, 'secret', algorithm='HS256')
-#         except jwt.ExpiredSignatureError:
-#             raise AuthenticationFailed('un authenticate')
+        try:
+            payload = jwt.decode(token, "secret", algorithm="HS256")
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed("un authenticate")
 
-#         user = User.objects.get(id=payload['id'])
-#         serializer = UserProfileSerializer(user)
-#         return Response(serializer.data)
+        user = User.objects.get(id=payload["id"])
+        serializer = UserProfileSerializer(user)
+        return Response(serializer.data)
 
 
 class UserLogoutView(GenericAPIView):
@@ -154,8 +164,20 @@ class UserLogoutView(GenericAPIView):
         return Response("logout", status=status.HTTP_204_NO_CONTENT)
 
 
-class UserForgotPasswordAPIView(GenericAPIView):
-    serializer_class = UserForgotPasswordSerializer
+class UserForgotPasswordEmailAPIView(GenericAPIView):
+    serializer_class = UserForgotPasswordEmailSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            return Response(
+                {"msg": "password reset link sent"}, status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserForgotPasswordPhoneAPIView(GenericAPIView):
+    serializer_class = UserForgotPasswordPhoneSerializer
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -270,7 +292,7 @@ class RequestOtpAPIView(APIView):
     # throttle_classes = [OncePerMinuteThrottle]
 
     def post(self, request):
-        serializer = RequestOtpSerializer(data=request.data)
+        serializer = RequestOTPSerialize(data=request.data)
         if serializer.is_valid():
             mobile = serializer.validated_data["mobile"]
             channel = serializer.validated_data["channel"]
@@ -280,14 +302,14 @@ class RequestOtpAPIView(APIView):
 
             # Send sms
 
-            return Response(RequestOtpResponseSerializer(otp_request).data)
+            return Response(RequestOTPResponseSerializer(otp_request).data)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class VerifyOtpAPIView(APIView):
     def post(self, request):
-        serializer = VerifyOtpSerializer(data=request.data)
+        serializer = VerifyOTPSerialize(data=request.data)
         if serializer.is_valid():
             request_id = serializer.validated_data["request_id"]
             mobile = serializer.validated_data["mobile"]

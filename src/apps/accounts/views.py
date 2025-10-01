@@ -76,7 +76,15 @@ class UserLoginView(BaseLoginView):
     success_url = reverse_lazy("blog:post_list")
 
 
-def login(request):
+class PasswordChangeView(BasePasswordChangeView):
+    pass
+
+
+class PasswordChangeDoneView(TemplateView):
+    pass
+
+
+def user_login(request):
     if request.method == "POST":
         form = UserLoginForm(data=request.POST)
         if form.is_valid():
@@ -89,6 +97,7 @@ def login(request):
                     login(request, user)
                     return redirect("home_view")
                 else:
+                    messages.error(request, "account is not active")
                     return HttpResponse("account is not active")
             else:
                 messages.info(request, "credentials invalid")
@@ -115,15 +124,7 @@ def activate_account_mail(request, uidb64, token):
         return HttpResponse("link invalid")
 
 
-class PasswordChangeView(BasePasswordChangeView):
-    pass
-
-
-class PasswordChangeDoneView(TemplateView):
-    pass
-
-
-def register(request):
+def user_register(request):
     if request.method == "POST":
         email = request.POST["email"]
         password = request.POST["password"]
@@ -178,5 +179,3 @@ def change_password(request):
         else:
             form = ChangePasswordForm()
         return render(request, "", {"form": form})
-
-

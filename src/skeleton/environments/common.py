@@ -89,6 +89,7 @@ INSTALLED_APPS = [
     'django_recaptcha',
     'widget_tweaks',
     'django_quill',
+    'silk',
 
     "utils",
     "django_cleanup.apps.CleanupConfig",
@@ -114,6 +115,8 @@ MIDDLEWARE = [
     "drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware",
     "auditlog.middleware.AuditlogMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    'silk.middleware.SilkyMiddleware',
+
 ]
 
 ROOT_URLCONF = "skeleton.urls"
@@ -379,6 +382,8 @@ JALALI_DATE_DEFAULTS = {
         },
     },
 }
+
+SILKY_PYTHON_PROFILER = True
 
 SITE_ID=1
 IMPORT_EXPORT_FORMATS = [CSV, XLSX]

@@ -1,4 +1,5 @@
 import uuid
+import os
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.text import slugify
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -22,11 +23,11 @@ class Helpers:
             'access': str(refresh.access_token)
         }
 
-    # @staticmethod
-    # def generate_filename(instance, filename):
-    #     ext = filename.split(".")[-1]
-    #     random_filename = f"{uuid.uuid4()}.{ext}"
-    #     return os.path.join('avatars/',random_filename)
+    @staticmethod
+    def generate_filename(instance, filename):
+        ext = filename.split(".")[-1]
+        random_filename = f"{uuid.uuid4()}.{ext}"
+        return os.path.join('avatars/',random_filename)
 
     @staticmethod
     def get_ip_address(request):

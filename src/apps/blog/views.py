@@ -108,9 +108,15 @@ class CategoryDetailView(DetailView):
     context_object_name = 'category'
 
 
-# class SearchListView(ListView):
-#     pass
+class SearchListView(ListView):
+    template_name = 'blog/post_list.html'
+    paginate_by = 24
 
+    def get_queryset(self):
+        query = self.request.GET.get('q')
+        if query is not None:
+            return Post.objects.filter(title__icontains=query)
+        return Post.objects.all()
 
 def likePost(request, id):
     post = Post.objects.get(id=id)
