@@ -17,3 +17,7 @@ class CommentCreateForm(forms.ModelForm):
 
 class TagsForm(forms.ModelForm):
     tags = TagField(required=False, widget=LabelWidget)
+    
+
+class SearchForm(forms.Form):
+    query = forms.CharField()

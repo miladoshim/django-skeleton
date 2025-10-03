@@ -4,6 +4,7 @@ import string
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.utils import timezone
@@ -18,30 +19,32 @@ class User(AbstractUser):
     Custom User model that have extra fields
     """
 
-
     class Meta:
         verbose_name = _("کاربر")
         verbose_name_plural = _("کاربر ها")
 
     # mobile = models.CharField(null=True, blank=True,
     #                           unique=True, max_length=11)
-    # mobile_verified = models.BooleanField(default=False)
     # USERNAME_FIELD = 'email'
     # REQUIRED_FIELDS = ['mobile']
 
     # objects = UserManager()
 
-    # def __str__(self):
-    #     return self.username
+    def __str__(self):
+        return self.username
+    
+    # def get_absolute_url(self):
+    #     return reverse("accounts:profile_view", kwargs={"username": self.username})
+    
 
 
 
 image_ext_validator = FileExtensionValidator(['png', 'jpg', 'jpeg']) 
 
 class UserProfile(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     avatar = models.ImageField(
-        upload_to="avatars/", blank=True, null=True, default="default_avatar.jpg",
+        upload_to="avatars/%Y/%m/%d/", blank=True, null=True, default="default_avatar.jpg",
     )
     gender = models.CharField(
         max_length=8, choices=GenderChoices.choices, default=GenderChoices.unknown

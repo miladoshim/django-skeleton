@@ -20,8 +20,8 @@ SECRET_KEY = config("SECRET_KEY")
 
 DEBUG = config("APP_DEBUG", cast=bool)
 
-DOMAIN = 'skeleton.com'
-SITE_NAME = 'Skeleton'
+DOMAIN = "skeleton.com"
+SITE_NAME = "Skeleton"
 ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
@@ -65,7 +65,7 @@ INSTALLED_APPS = [
     "drf_api_logger",
     "django_guid",
     "taggit",
-    'taggit_labels',
+    "taggit_labels",
     "compressor",
     "django_components",
     "jalali_date",
@@ -74,7 +74,7 @@ INSTALLED_APPS = [
     "crispy_bootstrap5",
     "treebeard",
     "auditlog",
-    'tinymce',
+    "tinymce",
     "extra_settings",
     "pwa",
     "allauth",
@@ -83,14 +83,13 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     # 'redirects',
     "django_unicorn",
-    'django_celery_results',
-    'django_celery_beat',
+    "django_celery_results",
+    "django_celery_beat",
     "azbankgateways",
-    'django_recaptcha',
-    'widget_tweaks',
-    'django_quill',
-    'silk',
-
+    "django_recaptcha",
+    "widget_tweaks",
+    "django_quill",
+    "silk",
     "utils",
     "django_cleanup.apps.CleanupConfig",
 ]
@@ -115,8 +114,7 @@ MIDDLEWARE = [
     "drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware",
     "auditlog.middleware.AuditlogMiddleware",
     "allauth.account.middleware.AccountMiddleware",
-    'silk.middleware.SilkyMiddleware',
-
+    "silk.middleware.SilkyMiddleware",
 ]
 
 ROOT_URLCONF = "skeleton.urls"
@@ -162,8 +160,7 @@ TEMPLATES = [
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",  # this is default
     "guardian.backends.ObjectPermissionBackend",
-    'allauth.account.auth_backends.AuthenticationBackend',
-
+    "allauth.account.auth_backends.AuthenticationBackend",
 )
 
 WSGI_APPLICATION = "skeleton.wsgi.application"
@@ -202,8 +199,7 @@ INTERNAL_IPS = [
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "EMAIL_AUTHENTICATION": True,
-        'FETCH_USERINFO' : True,
-
+        "FETCH_USERINFO": True,
         "APPS": [
             {
                 "client_id": "123",
@@ -227,10 +223,10 @@ SOCIALACCOUNT_PROVIDERS = {
         "AUTH_PARAMS": {
             "access_type": "online",
         },
-        'OAUTH_PKCE_ENABLED': True,
+        "OAUTH_PKCE_ENABLED": True,
     }
 }
-SOCIALACCOUNT_LOGIN_ON_GET=True
+SOCIALACCOUNT_LOGIN_ON_GET = True
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -280,6 +276,7 @@ STATICFILES_FINDERS = (
 )
 
 LOGIN_REDIRECT_URL = "blog:post_list"
+LOGIN_URL = "accounts:login_view"
 LOGOUT_REDIRECT_URL = "blog:post_list"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -385,7 +382,7 @@ JALALI_DATE_DEFAULTS = {
 
 SILKY_PYTHON_PROFILER = True
 
-SITE_ID=1
+SITE_ID = 1
 IMPORT_EXPORT_FORMATS = [CSV, XLSX]
 
 CELERY_TIMEZONE = TIME_ZONE
@@ -395,13 +392,13 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 # CELERY_BROKER_URL = broker_url = 'amqp://myuser:mypassword@localhost:5672/myvhost'
 # CELERY_CACHE_BACKEND = 'default'
 CELERY_BROKER_URL = "redis://localhost:6379"
-CELERY_RESULT_BACKEND = 'django-db'
+CELERY_RESULT_BACKEND = "django-db"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_DEFAULT_QUEUE = "default"
 CELERY_RESULT_EXTENDED = True
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 TAGGIT_CASE_INSENSITIVE = True
 
@@ -409,8 +406,8 @@ X_FRAME_OPTIONS = "SAMEORIGIN"
 SILENCED_SYSTEM_CHECKS = ["security.W019"]
 # USE_X_FORWARDED_HOST = True
 # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-CSRF_COOKIE_SECURE=True
-SESSION_COOKIE_SECURE=True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 # SECURE_SSL_REDIRECT=True
 
 # SESSION_ENGINE = "django.contrib.sessions.backends.cache"
@@ -426,13 +423,13 @@ AZ_IRANIAN_BANK_GATEWAYS = {
             "SANDBOX": True,
         },
     },
-    "IS_SAMPLE_FORM_ENABLE": True, 
+    "IS_SAMPLE_FORM_ENABLE": True,
     "DEFAULT": "ZARINPAL",
-    "CURRENCY": "IRT",  
+    "CURRENCY": "IRT",
     "TRACKING_CODE_QUERY_PARAM": "tc",
     "TRACKING_CODE_LENGTH": 16,  # اختیاری
     "SETTING_VALUE_READER_CLASS": "azbankgateways.readers.DefaultReader",  # اختیاری
-    "IS_SAFE_GET_GATEWAY_PAYMENT": True, 
+    "IS_SAFE_GET_GATEWAY_PAYMENT": True,
     # 'GO_TO_BANK_GATEWAY_NAMESPACE': 'api:payment:go-to-bank-gateway',
     # 'CALLBACK_NAMESPACE': 'api:payment:callback',
     # 'SAMPLE_RESULT_NAMESPACE': 'api:payment:sample-result',
@@ -486,32 +483,34 @@ PWA_APP_SCREENSHOTS = [
     }
 ]
 
-RECAPTCHA_PUBLIC_KEY = 'MyRecaptchaKey123'
-RECAPTCHA_PRIVATE_KEY = 'MyRecaptchaPrivateKey456'
+RECAPTCHA_PUBLIC_KEY = "MyRecaptchaKey123"
+RECAPTCHA_PRIVATE_KEY = "MyRecaptchaPrivateKey456"
 RECAPTCHA_REQUIRED_SCORE = 0.85
-SILENCED_SYSTEM_CHECKS = ['django_recaptcha.recaptcha_test_key_error']
+SILENCED_SYSTEM_CHECKS = ["django_recaptcha.recaptcha_test_key_error"]
 
-MESSAGE_TAGS = {
-    messages.ERROR:'danger'
-}
+MESSAGE_TAGS = {messages.ERROR: "danger"}
 
 QUILL_CONFIGS = {
-    'default':{
-        'theme': 'snow',
-        'modules': {
-            'syntax': True,
-            'toolbar': [
+    "default": {
+        "theme": "snow",
+        "modules": {
+            "syntax": True,
+            "toolbar": [
                 [
-                    {'header': []},
-                    {'align': []},
-                    'bold', 'italic', 'underline', 'strike', 'blockquote',
-                    {'color': []},
-                    {'background': []},
+                    {"header": []},
+                    {"align": []},
+                    "bold",
+                    "italic",
+                    "underline",
+                    "strike",
+                    "blockquote",
+                    {"color": []},
+                    {"background": []},
                 ],
-                [{'direction' : 'rtl'}],
-                ['code-block', 'link'],
-                ['clean'],
-            ]
-        }
+                [{"direction": "rtl"}],
+                ["code-block", "link"],
+                ["clean"],
+            ],
+        },
     }
 }

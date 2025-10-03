@@ -2,13 +2,14 @@ from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin, ExportActionMixin
 from django.contrib.auth import get_user_model
 
+from apps.accounts.models import UserProfile
+
 User = get_user_model()
 
 
 @admin.action(description="Mark selected users as verified")
 def mark_verified(modeladmin, request, queryset):
     queryset.update(is_verified=True)
-
 
 @admin.register(User)
 class UserAdmin(ImportExportModelAdmin):
@@ -66,3 +67,9 @@ class UserAdmin(ImportExportModelAdmin):
 
     class Meta:
         pass
+
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ['user', 'avatar', 'gender']
+    raw_id_fields = ['user']

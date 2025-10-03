@@ -1,4 +1,5 @@
 from django.urls import path, include
+from django.views.decorators.cache import cache_page
 from rest_framework import routers
 from .views import PostListView, PostDetailView, CategoryListView, CategoryDetailView
 
@@ -13,7 +14,7 @@ urlpatterns = [
 ]
 
 urlpatterns = [
-    path("", PostListView.as_view(), name="post_list"),
+    path("", cache_page(60 * 15)(PostListView.as_view()), name="post_list"),
     path("<str:slug>/", PostDetailView.as_view(), name="post_detail"),
     path("categories", CategoryListView.as_view(), name="category_list"),
     path("categories/<str:slug>", CategoryDetailView.as_view(), name="category_detail"),

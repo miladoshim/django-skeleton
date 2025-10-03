@@ -24,6 +24,7 @@ from jalali_date import datetime2jalali
 from filebrowser.fields import FileBrowseField
 from auditlog.registry import auditlog
 from tinymce.models import HTMLField
+from django_extensions.db.fields import AutoSlugField
 
 class Category(MP_Node):
     parent = models.ForeignKey(
@@ -77,7 +78,7 @@ class Post(BaseModel, HitCountMixin):
         blank=True,
         null=True,
     )
-    title = models.CharField(_("عنوان"), max_length=150, db_index=True)
+    title = models.CharField(_("عنوان"), max_length=255, db_index=True)
     slug = models.SlugField(
         unique=True, verbose_name=_("اسلاگ"), allow_unicode=True, default=None
     )
@@ -125,6 +126,9 @@ class Post(BaseModel, HitCountMixin):
         ordering = ["-created_at"]
         verbose_name = _("مقاله")
         verbose_name_plural = _("مقاله ها")
+        indexes = [
+            models.Index(fields=['title'])
+        ]
 
     def __str__(self) -> str:
         return self.title

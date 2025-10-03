@@ -5,9 +5,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, render
 from django.contrib.auth.models import User
 from django.db.models import Count, Sum
+from django.views.decorators.http import require_http_methods, require_safe
+from django.views.decorators.cache import cache_page
 from auditlog.mixins import LogAccessMixin
+from django.contrib.postgres.search import TrigramSimilarity
 from .models import Category, Post
-from .forms import CommentCreateForm
+from .forms import CommentCreateForm, SearchForm
 
 
 class PostListView(ListView):
@@ -20,8 +23,10 @@ class PostListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['post_count'] = Post.objects.aggregate(count=Count('id'))
-        context['categories'] = Post.objects.values("category").annotate(category_count=Count("category"))
+        context["post_count"] = Post.objects.aggregate(count=Count("id"))
+        context["categories"] = Post.objects.values("category").annotate(
+            category_count=Count("category")
+        )
         # context['popular_tags'] = Post.objects.values("tags__name").annotate(total_view=Sum("viewCount")).order_by("-total_views")[:8]
         return context
 
@@ -36,8 +41,17 @@ class PostDetailView(LogAccessMixin, FormMixin, DetailView):
     #     #     slug = self.kwargs.get('post_id')
     #     #     return get_object_or_404(Post.objects.published(), slug=slug)
 
+    def get_similar_posts(self):
+        post_tags_ids = self.object.tags.values_list("id", flat=True)
+        similar_posts = (
+            Post.published.filter(tags__in=post_tags_ids)
+            .exclude(id=self.object.id)
+            .annotate(same_tags=Count("tags"))
+            .order_by("-same_tags", "-created_at")[:8]
+        )
+
     def get_success_url(self) -> str:
-        return reverse('blog:post_detail', kwargs={'pk': self.object.id})
+        return reverse("blog:post_detail", kwargs={"pk": self.object.id})
 
     def get_context_data(self, **kwargs):
         context = super(PostDetailView, self).get_context_data(**kwargs)
@@ -47,7 +61,6 @@ class PostDetailView(LogAccessMixin, FormMixin, DetailView):
         # context['related_posts'] = Post.published.all()
         context["comments"] = self.object.comments.filter(is_approved=True)
         return context
-
 
     def post(self, *args, **kwargs):
         self.object = self.get_object()
@@ -99,24 +112,25 @@ class PostDetailView(LogAccessMixin, FormMixin, DetailView):
 class CategoryListView(ListView):
     model = Category
     template_name = "blog/category_list.html"
-    context_object_name = 'categories'
+    context_object_name = "categories"
 
 
 class CategoryDetailView(DetailView):
     model = Category
     template_name = "blog/category_detail.html"
-    context_object_name = 'category'
+    context_object_name = "category"
 
 
 class SearchListView(ListView):
-    template_name = 'blog/post_list.html'
+    template_name = "blog/post_list.html"
     paginate_by = 24
 
     def get_queryset(self):
-        query = self.request.GET.get('q')
+        query = self.request.GET.get("q")
         if query is not None:
             return Post.objects.filter(title__icontains=query)
         return Post.objects.all()
+
 
 def likePost(request, id):
     post = Post.objects.get(id=id)
@@ -125,3 +139,24 @@ def likePost(request, id):
         return "you are like this post"
     post.likes.add(user)
     return ""
+
+
+@require_safe
+def search_posts_trgm(request):
+    form = SearchForm()
+    query = None
+    results = []
+
+    if "query" in request.GET:
+        form = SearchForm(request.GET)
+        if form.is_valid():
+            query = form.changed_data["query"]
+            results = (
+                Post.published.annotate(
+                    similarity=TrigramSimilarity("title", query),
+                )
+                .filter(similarity__gt=0.1)
+                .order_by("-similarity")
+            )
+
+    return render(request,'blog/search.html', {"form": form, "query": query, "results": results})

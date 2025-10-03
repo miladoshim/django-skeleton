@@ -17,9 +17,9 @@ class PublishStatusChoice(models.TextChoices):
 
 
 class GenderChoices(models.TextChoices):
-    male = "male"
-    female = "female"
-    unknown = "unknown"
+    male = "m", _("مرد")
+    female = "f", _("زن")
+    unknown = "u", _("نامشخص")
     __empty__ = "(Unknown)"
 
 

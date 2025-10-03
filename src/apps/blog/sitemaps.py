@@ -28,11 +28,11 @@ class CategorySitemap(Sitemap):
 
 class PostSitemap(Sitemap):
     protocol = "https"
-    priority = "0.7"
+    priority = 0.8
     changefreq = "daily"
 
     def items(self):
-        return Post.objects.all()
+        return Post.published.all()
 
     def lastmod(self, obj):
         return obj.updated_at

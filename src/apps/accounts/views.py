@@ -16,7 +16,13 @@ from django.contrib import messages
 from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode
-from apps.accounts.forms import ChangePasswordForm, UserRegisterForm, UserLoginForm
+from apps.accounts.forms import (
+    ChangePasswordForm,
+    UserEditForm,
+    UserProfileEditForm,
+    UserRegisterForm,
+    UserLoginForm,
+)
 from .models import UserProfile, User
 from utils.helpers import token_generator
 
@@ -95,6 +101,7 @@ def user_login(request):
             if user is not None:
                 if user.is_active:
                     login(request, user)
+                    messages.success(request, "login successfully")
                     return redirect("home_view")
                 else:
                     messages.error(request, "account is not active")
@@ -154,7 +161,10 @@ def user_register(request):
 
 @login_required(login_url="accounts:login_view")
 def user_logout(request):
+    # user = request.user
+    # user.objects.
     logout(request)
+
     return redirect("blog:post_list")
 
 
@@ -179,3 +189,31 @@ def change_password(request):
         else:
             form = ChangePasswordForm()
         return render(request, "", {"form": form})
+
+
+@login_required
+def edit_profile(request):
+    if request.method == "POST":
+        user_edit_form = UserEditForm(instance=request.user, data=request.POST)
+        profile_edit_form = UserProfileEditForm(
+            isinstance=request.user.profile, data=request.POST, files=request.FILES
+        )
+
+        if user_edit_form.is_valid() and profile_edit_form.is_valid():
+            user_edit_form.save()
+            profile_edit_form.save()
+            messages.success(request, "profile updated")
+        else:
+            messages.error(request,'error in updating profile')
+    else:
+        user_edit_form = UserEditForm(instance=request.user)
+        profile_edit_form = UserProfileEditForm(isinstance=request.user.profile)
+
+    return render(
+        request,
+        "accounts/edit.html",
+        {
+            "user_edit_form": user_edit_form,
+            "profile_edit_form": profile_edit_form,
+        },
+    )

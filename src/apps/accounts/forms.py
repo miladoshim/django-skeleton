@@ -42,8 +42,8 @@ class LoginForm(ModelForm):
 
 
 class UserLoginForm(Form):
-    username = forms.TextInput()
-    password = forms.TextInput()
+    username = forms.CharField()
+    password = forms.CharField(widget=forms.PasswordInput)
 
 
 class ChangePasswordForm(Form):
@@ -67,22 +67,21 @@ class ChangePasswordForm(Form):
         return password_confirmation
 
 
-class AccountSettingForm(ModelForm):
+class UserEditForm(ModelForm):
     class Meta:
         model = User
-        fields = []
+        fields = ['first_name', 'last_name', 'email']
+        
+class UserProfileEditForm(ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ["avatar", "gender", "birthday"]
 
     def __init__(self, *args, **kwargs):
-        super(AccountSettingForm, self).__init__(*args, **kwargs)
+        super(UserProfileEditForm, self).__init__(*args, **kwargs)
         self.fields["birthday"] = JalaliDateField(
             label=_("تاریخ تولد"), widget=AdminJalaliDateWidget
         )
 
     def save(self, commit):
-        account = super(AccountSettingForm, self).save(commit=False)
-
-
-class UserProfileForm(ModelForm):
-    class Meta:
-        model = UserProfile
-        exclude = []
+        account = super(UserProfileEditForm, self).save(commit=False)
