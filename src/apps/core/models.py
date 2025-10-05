@@ -99,12 +99,21 @@ class NewsletterSubscriber(BaseModel):
     def __str__(self):
         return "%s" % self.email
 
+#     class Meta:
+#         db_table = 'ip_addresses'
+#         verbose_name = _("آدرس IP")
+#         verbose_name_plural = _("آدرس IP ها")
 
 class FaqGroup(BaseModel):
     title = models.TextField(max_length=255)
 
     def __str__(self):
         return self.title
+    
+    #     class Meta:
+#         db_table = 'ip_addresses'
+#         verbose_name = _("آدرس IP")
+#         verbose_name_plural = _("آدرس IP ها")
 
 
 class Faq(BaseModel):
@@ -116,3 +125,32 @@ class Faq(BaseModel):
 
     def __str__(self):
         return self.question
+    
+    #     class Meta:
+#         db_table = 'ip_addresses'
+#         verbose_name = _("آدرس IP")
+#         verbose_name_plural = _("آدرس IP ها")
+
+
+class ContactUsSubject(BaseModel):
+    title = models.TextField(max_length=255)
+
+    def __str__(self):
+        return self.title
+    #     class Meta:
+#         db_table = 'ip_addresses'
+#         verbose_name = _("آدرس IP")
+#         verbose_name_plural = _("آدرس IP ها")
+class ContactUs(BaseModel):
+    subject = models.OneToOneField(ContactUsSubject, on_delete=models.CASCADE)
+    fullname = models.TextField(max_length=255)
+    message = models.TextField(max_length=255)
+    phone = models.TextField(max_length=255)
+
+    def __str__(self):
+        return self.fullname
+    
+    #     class Meta:
+#         db_table = 'ip_addresses'
+#         verbose_name = _("آدرس IP")
+#         verbose_name_plural = _("آدرس IP ها")

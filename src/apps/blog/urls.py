@@ -1,17 +1,8 @@
-from django.urls import path, include
+from django.urls import path
 from django.views.decorators.cache import cache_page
-from rest_framework import routers
 from .views import PostListView, PostDetailView, CategoryListView, CategoryDetailView
 
 app_name = "blog"
-
-router = routers.DefaultRouter()
-# router.register(r'tags', views.UserViewSet)
-# router.register(r'posts', views.UserViewSet)
-
-urlpatterns = [
-    path("", include(router.urls)),
-]
 
 urlpatterns = [
     path("", cache_page(60 * 15)(PostListView.as_view()), name="post_list"),

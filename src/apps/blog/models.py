@@ -16,8 +16,6 @@ from meta.models import ModelMeta
 from taggit.managers import TaggableManager
 from taggit.models import Tag
 from treebeard.mp_tree import MP_Node
-from apps.accounts.models import User
-from apps.core.models import BaseModel
 from apps.core.managers import PublishedManager
 from apps.core.models import PublishStatusChoice, BaseModel
 from jalali_date import datetime2jalali
@@ -25,6 +23,10 @@ from filebrowser.fields import FileBrowseField
 from auditlog.registry import auditlog
 from tinymce.models import HTMLField
 from django_extensions.db.fields import AutoSlugField
+from django.contrib.auth import get_user_model
+
+
+User = get_user_model()
 
 class Category(MP_Node):
     parent = models.ForeignKey(

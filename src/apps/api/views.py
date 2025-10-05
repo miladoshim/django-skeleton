@@ -3,7 +3,6 @@ from django.db.models import Q
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from django.views.decorators.vary import vary_on_cookie, vary_on_headers
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from rest_framework import status
@@ -13,7 +12,6 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-from django_filters import filters
 from apps.accounts.serializers import (
     ObtainTokenSerializer,
     RequestOTPResponseSerializer,
@@ -25,8 +23,6 @@ from apps.accounts.models import OtpRequest, User
 from apps.api.filters import PostFilter
 from apps.api.pagination import CustomPagination
 from apps.api.renderers import UserRenderer
-
-# from apps.blog.documents import PostDocument
 from apps.api.serializers import (
     RegisterSerializer,
     UserForgotPasswordEmailSerializer,

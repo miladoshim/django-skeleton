@@ -1,9 +1,10 @@
 from django.db.models import QuerySet, Manager, Q
 from django.utils import timezone
-from apps.blog.models import PublishStatusChoice
+# from apps.blog.models import PublishStatusChoice
+
 class PublishedManager(Manager):
     def get_queryset(self) -> QuerySet:
-        return super(PublishedManager, self).get_queryset().filter(published_status=PublishStatusChoice.published)
+        return super(PublishedManager, self).get_queryset().filter(published_status='p')
 
 class SoftDeleteQuerySet(QuerySet):
     def delete(self):

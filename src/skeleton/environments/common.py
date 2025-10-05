@@ -90,6 +90,7 @@ INSTALLED_APPS = [
     "widget_tweaks",
     "django_quill",
     "silk",
+
     "utils",
     "django_cleanup.apps.CleanupConfig",
 ]
