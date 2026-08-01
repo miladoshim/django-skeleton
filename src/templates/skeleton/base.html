@@ -1,214 +1,56 @@
-{% load static %} {% load meta %} {% load unicorn %} {% load pwa %} 
-
+{% load static %} {% load meta %} {% load pwa %}
 
 <!DOCTYPE html>
-<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<!-- [if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif] -->
+<!-- [if IE 7]> <html class="no-js lt-ie9 lt-ie8"> <![endif] -->
+<!-- [if IE 8]> <html class="no-js lt-ie9"> <![endif] -->
+<!-- [if gt IE 8]> <html class="no-js"> <![endif] -->
 <html lang="fa" dir="rtl">
-  <head {% meta_namespaces %}>
-    {% include "meta/meta.html" %}
+  <head>
+    {% include 'meta/meta.html' %}
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <link rel="stylesheet" href="{% static 'css/bootstrap.rtl.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/meanmenu.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/owl.theme.default.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/owl.carousel.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/icofont.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/font-awesome-pro.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/scrollcue.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/magnific-popup.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/responsive.css' %}" />
-    {% comment %} <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}" /> {% endcomment %}
 
-    <title>Skeleton - {% block title %} {% endblock title %}</title>
-     {% block styles %} {% endblock styles %} 
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}" />
+
+    <title>
+      Skeleton -{% block title %}
+
+      {% endblock %}
+    </title>
+
+    {% block styles %}
+
+    {% endblock %}
+
     {% progressive_web_app_meta %}
-    {% unicorn_scripts %}
+
     {% component_css_dependencies %}
   </head>
   <body>
-    <!--[if lt IE 7]>
+    <!--    [if lt IE 7]>
       <p class="browsehappy">
         You are using an <strong>outdated</strong> browser. Please
         <a href="#">upgrade your browser</a> to improve your experience.
       </p>
-    <![endif]-->
+    <![endif]     -->
 
     {% csrf_token %}
 
-    <div class="navbar-area bg-black">
-      <div class="main-nav">
-        <div class="container mw-1680">
-          <nav class="navbar navbar-expand-md navbar-light">
-            <a class="navbar-brand" href="index.html"><img src="{% static 'images/white-logo.svg' %}" alt="logo" /></a><div class="collapse navbar-collapse for-mobile-menu" id="navbarSupportedContent">
-              <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                  <a href="/blog/" class="nav-link">صفحه اصلی</a>
-                </li>
-                <li class="nav-item">
-                  <a href="/blog/" class="nav-link">وبلاگ</a>
-                </li>
-                {% if user.is_authenticated %}
-                  <li class="nav-item">
-                    <a href="#" class="nav-link dropdown-toggle active">حساب کاربری</a><ul class="dropdown-menu">
-                      <li class="nav-item">
-                        <a href="blog.html" class="nav-link active">تنظیمات</a>
-                      </li>
-                      <li class="nav-item">
-                        <a href="single-blog.html" class="nav-link">نظرات من</a>
-                      </li>
-                    </ul>
-                  </li> 
-                  {{ request.user.first_name|default:request.user.username }}
-                  <li class="nav-item">
-                    <a href="/admin/" class="nav-link">admin</a>
-                  </li>
-                  <li class="nav-item">
-                    <a href="{% url 'accounts:logout' %}" class="nav-link">خروج</a>
-                  </li>
+    <main class="main">
+      {% block content %}
 
-                {% else %}
-                    <li class="nav-item">
-                      <a href="{% url 'accounts:login_view' %}" class="nav-link">ورود</a>
-                    </li>
-                {% endif %}
-               
-                {{ user }}
-                
-                
-              </ul>
-              <div class="nav-right-options d-flex align-items-center">
-                
-                <ul class="social-link ps-0 mb-0 list-unstyled">
-                  <li>
-                    <a href="https://facebook.com/" target="_blank"><i class="fa-brands fa-facebook-f"></i></a>
-                  </li>
-                  <li>
-                    <a href="https://twitter.com/" target="_blank"><i class="fa-brands fa-twitter"></i></a>
-                  </li>
-                  <li>
-                    <a href="https://instagram.com/" target="_blank"><i class="fa-brands fa-instagram"></i></a>
-                  </li>
-                  <li>
-                    <a href="https://linkedin.com/" target="_blank"><i class="fa-brands fa-linkedin-in"></i></a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </nav>
-        </div>
-      </div>
-      <div class="mobile-nav">
-        <div class="container">
-          <div class="mobile-menu">
-            <div class="logo">
-              <a href="index.html"><img src="{% static 'images/white-logo.svg' %}" alt="logo" /></a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="page-banner-area bg-black bg-img" data-background="{% static 'images/banner-bg-shape.png' %}">
-      <div class="container mw-1680">
-        <div class="page-banner-content">
-          <h2>{% block page_title %}{% endblock page_title %}</h2>
-          <ul class="ps-0 mb-0 list-unstyled justify-content-center page-breadcrumb d-flex flex-wrap gap-4">
-            <li>
-              <a href="index.html">صفحه اصلی</a>
-            </li>
-            <li>
-              <span class="active">وبلاگ</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-    
-    <main class="main">{% block content %} {% endblock content %}</main>
+      {% endblock %}
+    </main>
 
-    <div class="footer-area pt-100 pb-75 bg-color-030303">
-      <div class="container">
-        <div class="row">
-          <div class="col-lg-3 col-sm-6">
-            <div class="footer-single-item style-three">
-              <a href="index.html" class="logo"><img src="{% static 'images/white-logo.svg' %}" alt="white-logo" /></a><p>قالب آماده برای پروژه های جنگو</p>
-              <ul class="social-link ps-0 mb-0 list-unstyled">
-                <li>
-                  <a href="https://twitter.com/" target="_blank"><i class="fa-brands fa-twitter"></i></a>
-                </li>
-                <li>
-                  <a href="https://instagram.com/" target="_blank"><i class="fa-brands fa-instagram"></i></a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div class="col-lg-3 col-sm-6">
-            <div class="footer-single-item style-three ms-lg-5">
-              <h3>لینک های مفید</h3>
-              <ul class="useful-link">
-                <li>
-                  <a href="about-us.html">درباره ما</a>
-                </li>
-                <li>
-                  <a href="contact/">با ما تماس بگیرید</a>
-                </li>
-                <li>
-                  <a href="faqs/">سوالات متداول</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div class="col-lg-3 col-sm-6">
-            <div class="footer-single-item style-three">
-              <h3>با ما تماس بگیرید</h3>
-              <ul class="contact-info ms-0">
-                <li>
-                  <a href="mailto:miladimos@outlook.com">miladimos@outlook.com</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div class="col-lg-3 col-sm-6">
-            <div class="footer-single-item style-three">
-              <h3>مشترک ما شوید</h3>
-              <p>برای به روز رسانی های بعدی در خبرنامه ما مشترک شوید. نگران نباشید ما آدرس ایمیل شما را اسپم نمی کنیم</p>
-              <form class="position-relative z-1">
-                <input type="text" class="form-control" placeholder="ایمیل خود را وارد کنید" /><button type="submit" class="p-0 bg-transparent border-0 send-btn position-absolute top-50 end-0 translate-middle-y"><i class="fa-light fa-paper-plane-top"></i></button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="bg-color-030303">
-      <div class="container">
-        <p class="copy-right style-three">
-          تمامی حقوق محفوظ است.
-        </p>
-      </div>
-    </div>
-    <div class="back-to-top text-center">
-      <i class="icofont-simple-up"></i>
-    </div>
-    <script src="{% static 'js/jquery.min.js' %}"></script>
-    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-    <script src="{% static 'js/jquery.meanmenu.js' %}"></script>
-    <script src="{% static 'js/owl.carousel.min.js' %}"></script>
-    <script src="{% static 'js/scrollcue.js' %}"></script>
-    <script src="{% static 'js/magnific-popup.min.js' %}"></script>
-    <script src="{% static 'js/counterup.min.js' %}"></script>
-    <script src="{% static 'js/waypoints.min.js' %}"></script>
-    <script src="{% static 'js/mixitup.min.js' %}"></script>
-    <script src="{% static 'js/smoothscroll.min.js' %}"></script>
-    <script src="{% static 'js/custom.js' %}"></script>
+    <script src="{% static 'js/scripts.js' %}"></script>
 
-    {% block scripts %} {% endblock scripts %}
+    {% block scripts %}
+
+    {% endblock %}
+
     {% component_js_dependencies %}
   </body>
 </html>

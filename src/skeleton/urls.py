@@ -22,12 +22,18 @@ urlpatterns = [
     path("unicorn/", include("django_unicorn.urls")),
     path("", include("pwa.urls")),
     path("bankgateways/", az_bank_gateways_urls()),
-    path('silk/', include('silk.urls', namespace='silk')),
-] + debug_toolbar_urls()
+    path("silk/", include("silk.urls", namespace="silk")),
+]
+
+
+if not settings.TESTING:
+    from debug_toolbar.toolbar import debug_toolbar_urls
+
+    urlpatterns = [
+        *urlpatterns,
+    ] + debug_toolbar_urls()
 
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    
-# handler404 = error404_handler
