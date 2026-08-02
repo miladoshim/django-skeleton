@@ -47,7 +47,7 @@ AWS_S3_ENDPOINT_URL = config(
 AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME", default="us-east-1")
 AWS_LOCATION = "uploads"
 AWS_STATIC_LOCATION = "static"
-AWS_S3_CUSTOM_DOMAIN = "storage.cocooned.ir"
+AWS_S3_CUSTOM_DOMAIN = "storage.skeleton.ir"
 AWS_S3_USE_SSL = True
 AWS_S3_VERIFY = True
 AWS_S3_CHECK_BUCKET = False
@@ -67,15 +67,15 @@ X_FRAME_OPTIONS = "DENY"
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = "Lax"
-CSRF_COOKIE_DOMAIN = ".cocooned.ir"
+CSRF_COOKIE_DOMAIN = ".skeleton.ir"
 CSRF_USE_SESSIONS = False
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CORS_PREFLIGHT_MAX_AGE = 86400  # 24 ساعت
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://cocooned.ir",
-    "https://cocooned.ir",
-    "https://*.cocooned.ir",
+    "http://skeleton.ir",
+    "https://skeleton.ir",
+    "https://*.skeleton.ir",
 ]
 
 WHITENOISE_USE_HTTPS = True
@@ -104,7 +104,7 @@ CACHES = {
                 "retry_on_timeout": True,
             },
         },
-        "KEY_PREFIX": "cocooned_",
+        "KEY_PREFIX": "skeleton_",
         "TIMEOUT": 300,
     },
     "select2": {
@@ -113,13 +113,13 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
-        "KEY_PREFIX": "cocooned_select2_",
+        "KEY_PREFIX": "skeleton_select2_",
     },
     "admin_interface": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": config("REDIS_URL", default=""),
         "TIMEOUT": 60 * 5,
-        "KEY_PREFIX": "cocooned_admin_interface_",
+        "KEY_PREFIX": "skeleton_admin_interface_",
     },
 }
 
@@ -137,7 +137,7 @@ CACHEOPS_REDIS = "redis://:Iei608rSW7HyqMv3g3U665Ah@cocoredis:6379/0"
 CACHEOPS_ENABLED = True
 
 CORS_ALLOWED_ORIGINS = [
-    "http://cocooned.ir",
-    "https://cocooned.ir",
-    "https://*.cocooned.ir",
+    "http://skeleton.ir",
+    "https://skeleton.ir",
+    "https://*.skeleton.ir",
 ]

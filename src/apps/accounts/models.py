@@ -32,19 +32,21 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
-    
+
     # def get_absolute_url(self):
     #     return reverse("accounts:profile_view", kwargs={"username": self.username})
-    
 
 
+image_ext_validator = FileExtensionValidator(["png", "jpg", "jpeg"])
 
-image_ext_validator = FileExtensionValidator(['png', 'jpg', 'jpeg']) 
 
 class UserProfile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     avatar = models.ImageField(
-        upload_to="avatars/%Y/%m/%d/", blank=True, null=True, default="default_avatar.jpg",
+        upload_to="avatars/%Y/%m/%d/",
+        blank=True,
+        null=True,
+        default="default_avatar.jpg",
     )
     gender = models.CharField(
         max_length=8, choices=GenderChoices.choices, default=GenderChoices.unknown

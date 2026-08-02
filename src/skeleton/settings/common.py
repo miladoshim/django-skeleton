@@ -6,14 +6,13 @@ from pathlib import Path
 from decouple import config
 from django.contrib import messages
 from django_guid.integrations import CeleryIntegration
-from easy_thumbnails.conf import Settings as thumbnail_settings
 from import_export.formats.base_formats import CSV, XLSX
 
 PROJECT_ROOT = os.path.dirname(__file__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_BASE_DIR = Path(__file__).resolve().parent.parent.parent
-TEMPLATE_DIR = str(BASE_BASE_DIR.joinpath("templates/cocooned/"))
+TEMPLATE_DIR = str(BASE_BASE_DIR.joinpath("templates/skeleton/"))
 
 DEBUG = config("DEBUG", default=False, cast=bool)
 
@@ -27,7 +26,7 @@ ALLOWED_HOSTS = config(
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles/")
 STATICFILES_DIRS = [
-    BASE_BASE_DIR.joinpath("static/cocooned/"),
+    BASE_BASE_DIR.joinpath("static/skeleton/"),
 ]
 
 STATICFILES_FINDERS = (
@@ -47,7 +46,7 @@ sys.path.insert(0, join(PROJECT_ROOT, "apps"))
 
 SECRET_KEY = config("SECRET_KEY", default="")
 
-DOMAIN = config("APP_DOMAIN", default="cocooned.ir")
+DOMAIN = config("APP_DOMAIN", default="skeleton.ir")
 SITE_NAME = config("APP_NAME", default="کوکوند")
 SITE_ID = 1
 
@@ -56,8 +55,6 @@ INSTALLED_APPS = [
     "channels",
     "django.contrib.contenttypes",
     "admin_interface",
-    "colorfield",
-    "whitenoise.runserver_nostatic" if DEBUG else "whitenoise",
     "django.contrib.admin",
     "django.contrib.sites",
     "django.contrib.auth",
@@ -72,12 +69,7 @@ INSTALLED_APPS = [
     "apps.blog.apps.BlogConfig",
     "apps.api.apps.ApiConfig",
     "apps.financial.apps.FinancialConfig",
-    "apps.academy.apps.AcademyConfig",
-    "apps.shop.apps.ShopConfig",
-    "apps.coaching.apps.CoachingConfig",
-    "apps.library.apps.LibraryConfig",
     "apps.pages.apps.PagesConfig",
-    "apps.orphan_files_cleaner.apps.OrphanFilesCleanerConfig",
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
@@ -86,14 +78,9 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "drf_api_logger",
-    "csp",
     "robots",
-    "django-package",
     "hitcount",
     "django_extensions",
-    "easy_thumbnails",
-    "filer",
-    "image_cropping",
     "django_filters",
     "storages",
     "django_guid",
@@ -101,41 +88,20 @@ INSTALLED_APPS = [
     "taggit_labels",
     "taggit_selectize",
     "matomo",
-    "compressor",
-    "cssmin",
-    "jsmin",
     "django_minify_html",
-    "jalali_date",
     "crispy_forms",
-    "crispy_bootstrap5",
-    "treebeard",
-    "auditlog",
-    "django_ckeditor_5",
     "django_cotton",
     "pwa",
+    "colorfield",
     "redirects",
-    "django_unicorn",
-    "smart_selects",
     "django_celery_results",
     "django_celery_beat",
     "azbankgateways",
-    "django_select2",
-    "ordered_model",
-    "widget_tweaks",
-    "versatileimagefield",
-    "django_bootstrap5",
-    "heroicons",
-    "any_urlfield",
-    "django_htmx",
     "debug_toolbar",
     "iranian_cities",
-    "image_uploader_widget",
     "cache_cleaner",
     "schema_viewer",
-    "friendship",
-    "formtools",
     "star_ratings",
-    "cacheops",
     "django_admin_trap",
     "utils",
     "django_cleanup.apps.CleanupConfig",
@@ -147,7 +113,6 @@ MIDDLEWARE = [
     "django.middleware.cache.UpdateCacheMiddleware",
     "django.middleware.cache.FetchFromCacheMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -157,8 +122,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "csp.middleware.CSPMiddleware",
     "drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware",
-    "auditlog.middleware.AuditlogMiddleware",
-    "django_htmx.middleware.HtmxMiddleware",
     "django_minify_html.middleware.MinifyHtmlMiddleware",
     "apps.core.middlewares.RequestIdMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
@@ -166,13 +129,11 @@ MIDDLEWARE = [
 
 if DEBUG:
     print("DEBUG MODE")
-    WHITENOISE_AUTOREFRESH = True
 else:
     print("PRODUCTION MODE")
-    WHITENOISE_AUTOREFRESH = False
 
 
-ROOT_URLCONF = "cocooned.urls"
+ROOT_URLCONF = "skeleton.urls"
 
 TEMPLATES = [
     {
@@ -189,7 +150,6 @@ TEMPLATES = [
             ],
             "builtins": [
                 "django_cotton.templatetags.cotton",
-                "heroicons.templatetags.heroicons",
             ],
             "loaders": [
                 (
@@ -210,8 +170,8 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
-# WSGI_APPLICATION = "cocooned.wsgi.application"
-ASGI_APPLICATION = "cocooned.asgi.application"
+# WSGI_APPLICATION = "skeleton.wsgi.application"
+ASGI_APPLICATION = "skeleton.asgi.application"
 
 CHANNEL_LAYERS = {
     "default": {
@@ -316,8 +276,8 @@ ORPHAN_FILES_CLEANUP = {
 
 SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
-    "TITLE": "Cocooned API V1",
-    "DESCRIPTION": "cocooned api project",
+    "TITLE": "skeleton API V1",
+    "DESCRIPTION": "skeleton api project",
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "REDOC_DIST": "SIDECAR",
@@ -328,49 +288,34 @@ CACHE_MIDDLEWARE_SECONDS = 60
 
 COMPRESS_ENABLED = True
 
-MAIL_FROM = "Cocooned <info@cocooned.ir>"
-DEFAULT_FROM_EMAIL = "info@cocooned.ir"
-MAIL_FROM_ADDRESS = "info@cocooned.ir"
+MAIL_FROM = "skeleton <info@skeleton.ir>"
+DEFAULT_FROM_EMAIL = "info@skeleton.ir"
+MAIL_FROM_ADDRESS = "info@skeleton.ir"
 
-JALALI_DATE_DEFAULTS = {
-    "LIST_DISPLAY_AUTO_CONVERT": True,
-    "Strftime": {
-        "date": "%y/%m/%d",
-        "datetime": "%H:%M:%S _ %y/%m/%d",
-    },
-    "Static": {
-        "js": [
-            "admin/js/django_jalali.min.js",
-            # OR
-            # 'admin/jquery.ui.datepicker.jalali/scripts/jquery.ui.core.js',
-            # 'admin/jquery.ui.datepicker.jalali/scripts/calendar.js',
-            # 'admin/jquery.ui.datepicker.jalali/scripts/jquery.ui.datepicker-cc.js',
-            # 'admin/jquery.ui.datepicker.jalali/scripts/jquery.ui.datepicker-cc-fa.js',
-            # 'admin/js/main.js',
-        ],
-        "css": {
-            "all": [
-                "admin/css/django_jalali.min.css",
-                # "admin/jquery.ui.datepicker.jalali/themes/base/jquery-ui.min.css",
-            ]
-        },
-    },
-}
-
-THUMBNAIL_PROCESSORS = (
-    "easy_thumbnails.processors.colorspace",
-    "easy_thumbnails.processors.autocrop",
-    "easy_thumbnails.processors.scale_and_crop",
-    "image_cropping.thumbnail_processors.crop_corners",
-    "filer.thumbnail_processors.scale_and_crop_with_subject_location",
-    "easy_thumbnails.processors.filters",
-) + thumbnail_settings.THUMBNAIL_PROCESSORS
-
-THUMBNAIL_ALIASES = {
-    "": {
-        "avatar": {"size": (50, 50), "crop": True},
-    },
-}
+# JALALI_DATE_DEFAULTS = {
+#     "LIST_DISPLAY_AUTO_CONVERT": True,
+#     "Strftime": {
+#         "date": "%y/%m/%d",
+#         "datetime": "%H:%M:%S _ %y/%m/%d",
+#     },
+#     "Static": {
+#         "js": [
+#             "admin/js/django_jalali.min.js",
+#             # OR
+#             # 'admin/jquery.ui.datepicker.jalali/scripts/jquery.ui.core.js',
+#             # 'admin/jquery.ui.datepicker.jalali/scripts/calendar.js',
+#             # 'admin/jquery.ui.datepicker.jalali/scripts/jquery.ui.datepicker-cc.js',
+#             # 'admin/jquery.ui.datepicker.jalali/scripts/jquery.ui.datepicker-cc-fa.js',
+#             # 'admin/js/main.js',
+#         ],
+#         "css": {
+#             "all": [
+#                 "admin/css/django_jalali.min.css",
+#                 # "admin/jquery.ui.datepicker.jalali/themes/base/jquery-ui.min.css",
+#             ]
+#         },
+#     },
+# }
 
 SILKY_PYTHON_PROFILER = True
 
@@ -546,8 +491,8 @@ KAVENEGAR_OTP_TEMPLATE = config("KAVENEGAR_OTP_TEMPLATE", default="otp")
 
 # PWA Setting Start
 
-PWA_APP_NAME = config("APP_NAME", default="Cocooned")
-PWA_APP_DESCRIPTION = config("APP_DESCRIPTION", default="Cocooned Application")
+PWA_APP_NAME = config("APP_NAME", default="skeleton")
+PWA_APP_DESCRIPTION = config("APP_DESCRIPTION", default="skeleton Application")
 PWA_APP_THEME_COLOR = "#6a1e55"
 PWA_APP_BACKGROUND_COLOR = "#ffffff"
 PWA_APP_DISPLAY = "standalone"

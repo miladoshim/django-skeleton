@@ -2,9 +2,9 @@ import os
 from celery import Celery
 from celery.schedules import crontab
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cocooned.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "skeleton.settings")
 
-app = Celery("cocooned")
+app = Celery("skeleton")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
 

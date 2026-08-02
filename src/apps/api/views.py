@@ -5,8 +5,8 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from apps.blog.models import Post
-from apps.pages.models import ContactSubject, FaqGroup
-from apps.pages.serializers import ContactSubjectSerializer, FaqGroupSerializer
+from apps.core.models import ContactSubject, FaqGroup
+from apps.core.serializers import ContactSubjectSerializer, FaqGroupSerializer
 
 
 def search(request):

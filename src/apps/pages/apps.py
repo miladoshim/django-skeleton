@@ -1,10 +1,10 @@
 from django.apps import AppConfig
 
 
-class CoreConfig(AppConfig):
+class PagesConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "apps.core"
+    name = "apps.pages"
     verbose_name = "صفحات"
 
     def ready(self):
-        import apps.core.signals
+        import apps.pages.signals

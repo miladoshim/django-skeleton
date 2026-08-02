@@ -77,7 +77,7 @@ CACHES = {
                 "retry_on_timeout": True,
             },
         },
-        "KEY_PREFIX": "cocooned_",
+        "KEY_PREFIX": "skeleton_",
         "TIMEOUT": 50,
     },
     "select2": {
@@ -86,7 +86,7 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
-        "KEY_PREFIX": "cocooned_select2_",
+        "KEY_PREFIX": "skeleton_select2_",
     },
     "admin_interface": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",

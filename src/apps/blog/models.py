@@ -12,21 +12,19 @@ from django.core.files import File
 from django.db.models.functions import Length
 from hitcount.models import HitCountMixin
 from hitcount.settings import MODEL_HITCOUNT
-from meta.models import ModelMeta
 from taggit.managers import TaggableManager
 from taggit.models import Tag
 from treebeard.mp_tree import MP_Node
 from apps.core.managers import PublishedManager
 from apps.core.models import PublishStatusChoice, BaseModel
 from jalali_date import datetime2jalali
-from filebrowser.fields import FileBrowseField
-from auditlog.registry import auditlog
-from tinymce.models import HTMLField
+
+# from tinymce.models import HTMLField
 from django_extensions.db.fields import AutoSlugField
 from django.contrib.auth import get_user_model
 
-
 User = get_user_model()
+
 
 class Category(MP_Node):
     parent = models.ForeignKey(
@@ -84,7 +82,7 @@ class Post(BaseModel, HitCountMixin):
     slug = models.SlugField(
         unique=True, verbose_name=_("اسلاگ"), allow_unicode=True, default=None
     )
-    body = HTMLField(_("متن مقاله"), null=True, blank=True)
+    # body = HTMLField(_("متن مقاله"), null=True, blank=True)
     thumbnail = models.ImageField(
         upload_to="posts/%Y/%m/%d", null=True, blank=True, verbose_name=_("تصویر شاخص")
     )
@@ -128,9 +126,7 @@ class Post(BaseModel, HitCountMixin):
         ordering = ["-created_at"]
         verbose_name = _("مقاله")
         verbose_name_plural = _("مقاله ها")
-        indexes = [
-            models.Index(fields=['title'])
-        ]
+        indexes = [models.Index(fields=["title"])]
 
     def __str__(self) -> str:
         return self.title
@@ -195,8 +191,6 @@ class Comment(BaseModel):
 
 class RecyclePost(Post):
     deleted = models.Manager()
+
     class Meta:
         proxy = True
-
-
-auditlog.register(Post, serialize_data=True)

@@ -7,7 +7,6 @@ from django.contrib.auth.models import User
 from django.db.models import Count, Sum
 from django.views.decorators.http import require_http_methods, require_safe
 from django.views.decorators.cache import cache_page
-from auditlog.mixins import LogAccessMixin
 from django.contrib.postgres.search import TrigramSimilarity
 from .models import Category, Post
 from .forms import CommentCreateForm, SearchForm
@@ -31,7 +30,7 @@ class PostListView(ListView):
         return context
 
 
-class PostDetailView(LogAccessMixin, FormMixin, DetailView):
+class PostDetailView(FormMixin, DetailView):
     model = Post
     template_name = "blog/post_detail.html"
     context_object_name = "post"
@@ -159,4 +158,6 @@ def search_posts_trgm(request):
                 .order_by("-similarity")
             )
 
-    return render(request,'blog/search.html', {"form": form, "query": query, "results": results})
+    return render(
+        request, "blog/search.html", {"form": form, "query": query, "results": results}
+    )

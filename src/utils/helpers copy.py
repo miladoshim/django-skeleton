@@ -35,7 +35,7 @@ def image_folder(instance, filename):
     return "photos/{}.webp".format(uuid.uuid4().hex)
 
 
-def write_watermark(input_path, output_path, text="Cocooned"):
+def write_watermark(input_path, output_path, text="skeleton"):
     photo = Image.open(input_path)
     w, h = photo.size
     drawing = ImageDraw.Draw(photo)

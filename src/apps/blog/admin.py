@@ -3,10 +3,10 @@ from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin, ExportActionMixin
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
-from guardian.admin import GuardedModelAdmin
 from apps.blog.models import Category, RecyclePost, Tag, Post, Comment
 from apps.blog.resources import PostResource
 from apps.blog.forms import TagsForm
+
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
@@ -60,7 +60,7 @@ class PostAdmin(ImportExportModelAdmin):
     )
     empty_value_display = "---"
     autocomplete_fields = ["author"]
-    
+
     def tags_to_str(self, obj):
         return ", ".join(tag.title for tag in obj.tags.all())
 
@@ -90,12 +90,12 @@ class PostAdmin(ImportExportModelAdmin):
 @admin.register(RecyclePost)
 class PostAdmin(admin.ModelAdmin):
 
-    actions = ['recover']
+    actions = ["recover"]
 
     def get_queryset(self, request):
         return RecyclePost.deleted.filter(is_deleted=True)
 
-    @admin.action(description='بازنشانی آیتم حذف شده')
+    @admin.action(description="بازنشانی آیتم حذف شده")
     def recover(self, request, queryset):
         queryset.update(is_deleted=False, deleted_at=None)
 
@@ -103,11 +103,10 @@ class PostAdmin(admin.ModelAdmin):
     def draft_to_published_posts(self, request, queryset):
         rows_updated = queryset.update(status="p")
         if rows_updated == 1:
-            message_bit = 'منتشر شد.'
+            message_bit = "منتشر شد."
         else:
-            message_bit = 'منتشر شدند.'
-        self.message_user(request, "{} مقاله {}".format(
-            rows_updated, message_bit))
+            message_bit = "منتشر شدند."
+        self.message_user(request, "{} مقاله {}".format(rows_updated, message_bit))
 
     @admin.action(description="Published posts to draft")
     def published_to_draft_posts(self, request, queryset):

@@ -1,7 +1,7 @@
 import os
 import django
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cocooned.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "skeleton.settings")
 django.setup()
 
 from django.conf import settings

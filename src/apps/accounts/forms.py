@@ -4,8 +4,6 @@ from django.forms import Form, ModelForm
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from jalali_date.fields import JalaliDateField
 from jalali_date.widgets import AdminJalaliDateWidget
-from django_recaptcha.fields import ReCaptchaField
-from django_recaptcha.widgets import ReCaptchaV3
 from .models import User, UserProfile
 
 # class CustomUserCreationForm(UserCreationForm):
@@ -28,7 +26,6 @@ class UserRegisterForm(UserCreationForm):
         widget=forms.PasswordInput(attrs={"placeholder": "تایید رمز عبور"}),
         label="تایید رمز عبور",
     )
-    captcha = ReCaptchaField(widget=ReCaptchaV3(action="signup"))
 
     class Meta:
         model = User
@@ -70,8 +67,9 @@ class ChangePasswordForm(Form):
 class UserEditForm(ModelForm):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email']
-        
+        fields = ["first_name", "last_name", "email"]
+
+
 class UserProfileEditForm(ModelForm):
     class Meta:
         model = UserProfile
