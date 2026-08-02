@@ -1,18 +1,14 @@
 # Django skeleton project
 
-
 ## Features
 
+### Authentication
 
-Authentication:
+- [ ] OTP
+- [ ] EMAIL/Activation
 
+### Blog
 
-oauth with google
-
-google recaptcha v3
-
-
-
-
-
-
+- [ ] Category
+- [ ] Tags
+- [ ] Posts

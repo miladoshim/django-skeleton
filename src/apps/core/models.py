@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 # from django.contrib.auth import get_user_model
-from apps.core.managers import SoftDeleteManager
+# from apps.core.managers import SoftDeleteManager
 
 # User = get_user_model()
 
@@ -27,7 +27,7 @@ class BaseModel(models.Model):
         abstract = True
         ordering = ["-created_at"]
 
-    objects = SoftDeleteManager()
+    # objects = SoftDeleteManager()
 
     uuid = models.UUIDField(unique=True, default=str(uuid.uuid4()), editable=False)
     is_deleted = models.BooleanField(

@@ -11,44 +11,29 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from .views import (
-    TagViewSet,
-    PostViewSet,
-    CategoryViewSet,
-    UserForgotPasswordEmailAPIView,
-    UserPasswordResetAPIView,
-    UserForgotPasswordPhoneAPIView,
-    UserLogoutView,
-    UserLoginView,
-    UserRegisterView,
-)
-
-app_name='api'
+app_name = "apps.api"
 
 router = routers.DefaultRouter()
-router.register(r"tags", TagViewSet, basename="tag")
-router.register(r"posts", PostViewSet, basename="post")
-router.register(r"categories", CategoryViewSet, basename="category")
+# router.register(r"tags", TagViewSet, basename="tag")
+# router.register(r"posts", PostViewSet, basename="post")
+# router.register(r"categories", CategoryViewSet, basename="category")
 
 urlpatterns = [
     path("", include(router.urls)),
-    
-    path('auth/register/', UserRegisterView.as_view()),
+    # path("auth/register/", UserRegisterView.as_view()),
     path("auth/token/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("auth/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
-    path('auth/login/', UserLoginView.as_view()),
-    path('auth/logout/', UserLogoutView.as_view()),
-    
-    path('auth/passwords/forgot/email', UserForgotPasswordEmailAPIView.as_view()),
-    path('auth/passwords/email/reset/<uid>/<token>/', UserPasswordResetAPIView.as_view()),
-    
-    path('auth/passwords/forgot/phone', UserForgotPasswordPhoneAPIView.as_view()),
-    
+    # path("auth/login/", UserLoginView.as_view()),
+    # path("auth/logout/", UserLogoutView.as_view()),
+    # path("auth/passwords/forgot/email", UserForgotPasswordEmailAPIView.as_view()),
+    # path(
+    #     "auth/passwords/email/reset/<uid>/<token>/", UserPasswordResetAPIView.as_view()
+    # ),
+    # path("auth/passwords/forgot/phone", UserForgotPasswordPhoneAPIView.as_view()),
     # path('auth/oauth/google/'),
     # path('auth/otp/request/', RequestOtpAPIView.as_view()),
     # path('auth/otp/verify/', VerifyOtpAPIView.as_view()),
-    
     # path('account/password_change', UserChangePasswordAPIView.as_view()),
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path(

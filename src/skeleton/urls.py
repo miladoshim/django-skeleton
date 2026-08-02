@@ -13,8 +13,7 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),
     path("api/v1/", include("apps.api.urls")),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
-    path("", include("django_components.urls")),
-    path("tinymce/", include("tinymce.urls")),
+    # path("tinymce/", include("tinymce.urls")),
     path("", include("pwa.urls")),
     path("bankgateways/", az_bank_gateways_urls()),
 ]
