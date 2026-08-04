@@ -1,156 +1,350 @@
-import datetime
-import random
-import string
-import uuid
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
-from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.utils.functional import cached_property
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
-from django.db.models import UniqueConstraint
-from django.core.validators import FileExtensionValidator
-from apps.core.models import BaseModel, GenderChoices
+from jalali_date import date2jalali
+from apps.core.models import BaseModel
+from utils.enums import GenderChoices, UserRole
+from utils.helpers import generate_unique_uuid
+from .managers import OTPManager, UserManager
 
 
-class User(AbstractUser):
+class User(AbstractBaseUser, PermissionsMixin):
     """
     Custom User model that have extra fields
     """
 
     class Meta:
-        verbose_name = _("کاربر")
-        verbose_name_plural = _("کاربر ها")
+        verbose_name = "کاربر"
+        verbose_name_plural = "کاربر ها"
+        swappable = "AUTH_USER_MODEL"
 
-    # mobile = models.CharField(null=True, blank=True,
-    #                           unique=True, max_length=11)
-    # USERNAME_FIELD = 'email'
-    # REQUIRED_FIELDS = ['mobile']
+    uuid = models.UUIDField(
+        default=generate_unique_uuid,
+        editable=False,
+        db_index=True,
+        unique=True,
+    )
+    first_name = models.CharField(
+        "نام",
+        max_length=150,
+        blank=True,
+        null=True,
+    )
+    last_name = models.CharField(
+        "نام خانوادگی",
+        max_length=150,
+        blank=True,
+        null=True,
+    )
+    username = models.CharField(
+        "نام کاربری",
+        blank=True,
+        null=True,
+        editable=False,
+        unique=True,
+        max_length=9,
+    )
+    email = models.EmailField(
+        verbose_name="ایمیل",
+        blank=True,
+        null=True,
+        unique=True,
+    )
+    mobile = models.CharField(
+        "موبایل",
+        unique=True,
+        max_length=11,
+    )
+    password = models.CharField(
+        "رمز عبور",
+        max_length=128,
+        null=True,
+        blank=True,
+    )
+    is_staff = models.BooleanField(
+        verbose_name="کاربر مدیر باشد؟",
+        default=False,
+        help_text="با این کزینه کاربر توانایی ورود به پنل مدیریت را دارا می باشد.",
+    )
+    is_active = models.BooleanField(
+        verbose_name="فعال باشد؟",
+        default=False,
+        help_text="Unselect this instead of deleting accounts.",
+    )
+    role = models.PositiveSmallIntegerField(
+        verbose_name="نقش کاربر",
+        choices=UserRole.choices,
+        default=UserRole.STUDENT,
+    )
+    coach_percent = models.PositiveSmallIntegerField(
+        default=40,
+        verbose_name="درصد همکاری مدرس",
+        help_text="درصد سهم مربی از فروش دوره",
+    )
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ بروزرسانی")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ثبت")
 
-    # objects = UserManager()
+    def get_jalali_date(self):
+        return date2jalali(self.created_at)
+
+    USERNAME_FIELD = "mobile"
+    REQUIRED_FIELDS = []
+
+    objects = UserManager()
 
     def __str__(self):
-        return self.username
+        return self.get_full_name()
 
-    # def get_absolute_url(self):
-    #     return reverse("accounts:profile_view", kwargs={"username": self.username})
+    def get_absolute_url(self):
+        return reverse("accounts:profile_view", kwargs={"uuid": self.uuid})
 
+    def get_full_name(self):
+        full_name = "%s %s" % (self.first_name, self.last_name)
+        return full_name.strip()
 
-image_ext_validator = FileExtensionValidator(["png", "jpg", "jpeg"])
+    def get_cart_items(self):
+        cart = self.cart
+        return cart.items.all()
+
+    @property
+    def is_banned(self) -> bool:
+        return self.meta.is_banned
+
+    def is_student(self) -> bool:
+        return self.role == UserRole.STUDENT
+
+    @property
+    def is_coach(self) -> bool:
+        return self.role == UserRole.COACH
+
+    # Staff can only delete their own account
+    def has_delete_permission(self, request, obj=None):
+        if not request.user.is_superuser:
+            if obj is not None and obj.id != request.user.id:
+                return False
+        return True
+
+    # Staff can only change their own account info
+    def has_change_permission(self, request, obj=None):
+        if not request.user.is_superuser:
+            if obj is not None and obj.id != request.user.id:
+                return False
+        return True
+
+    # Staff can't add new account
+    def has_add_permission(self, request):
+        if not request.user.is_superuser:
+            return False
+        return True
+
+    # Field makes specified fields as read-only for staff
+    def get_readonly_fields(self, request, obj=None):
+        if not request.user.is_superuser:
+            return "is_superuser", "is_staff", "is_active"
+        return super(User, self).get_readonly_fields(request)
+
+    @cached_property
+    def get_account_role_title(self) -> str:
+        return "مربی" if self.role == UserRole.COACH else "دانشجو"
+
+    def is_registered(self):
+        return self.meta.mobile_verified_at
 
 
 class UserProfile(BaseModel):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="profile",
+    )
     avatar = models.ImageField(
-        upload_to="avatars/%Y/%m/%d/",
+        upload_to="users/avatars/%Y/%m/%d/",
         blank=True,
         null=True,
-        default="default_avatar.jpg",
+        default="images/default_man_avatar.jpg",
+        verbose_name="تصویر پروفایل",
+    )
+    banner = models.ImageField(
+        upload_to="users/banners/%Y/%m/%d/",
+        blank=True,
+        null=True,
+        default="images/default_banner.jpg",
+        verbose_name="بنر پروفایل",
     )
     gender = models.CharField(
-        max_length=8, choices=GenderChoices.choices, default=GenderChoices.unknown
+        max_length=8,
+        choices=GenderChoices.choices,
+        default=GenderChoices.__empty__,
+        verbose_name="جنسیت",
     )
-    bio = models.CharField(max_length=255, null=True, blank=True)
-    birthday = models.DateField(verbose_name=_("تاریخ تولد"), null=True, blank=True)
+    bio = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="بیوگرافی",
+    )
+    instagram = models.CharField(
+        verbose_name="اینستاگرام",
+        null=True,
+        blank=True,
+        max_length=75,
+    )
+    linkedin = models.CharField(
+        verbose_name="لینکدین",
+        null=True,
+        blank=True,
+        max_length=75,
+    )
+    site = models.CharField(
+        verbose_name="سایت",
+        null=True,
+        blank=True,
+        max_length=150,
+    )
 
-    def __str__(self) -> str:
-        return self.user.username + " profile"
+    def __str__(self):
+        return self.user.get_full_name() + " profile"
 
-    def get_avatar_image_path(self, filename):
-        return f"accounts/avatars/{self.pk}/profile_image.jpg"
+    def get_default_avatar_image(self):
+        return "images/default_man_avatar.jpg"
 
-    def get_default_avatar_image():
-        return "accounts/avatars/default_avatar.jpg"
+    def get_default_banner_image(self):
+        return "images/default_banner.jpg"
 
     class Meta:
         verbose_name = "پروفایل"
+        verbose_name_plural = "پروفایل ها"
 
 
 class UserMeta(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    last_login_at = models.DateTimeField(null=True, blank=True)
-    last_login_ip = models.GenericIPAddressField(null=True, blank=True)
-    last_logout_at = models.DateTimeField(null=True, blank=True)
-    last_login_agent = models.TextField(null=True, blank=True)
-    email_verified_at = models.DateTimeField(null=True, blank=True)
-    email_changed_at = models.DateTimeField(null=True, blank=True)
-    mobile_changed_at = models.DateTimeField(null=True, blank=True)
-    mobile_verified_at = models.DateTimeField(null=True, blank=True)
-    username_changed_at = models.DateTimeField(null=True, blank=True)
-    password_changed_at = models.DateTimeField(null=True, blank=True)
-    is_banned = models.BooleanField(default=False)
-    banned_at = models.DateTimeField(null=True, blank=True)
-    unbanned_at = models.DateTimeField(null=True, blank=True)
-
-
-class ActivationCode(BaseModel):
-    code = models.CharField(max_length=50, unique=True)
-    expired_at = models.DateTimeField(default=datetime.timedelta(minutes=3))
-
-
-class OtpRequestQuerySet(models.QuerySet):
-    def is_valid(self, receiver, request, password):
-        current_time = timezone.now()
-
-        return self.filter(
-            receiver=receiver,
-            request_id=request,
-            password=password,
-            created__lt=current_time,
-            created__gt=current_time - datetime.timedelta(seconds=120),
-        ).exists()
-
-
-class OTPManager(models.Manager):
-    def generate(self, data):
-        otp = self.model(channel=data["channel"], receiver=data["receiver"])
-        otp.save(using=self._db)
-        return otp
-
-    def get_queryset(self):
-        return OtpRequestQuerySet(self.model, self._db)
-
-    def is_valid(self, receiver, request, password):
-        return self.get_queryset().is_valid(receiver, request, password)
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="meta",
+        verbose_name="کاربر",
+    )
+    last_login_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="تاریخ آخرین لاگین",
+    )
+    last_login_ip = models.GenericIPAddressField(
+        null=True,
+        blank=True,
+        verbose_name="ip آخرین لاگین",
+    )
+    last_logout_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="تاریخ آخرین خروج",
+    )
+    last_login_agent = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="مرورگر آخرین ورود",
+    )
+    email_verified_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="تاریخ تایید ایمیل",
+    )
+    email_changed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="تاریخ تغییر ایمیل",
+    )
+    mobile_changed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="تاریخ تغییر موبایل",
+    )
+    mobile_verified_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="تاریخ تایید موبایل",
+    )
+    username_changed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="تاریخ تغییر نام کاربری",
+    )
+    password_changed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="تاریخ تغییر رمز عبور",
+    )
+    is_banned = models.BooleanField(
+        default=False,
+        verbose_name="کاربر مسدود می باشد؟",
+    )
+    banned_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="تاریخ مسدود شدن کاربر",
+    )
+    unbanned_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="تاریخ رفع مسدودی ",
+    )
 
 
 class OtpRequest(models.Model):
     class OtpChannel(models.TextChoices):
-        PHONE = "p", _("Phone")
-        EMAIL = "e", _("Email")
+        PHONE = "p", "Phone"
+        EMAIL = "e", "Email"
 
     objects = OTPManager()
 
-    request_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    uuid = models.UUIDField(
+        default=generate_unique_uuid,
+        editable=False,
+        db_index=True,
+        unique=True,
+    )
+    request_id = models.UUIDField(
+        default=generate_unique_uuid,
+        editable=False,
+        unique=True,
+        db_index=True,
+    )
     channel = models.CharField(
-        _("channel"),
-        max_length=20,
+        "channel",
+        max_length=1,
         choices=OtpChannel.choices,
         default=OtpChannel.PHONE,
     )
-    receiver = models.CharField(max_length=12)  # mobile or email
-    password = models.CharField(max_length=4, null=True)
-    valid_until = models.DateTimeField(
-        default=timezone.now() + timezone.timedelta(seconds=120)
+    receiver = models.CharField(max_length=256)  # mobile or email
+    password = models.CharField(
+        max_length=6,
+        null=True,
+        blank=True,
     )
-    receipt_id = models.CharField(max_length=255, null=True)
-
-    def generate_otp(self):
-        self.password = self._random_password()
-        self.valid_until = timezone.now() + timezone.timedelta(seconds=120)
-
-    def _random_password(self):
-        rand = random.SystemRandom()
-        digits = rand.choice(string.digits, k=4)
-        return "".join(digits)
+    expired_at = models.DateTimeField(
+        default=timezone.now() + timezone.timedelta(seconds=120),
+        db_index=True,
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="تاریخ ثبت",
+    )
 
     class Meta:
-        verbose_name = _("Otp Request")
-        verbose_name_plural = _("Otp Requests")
+        verbose_name = "درخواست رمز یکبار مصرف"
+        verbose_name_plural = "درخواست رمز یکبار مصرف ها"
 
+    def __str__(self):
+        return "{}-{}-{}".format(self.channel, self.receiver, self.password)
 
-class AccountDeleteRequest(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_("کاربر"))
-    approved_at = models.DateTimeField(null=True, blank=True)
-    complete_at = models.DateTimeField(null=True, blank=True)
+    @property
+    def is_expired(self):
+        """آیا منقضی شده؟"""
+        return timezone.now() > self.expired_at
+
+    @classmethod
+    def delete_expired(cls):
+        """حذف همه رکوردهای منقضی شده"""
+        expired_count = cls.objects.filter(expires_at__lt=timezone.now()).delete()[0]
+        return expired_count

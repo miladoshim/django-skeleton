@@ -1,19 +1,33 @@
 import time
-from django.core.exceptions import PermissionDenied
 from functools import wraps
-from django.http import HttpResponse
+from django.db import connection, reset_queries
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect
-from django.db import connection
-from django.db import reset_queries
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+
+
+def anonymous_required(redirect_url):
+    def _wrapped(view_func, *args, **kwargs):
+        def check_anonymous(request, *args, **kwargs):
+            view = view_func(request, *args, **kwargs)
+            if request.user.is_authenticated:
+                return redirect(redirect_url)
+            return view
+
+        return check_anonymous
+
+    return _wrapped
 
 
 def unauthenticated_user(view_func):
     @wraps
     def wrapper(request, *args, **kwargs):
         if request.user.is_authenticate:
-            return redirect('home_view')
+            return redirect("apps.pages:home_view")
         else:
             return view_func(request, *args, **kwargs)
+
     return wrapper
 
 
@@ -27,8 +41,10 @@ def allowed_users(allowed_roles=[]):
             if group in allowed_roles:
                 return view_func(request, *args, **kwargs)
             else:
-                return HttpResponse('you dont have permission')
+                return HttpResponse("you dont have permission")
+
         return wrapper
+
     return decorator
 
 
@@ -40,14 +56,14 @@ def database_debug(func):
         query_info = connection.queries
         st = time.time()
         et = time.time()
-        print('function_name: {}'.format(func.__name__))
-        print('query_count: {}'.format(len(query_info)))
-        queries = ['{}\n'.format(query['sql']) for query in query_info]
-        print('queries: \n{}'.format(''.join(queries)))
+        print("function_name: {}".format(func.__name__))
+        print("query_count: {}".format(len(query_info)))
+        queries = ["{}\n".format(query["sql"]) for query in query_info]
+        print("queries: \n{}".format("".join(queries)))
         print(f"take time : {(st - et):.3f}")
         return results
-    return wrapper
 
+    return wrapper
 
 
 def timeit(func):
@@ -77,8 +93,19 @@ def time_of_execution(func):
 def superuser_only(func):
     @wraps(func)
     def wrapper(request, *args, **kwargs):
-        if not request.user.is_supperuser:
+        if not request.user.is_superuser:
             raise PermissionDenied
         return func(request, *args, **kwargs)
 
     return wrapper
+
+
+def login_role_required(required_role):
+    def decorator(view_func):
+        @wraps(view_func)
+        @login_required
+        def _wrapped_view(request, *args, **kwargs):
+            user = request.user
+            if required_role == "coach" and not user.is_coach:
+                return HttpResponseForbidden("you dont access")
+            return view_func(request, *args, **kwargs)

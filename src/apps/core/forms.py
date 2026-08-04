@@ -1,15 +1,22 @@
 from django import forms
-
-from apps.core.models import NewsletterSubscriber
+from .models import NewsletterSubscriber
 
 
 class NewsletterSubscriberForm(forms.ModelForm):
+    email = forms.EmailField(
+        widget=forms.EmailInput(
+            attrs={
+                "class": "form-control",
+            },
+        ),
+    )
+
     class Meta:
         model = NewsletterSubscriber
         fields = ["email"]
 
 
-class ContactForm(form.Form):
+class ContactForm(forms.Form):
     name = forms.CharField(
         min_length=3,
         max_length=128,
@@ -18,19 +25,40 @@ class ContactForm(form.Form):
             attrs={"class": "form-control"},
         ),
     )
-    phone = forms.CharField(max_length=11, required=True)
+    phone = forms.CharField(
+        max_length=11,
+        required=True,
+        error_messages={"required": "شماره موبایل الزامی می باشد."},
+    )
     message = forms.CharField(
-        1024,
+        max_length=1024,
         required=True,
         widget=forms.Textarea(
-            attrs={},
+            attrs={"class": "form-control"},
         ),
     )
 
 
-# class BodyFieldForm(forms.ModelForm):
-#     body = forms.Charfield(widget=forms.Textarea(attrs={'id':'richtext_field'}))
+class CommentCreateForm(forms.Form):
+    comment = forms.CharField(
+        min_length=4,
+        max_length=1024,
+        required=True,
+        label="متن نظر",
+        widget=forms.Textarea(
+            attrs={"class": "form-control"},
+        ),
+    )
 
-#     class Meta:
-#         model=Post
-#         fields = "__all__"
+
+class CommentReplyCreateForm(forms.Form):
+    reply = forms.CharField(
+        min_length=4,
+        max_length=1024,
+        required=True,
+        label="متن پاسخ",
+        widget=forms.Textarea(
+            attrs={"class": "form-control"},
+        ),
+    )
+    pid = forms.HiddenInput()

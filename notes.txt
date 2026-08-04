@@ -1,0 +1,5 @@
+
+find . -type d -name "__pycache__" -exec rm -r {} +
+find . -type f -name "*.pyc" -delete
+find . -path "./src/*/migrations/*.py" ! -name "__init__.py" -print
+find . -path "./src/*/migrations/*.py" ! -name "__init__.py" -delete

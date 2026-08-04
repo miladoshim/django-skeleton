@@ -1,0 +1,23 @@
+[
+  {
+    "title": "پلن مقدماتی",
+    "original_price": 1200000,
+    "discount_price": null,
+    "short_description": "پلن مقدماتی",
+    "is_preferred": false
+  },
+  {
+    "title": "پلن متوسط",
+    "original_price": 2200000,
+    "discount_price": 1800000,
+    "short_description": "پلن متوسط",
+    "is_preferred": true
+  },
+  {
+    "title": "پلن پیشرفته",
+    "original_price": 3200000,
+    "discount_price": null,
+    "short_description": "پلن پیشرفته",
+    "is_preferred": false
+  }
+]

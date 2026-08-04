@@ -1,17 +1,7 @@
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
-from .models import Post, Category
 
-
-class StaticViewSitemap(Sitemap):
-    priority = 0.5
-    changefreq = "daily"
-    
-    def items(self):
-        return ["contact", "faqs"]
-
-    def location(self, item):
-        return reverse(item)
+from .models import Category, Post
 
 
 class CategorySitemap(Sitemap):
@@ -36,3 +26,6 @@ class PostSitemap(Sitemap):
 
     def lastmod(self, obj):
         return obj.updated_at
+
+    def location(self, item):
+        return item.get_absolute_url()

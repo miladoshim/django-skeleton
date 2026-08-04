@@ -1,39 +1,46 @@
 import logging
-from django.urls import reverse
-from django.http import HttpResponse, Http404
+from django.http import Http404
 from django.shortcuts import render
+from django.urls import reverse
 from azbankgateways import (
     bankfactories,
-    models as bank_models,
+)
+from azbankgateways import (
     default_settings as settings,
 )
+from azbankgateways import (
+    models as bank_models,
+)
 from azbankgateways.exceptions import AZBankGatewaysException
+from .models import Payment
 
+
+# @login_required("apps.accounts:login_view")
 def go_to_gateway_view(request):
-    amount = 1000
-    user_mobile_number = "+989112221234" 
+    user = request.user
+    amount = 20000
+    user_mobile_number = user.mobile
 
     factory = bankfactories.BankFactory()
     try:
-        bank = (
-            factory.auto_create()
-        )
+        bank = factory.auto_create()
         bank.set_request(request)
         bank.set_amount(amount)
-        bank.set_client_callback_url(reverse("financial:callback-gateway"))
-        bank.set_mobile_number(user_mobile_number)  # اختیاری
+        bank.set_client_callback_url(reverse("apps.financial:callback_gateway"))
+        bank.set_mobile_number(user_mobile_number)
 
         # در صورت تمایل اتصال این رکورد به رکورد فاکتور یا هر چیزی که بعدا بتوانید ارتباط بین محصول یا خدمات را با این
         # پرداخت برقرار کنید.
         bank_record = bank.ready()
 
+        Payment.objects.create(result=bank_record, user=user)
+
         # هدایت کاربر به درگاه بانک
         context = bank.get_gateway()
-        return render(request, "redirect_to_bank.html", context=context)
+        return render(request, "financial/redirect_to_bank.html", context=context)
     except AZBankGatewaysException as e:
         logging.critical(e)
-        return render(request, "redirect_to_bank.html")
-    
+        return render(request, "financial/redirect_to_bank.html")
 
 
 def callback_gateway_view(request):
@@ -52,9 +59,31 @@ def callback_gateway_view(request):
     if bank_record.is_success:
         # پرداخت با موفقیت انجام پذیرفته است و بانک تایید کرده است.
         # می توانید کاربر را به صفحه نتیجه هدایت کنید یا نتیجه را نمایش دهید.
-        return HttpResponse("پرداخت با موفقیت انجام شد.")
 
-    # پرداخت موفق نبوده است. اگر پول کم شده است ظرف مدت ۴۸ ساعت پول به حساب شما بازخواهد گشت.
-    return HttpResponse(
-        "پرداخت با شکست مواجه شده است. اگر پول کم شده است ظرف مدت ۴۸ ساعت پول به حساب شما بازخواهد گشت."
-    )
+        # wallet charge, create order
+        context = {
+            "success": True,
+            "message": "پرداخت با موفقیت انجام شد.",
+            "tc": tracking_code,
+        }
+        return render(request, "financial/payment_result.html", context=context)
+
+    context = {
+        "success": False,
+        "message": "پرداخت با شکست مواجه شده است. اگر پول کم شده است ظرف مدت ۴۸ ساعت پول به حساب شما بازخواهد گشت.",
+        "tc": tracking_code,
+    }
+    return render(request, "financial/payment_result.html", context=context)
+
+
+# class PaymentVerifyView(LoginRequiredMixin, View):
+#     @method_decorator(csrf_protect)
+#     def post(self, request, *args, **kwargs):
+#         try:
+#             payment_id = request.POST.get('payment_id')
+#             payment = Payment.objects.get(payment_id=payment_id)
+#             return JsonResponse({'status': 'success', 'order_id': payment.order.uid, 'payment_status': payment.status})
+#         except Payment.DoesNotExist:
+#             return JsonResponse({'status': 'error', 'message': 'Payment not found'}, status=404)
+#         except Exception as e:
+#             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
