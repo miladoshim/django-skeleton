@@ -1,29 +1,47 @@
 from django.urls import path
 from .views import (
-    UserRegisterView,
     UserLoginView,
     PasswordChangeView,
-    PasswordChangeDoneView,
-    user_logout,
 )
-
 
 app_name = "accounts"
 
 urlpatterns = [
-    #     path('', AccountView.as_view(), name='account_index'),
-    #     path('setting/', AccountSettingView.as_view(), name='account_setting'),
-    path("register/", UserRegisterView.as_view(), name="register_view"),
-    path("login/", UserLoginView.as_view(), name="login_view"),
-    path("logout/", user_logout, name="logout"),
-    path("password_change/", PasswordChangeView.as_view(), name="password_change_view"),
+    # Account Setting
+    path("accounts/", UserLoginView.as_view(), name="account_index"),
+    path("accounts/setting/", UserLoginView.as_view(), name="account_setting"),
     path(
-        "password_change/done",
-        PasswordChangeDoneView.as_view(),
-        name="password_change_done_view",
+        "accounts/setting/change_password",
+        UserLoginView.as_view(),
+        name="account_setting",
     ),
-    
-    
-    # path('auth/otp/request/', RequestOtpAPIView.as_view()),
-    # path('auth/otp/verify/', VerifyOtpAPIView.as_view()),
+    path("accounts/comments", UserLoginView.as_view(), name="account_setting"),
+    # Authentication
+    path("auth/register", UserLoginView.as_view(), name="register_view"),
+    path("auth/register/otp/request", UserLoginView.as_view(), name="register_view"),
+    path("auth/register/otp/verify", UserLoginView.as_view(), name="register_view"),
+    path(
+        "register/otp/verify/<str:mobile>/<str:reqid>/",
+        user_register_otp_verify,
+        name="register_otp_verify_view",
+    ),
+    path(
+        "register/otp/complete/<str:mobile>/<str:reqid>/",
+        user_register_otp_complete,
+        name="register_otp_complete_view",
+    ),
+    path("auth/register/otp/complete", UserLoginView.as_view(), name="register_view"),
+    path("auth/login/", UserLoginView.as_view(), name="login_view"),
+    path("auth/logout/", UserLoginView, name="logout"),
+    path("auth/login/", UserLoginView.as_view(), name="login_view"),
+    path(
+        "password/forgot/mobile/",
+        forgot_password_mobile,
+        name="password_forgot_mobile_view",
+    ),
+    path(
+        "password/forgot/mobile/reset/<str:mobile>/<str:reqid>/",
+        forgot_password_mobile_reset,
+        name="password_forgot_mobile_reset_view",
+    ),
 ]

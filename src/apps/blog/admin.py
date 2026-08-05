@@ -3,30 +3,28 @@ from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin, ExportActionMixin
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
-from apps.blog.models import Category, RecyclePost, Tag, Post, Comment
-from apps.blog.resources import PostResource
+from apps.blog.models import Category, Post
 from apps.blog.forms import TagsForm
 
+# @admin.register(Comment)
+# class CommentAdmin(admin.ModelAdmin):
+#     list_display = [
+#         "user",
+#         "post",
+#         "comment",
+#         "is_approved",
+#     ]
+#     list_filter = ["is_approved"]
+#     list_editable = ["is_approved"]
+#     search_fields = [
+#         "comment",
+#     ]
 
-@admin.register(Comment)
-class CommentAdmin(admin.ModelAdmin):
-    list_display = [
-        "user",
-        "post",
-        "comment",
-        "is_approved",
-    ]
-    list_filter = ["is_approved"]
-    list_editable = ["is_approved"]
-    search_fields = [
-        "comment",
-    ]
 
-
-class CommentInline(admin.StackedInline):
-    model = Comment
-    extra = False
-    max_num = 3
+# class CommentInline(admin.StackedInline):
+#     model = Comment
+#     extra = False
+#     max_num = 3
 
 
 @admin.register(Post)
@@ -39,7 +37,7 @@ class PostAdmin(ImportExportModelAdmin):
         "title",
     ]
     list_display_links = ["id", "title"]
-    inlines = [CommentInline]
+    # inlines = [CommentInline]
     prepopulated_fields = {"slug": ["title"]}
     show_facets = admin.ShowFacets.ALWAYS
     # form = TagsForm
@@ -85,32 +83,6 @@ class PostAdmin(ImportExportModelAdmin):
     #     )
     #     return format_html('<a href="{}"> {} Categories </a>', url, count)
     # view_categories_list.__name__ = 'Categories Count'
-
-
-@admin.register(RecyclePost)
-class PostAdmin(admin.ModelAdmin):
-
-    actions = ["recover"]
-
-    def get_queryset(self, request):
-        return RecyclePost.deleted.filter(is_deleted=True)
-
-    @admin.action(description="بازنشانی آیتم حذف شده")
-    def recover(self, request, queryset):
-        queryset.update(is_deleted=False, deleted_at=None)
-
-    @admin.action(description="Draft posts to published")
-    def draft_to_published_posts(self, request, queryset):
-        rows_updated = queryset.update(status="p")
-        if rows_updated == 1:
-            message_bit = "منتشر شد."
-        else:
-            message_bit = "منتشر شدند."
-        self.message_user(request, "{} مقاله {}".format(rows_updated, message_bit))
-
-    @admin.action(description="Published posts to draft")
-    def published_to_draft_posts(self, request, queryset):
-        queryset.update(status="d")
 
 
 @admin.register(Category)

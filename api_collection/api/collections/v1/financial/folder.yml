@@ -1,0 +1,7 @@
+info:
+  name: financial
+  type: folder
+  seq: 4
+
+request:
+  auth: inherit

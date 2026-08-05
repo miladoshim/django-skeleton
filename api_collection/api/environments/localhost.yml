@@ -1,0 +1,4 @@
+name: localhost
+variables:
+  - name: baseurlv1
+    value: http://localhost:8000/api/v1/

@@ -1,36 +1,27 @@
 from django import forms
-
-from apps.core.models import NewsletterSubscriber
-
-
-class NewsletterSubscriberForm(forms.ModelForm):
-    class Meta:
-        model = NewsletterSubscriber
-        fields = ["email"]
+from .models import ContactUs
 
 
-class ContactForm(form.Form):
-    name = forms.CharField(
-        min_length=3,
-        max_length=128,
+class ContactForm(forms.ModelForm):
+    mobile = forms.CharField(
+        min_length=11,
+        max_length=11,
+        label="شماره موبایل",
         required=True,
         widget=forms.TextInput(
-            attrs={"class": "form-control"},
-        ),
-    )
-    phone = forms.CharField(max_length=11, required=True)
-    message = forms.CharField(
-        1024,
-        required=True,
-        widget=forms.Textarea(
-            attrs={},
+            attrs={"placeholder": "مثال:‌09121236515", "class": "form-control"},
         ),
     )
 
+    class Meta:
+        model = ContactUs
+        fields = (
+            "subject",
+            "name",
+            "mobile",
+            "message",
+        )
 
-# class BodyFieldForm(forms.ModelForm):
-#     body = forms.Charfield(widget=forms.Textarea(attrs={'id':'richtext_field'}))
 
-#     class Meta:
-#         model=Post
-#         fields = "__all__"
+class SearchForm(forms.Form):
+    query = forms.CharField(min_length=3, max_length=150, required=True, label="جستجو")

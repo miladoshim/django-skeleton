@@ -2,9 +2,8 @@ from django.contrib import admin
 from django import forms
 from django.db import models
 from django.utils import timezone
-from image_uploader_widget.widgets import ImageUploaderWidget
 from import_export.admin import ImportExportModelAdmin
-from .models import Banner, Bookmark, NewsletterSubscriber, Skill, TopBarTimerMessage
+from .models import Banner, Bookmark, NewsletterSubscriber
 
 
 class BaseAdminMixin(admin.ModelAdmin):
@@ -13,9 +12,6 @@ class BaseAdminMixin(admin.ModelAdmin):
     search_fields = ["title"]
     list_display_links = ["id", "title"]
     list_filter = ["created_at", "is_deleted"]
-    formfield_overrides = {
-        models.ImageField: {"widget": ImageUploaderWidget},
-    }
 
     def save_model(self, request, obj, form, change):
         if hasattr("obj", "author"):
@@ -45,16 +41,6 @@ class SoftDeleteAdmin(admin.ModelAdmin):
     @admin.action(description="Hard delete selected items (permanent)")
     def hard_delete(self, request, queryset):
         queryset.hard_delete()
-
-
-@admin.register(Skill)
-class SkillAdmin(ImportExportModelAdmin):
-    list_display = ["id", "title", "created_at"]
-    date_hierarchy = "created_at"
-    search_fields = ["title"]
-    list_display_links = ["id", "title"]
-    prepopulated_fields = {"slug": ["title"]}
-    empty_value_display = "---"
 
 
 @admin.register(NewsletterSubscriber)
@@ -93,15 +79,6 @@ class BannerAdmin(ImportExportModelAdmin):
     class Media:
         css = {"all": ("admin/css/upload_progress.css",)}
         js = ("admin/js/upload_progress.js",)
-
-
-@admin.register(TopBarTimerMessage)
-class TopBarTimerMessageAdmin(ImportExportModelAdmin):
-    list_display = ["id", "message", "link_text", "link", "created_at"]
-    date_hierarchy = "created_at"
-    search_fields = ("message",)
-    list_display_links = ["id", "message"]
-    empty_value_display = "---"
 
 
 @admin.register(Bookmark)

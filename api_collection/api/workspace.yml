@@ -1,0 +1,14 @@
+opencollection: 1.0.0
+info:
+  name: "skeleton"
+  type: workspace
+
+collections:
+  - name: "v1"
+    path: "collections/v1"
+
+specs:
+
+docs: ''
+
+activeEnvironmentUid: w3722o000000000000000

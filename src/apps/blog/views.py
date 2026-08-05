@@ -5,18 +5,16 @@ from django.shortcuts import get_object_or_404, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic import DetailView, ListView
-from django_filters.views import FilterView
 from hitcount.models import HitCount
 from hitcount.views import HitCountMixin
 from apps.core.models import Comment
 from utils.enums import PublishStatusChoice
-from .filters import PostFilter
 from .forms import CommentCreateForm
 from .models import Category, Post
 
 
 # @method_decorator(cache_page(60 * 15), name="dispatch")
-class PostListView(FilterView):
+class PostListView(ListView):
     model = Post
     queryset = Post.published.select_related("category", "author").order_by(
         "-created_at"
@@ -24,7 +22,6 @@ class PostListView(FilterView):
     context_object_name = "posts"
     template_name = "blog/post_list.html"
     paginate_by = 24
-    filterset_class = PostFilter
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

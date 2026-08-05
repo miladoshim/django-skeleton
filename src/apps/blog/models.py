@@ -8,8 +8,6 @@ from django.db.models import Count
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
-from django_ckeditor_5.fields import CKEditor5Field
-from auditlog.registry import auditlog
 from hitcount.models import HitCountMixin
 from hitcount.settings import MODEL_HITCOUNT
 from star_ratings.models import Rating
@@ -104,7 +102,7 @@ class Post(BaseModel, Commentable, Bookmarkable, HitCountMixin):
         "توضیحات کوتاه",
         max_length=255,
     )
-    body = CKEditor5Field("متن مقاله", config_name="extends")
+    body = models.TextField("متن مقاله")
     thumbnail = models.ImageField(
         upload_to="posts/thumbnails/%Y/%m/%d",
         verbose_name="تصویر شاخص",
@@ -192,7 +190,3 @@ class Post(BaseModel, Commentable, Bookmarkable, HitCountMixin):
             return "پادکست"
         else:
             return "سینما"
-
-
-auditlog.register(Category, serialize_data=True)
-auditlog.register(Post, serialize_data=True)

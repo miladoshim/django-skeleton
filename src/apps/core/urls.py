@@ -1,10 +1,7 @@
 from django.contrib.sitemaps.views import sitemap as sitemaps_views
 from django.urls import path
 from django.views.decorators.cache import cache_page
-from apps.academy.sitemaps import CourseSitemap, EpisodeSitemap
 from apps.blog.sitemaps import CategorySitemap, PostSitemap
-from apps.library.sitemaps import BookSitemap
-from apps.shop.sitemaps import BrandSitemap, ProductCategorySitemap
 from .views import (
     bookmarks_toggle,
     comment_reply,
@@ -17,11 +14,6 @@ app_name = "apps.core"
 sitemaps = {
     "posts": PostSitemap,
     "categories": CategorySitemap,
-    "courses": CourseSitemap,
-    "episodes": EpisodeSitemap,
-    "books": BookSitemap,
-    "product_categories": ProductCategorySitemap,
-    "brands": BrandSitemap,
 }
 
 urlpatterns = [

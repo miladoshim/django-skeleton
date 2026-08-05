@@ -3,15 +3,7 @@ from django.contrib.auth.forms import UserChangeForm
 from django.core import validators
 from django.core.exceptions import ValidationError
 from django.forms import Form, ModelForm
-from django_select2 import forms as s2forms
-from apps.financial.models import IrBank
-from apps.shop.models import Address
-from utils.validators import (
-    validate_card_number,
-    validate_shaba,
-)
-
-from .models import User, UserBank, UserProfile
+from .models import User, UserProfile
 
 
 class UserLoginForm(Form):

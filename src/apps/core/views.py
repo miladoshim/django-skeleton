@@ -5,17 +5,10 @@ from django.shortcuts import get_object_or_404, render
 from django.views.generic import TemplateView
 from django.views.decorators.http import require_POST
 from django.contrib.contenttypes.models import ContentType
-from django_htmx.middleware import HtmxDetails
-from apps.academy.models import Course
 from apps.blog.models import Post
 from apps.core.services.bookmark_services import BookmarkService
-from apps.library.models import Book
 from .forms import CommentReplyCreateForm, NewsletterSubscriberForm
 from .models import Comment
-
-
-class HtmxHttpRequest(HttpRequest):
-    htmx: HtmxDetails
 
 
 def error404_handler(request, *args, **kwargs):
@@ -72,10 +65,6 @@ def comment_reply(request, *args, **kwargs):
     object_ = None
 
     if object_type == "a":
-        object_ = get_object_or_404(Course, id=object_id)
-    elif object_type == "b":
-        object_ = get_object_or_404(Book, id=object_id)
-    elif object_type == "c":
         object_ = get_object_or_404(Post, id=object_id)
     else:
         return HttpResponse("model not found")

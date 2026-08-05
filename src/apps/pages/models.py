@@ -1,49 +1,5 @@
-import uuid
 from django.db import models
-from django.db.models import Q
-from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
-
 from apps.core.models import BaseModel
-
-# from django.contrib.auth import get_user_model
-
-# User = get_user_model()
-
-
-class PublishStatusChoice(models.TextChoices):
-    published = "p", _("منتشر شده")
-    draft = "d", _("پیش نویس")
-
-
-class GenderChoices(models.TextChoices):
-    male = "m", _("مرد")
-    female = "f", _("زن")
-    unknown = "u", _("نامشخص")
-    __empty__ = "(Unknown)"
-
-
-# class IPAddress(BaseModel):
-#     ip_address = models.GenericIPAddressField()
-#     hit_count = models.PositiveBigIntegerField(default=0)
-
-#     class Meta:
-#         db_table = 'ip_addresses'
-#         verbose_name = _("آدرس IP")
-#         verbose_name_plural = _("آدرس IP ها")
-
-#     def __str__(self) -> str:
-#         return self.ip_address + ' : ' + self.hit_count
-
-# class Notification(BaseModel):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE,
-#                              null=True,blank=True, related_name='notifications')
-#     message = models.TextField()
-#     is_read = models.BooleanField(default=False)
-#     read_at = models.DateTimeField(null=True, blank=True)
-
-#     def __str__(self):
-#         return self.message
 
 
 class NewsletterSubscriber(BaseModel):
@@ -53,11 +9,9 @@ class NewsletterSubscriber(BaseModel):
     def __str__(self):
         return "%s" % self.email
 
-
-#     class Meta:
-#         db_table = 'ip_addresses'
-#         verbose_name = _("آدرس IP")
-#         verbose_name_plural = _("آدرس IP ها")
+    class Meta:
+        verbose_name = "مشترک خبرنامه"
+        verbose_name_plural = "مشترکین خبرنامه "
 
 
 class FaqGroup(BaseModel):
@@ -66,12 +20,9 @@ class FaqGroup(BaseModel):
     def __str__(self):
         return self.title
 
-    #     class Meta:
-
-
-#         db_table = 'ip_addresses'
-#         verbose_name = _("آدرس IP")
-#         verbose_name_plural = _("آدرس IP ها")
+    class Meta:
+        verbose_name = "گروه سوالات متداول"
+        verbose_name_plural = "گروه های سوالات متداول"
 
 
 class Faq(BaseModel):
@@ -84,12 +35,9 @@ class Faq(BaseModel):
     def __str__(self):
         return self.question
 
-    #     class Meta:
-
-
-#         db_table = 'ip_addresses'
-#         verbose_name = _("آدرس IP")
-#         verbose_name_plural = _("آدرس IP ها")
+    class Meta:
+        verbose_name = "سوال متداول"
+        verbose_name_plural = "سوالات متداول"
 
 
 class ContactUsSubject(BaseModel):
@@ -98,12 +46,11 @@ class ContactUsSubject(BaseModel):
     def __str__(self):
         return self.title
 
-    #     class Meta:
+    class Meta:
+        verbose_name = "موضوع تماس با ما"
+        verbose_name_plural = "موضوع های تماس با ما"
 
 
-#         db_table = 'ip_addresses'
-#         verbose_name = _("آدرس IP")
-#         verbose_name_plural = _("آدرس IP ها")
 class ContactUs(BaseModel):
     subject = models.OneToOneField(ContactUsSubject, on_delete=models.CASCADE)
     fullname = models.TextField(max_length=255)
@@ -113,9 +60,6 @@ class ContactUs(BaseModel):
     def __str__(self):
         return self.fullname
 
-    #     class Meta:
-
-
-#         db_table = 'ip_addresses'
-#         verbose_name = _("آدرس IP")
-#         verbose_name_plural = _("آدرس IP ها")
+    class Meta:
+        verbose_name = "تماس با ما"
+        verbose_name_plural = "تماس با ما ها"

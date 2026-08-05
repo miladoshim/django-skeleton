@@ -1,0 +1,15 @@
+info:
+  name: post list
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseurlv1}}blog/posts/"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

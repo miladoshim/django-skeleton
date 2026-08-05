@@ -10,10 +10,9 @@ from django.core.files.storage import default_storage
 from django.db.models.base import pre_save
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
-from apps.financial.models import CoachIncome, Payout, Wallet
-from apps.shop.models import Cart
+from apps.financial.models import Wallet
 from utils.helpers import get_user_ip_address
-from .models import User, UserBank, UserMeta, UserProfile
+from .models import User, UserMeta, UserProfile
 
 
 @receiver(post_save, sender=User)
@@ -32,7 +31,6 @@ def user_created_signal(sender, instance, *args, **kwargs):
     UserProfile.objects.filter(user=instance).delete()
     UserMeta.objects.filter(user=instance).delete()
     Wallet.objects.filter(user=instance).delete()
-    Cart.objects.filter(user=instance).delete()
 
 
 @receiver(user_logged_in, sender=User)
@@ -90,36 +88,3 @@ def user_deleted_signal(sender, instance, *args, **kwargs):
             return
 
     delete_user_avatar_and_banner(old_instance, instance)
-
-
-@receiver([post_delete, post_save], sender=UserBank)
-def invalidate_user_bank_cache(sender, instance, **kwargs):
-    cache.delete_pattern("*user_bank_list*")
-
-
-@receiver(post_save, sender=Payout)
-def payout_created_signal(sender, instance, created, *args, **kwargs):
-    if created:
-        pass
-
-
-@receiver(post_save, sender=CoachIncome)
-def coach_income_created_signal(sender, instance, created, *args, **kwargs):
-    if created:
-        pass
-
-
-# @receiver(user_logged_in)
-# def limit_concurrent_sessions(sender, request, user, **kwargs):
-#     from django.contrib.sessions.models import Session
-
-#     # Get all sessions for this user
-#     user_sessions = Session.objects.filter(
-#         expire_date__gte=timezone.now()
-#     )
-
-#     # Allow only 3 concurrent sessions
-#     if user_sessions.count() > 3:
-#         oldest_sessions = user_sessions.order_by('expire_date')[:user_sessions.count()-3]
-#         for session in oldest_sessions:
-#             session.delete()

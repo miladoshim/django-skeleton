@@ -2,33 +2,18 @@ import hashlib
 import os
 import pathlib
 import uuid
-from decimal import ROUND_HALF_UP
 from uuid import uuid4
 import functools
 from django.core.cache import cache
-
-# from django.utils import timezone
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.contenttypes.models import ContentType
 from django_redis import get_redis_connection
-
-# from django.contrib.sessions.models import Session
-from django.core.mail import EmailMessage
 from django.core.validators import FileExtensionValidator
-from django.db.models.expressions import Decimal
-from django.http import JsonResponse
 from django.utils.text import slugify
-from persian_tools import digits, national_id, phone_number, separator
-from persian_tools.bank import card_number, sheba
+from persian_tools import digits, separator
 from PIL import Image, ImageDraw, ImageFont
 from rest_framework.views import exception_handler
 from rest_framework_simplejwt.tokens import RefreshToken
-
-# from pygments import highlight
-# from pygments.formatters import TerminalFormatter
-# from pygments.lexers import PostgresLexer
-# from sqlparse import format
-# from django.db.models import QuerySet
 
 
 def image_folder(instance, filename):
@@ -216,36 +201,6 @@ def custom_exception_handler(exc, context):
     return response
 
 
-# def mark_payout_as_paid(payout):
-#     payout.status = Payout.PAID
-#     payout.processed_at = timezone.now()
-#     payout.save(update_fields=["status", "processed_at"])
-
-
-# def extract_video_duration(self):
-#     """استخراج زمان ویدیو با استفاده از ffprobe"""
-#     try:
-#         result = subprocess.run(
-#             [
-#                 "ffprobe",
-#                 "-v",
-#                 "quiet",
-#                 "-print_format",
-#                 "json",
-#                 "-show_format",
-#                 "-show_streams",
-#                 self.video.path,
-#             ],
-#             stdout=subprocess.PIPE,
-#             stderr=subprocess.PIPE,
-#         )
-#         data = json.loads(result.stdout)
-#         seconds = float(data["format"]["duration"])
-#         return timedelta(seconds=int(seconds))
-#     except:
-#         return None
-
-
 def get_real_ip_addr(request):
 
     real_ip = request.META.get("REAL_IP")
@@ -257,15 +212,6 @@ def get_real_ip_addr(request):
     else:
         ip = request.META.get("REAL_IP")
     return ip
-
-
-def calculate_tax(self):
-    if self.pk and self.orderitems.exists():  # type: ignore
-        subtotal = sum(item.get_total_price_item() for item in self.orderitems.all())  # type: ignore
-    else:
-        subtotal = int(self.total_price)  # تبدیل صریح به Decimal
-    tax_rate = Decimal("0.09")
-    return (subtotal * tax_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def generate_unique_uuid():
@@ -293,80 +239,6 @@ def get_model_name(model, attr=None):
 
 def get_kwarg_object(model_name, pk):
     return string_to_model(model_name).objects.get(pk=pk)
-
-
-# def user_has_course_access(user, course: Course) -> bool:
-#     if not user.is_authenticated:
-#         return False
-
-#     if course.price == 0:
-#         return True
-
-#     if Enrollment.objects.filter(user=user, course=course, is_active=True).exists():
-#         return True
-
-#     now = timezone.now()
-#     vip = (
-#         VipSubscription.objects.filter(user=user, is_active=True, end_at__gte=now)
-#         .select_related("plan")
-#         .first()
-#     )
-#     if vip:
-#         if course.free_for_vip_plans.filter(id=vip.plan_id).exists():
-#             return True
-
-#     return False
-
-
-# def get_total_revenue(instructor):
-#     return (
-#         InstructorRevenue.objects.filter(instructor=instructor).aggregate(
-#             total=models.Sum("amount")
-#         )["total"]
-#         or 0
-#     )
-#
-
-#
-# def get_revenue_in_period(instructor, start, end):
-#     return (
-#         InstructorRevenue.objects.filter(
-#             instructor=instructor, created_at__range=(start, end)
-#         ).aggregate(total=models.Sum("amount"))["total"]
-#         or 0
-#     )
-
-
-# def get_course_revenue(instructor, course):
-#     return (
-#         InstructorRevenue.objects.filter(
-#             instructor=instructor, course=course
-#         ).aggregate(total=models.Sum("amount"))["total"]
-#         or 0
-#     )
-
-
-# def extract_video_duration(self):
-#     try:
-#         result = subprocess.run(
-#             [
-#                 "ffprobe",
-#                 "-v",
-#                 "quiet",
-#                 "-print_format",
-#                 "json",
-#                 "-show_format",
-#                 "-show_streams",
-#                 self.video.path,
-#             ],
-#             stdout=subprocess.PIPE,
-#             stderr=subprocess.PIPE,
-#         )
-#         data = json.loads(result.stdout)
-#         seconds = float(data["format"]["duration"])
-#         return timedelta(seconds=int(seconds))
-#     except:
-#         return None
 
 
 class TokenGenerator(PasswordResetTokenGenerator):

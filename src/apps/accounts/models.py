@@ -1,7 +1,6 @@
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.utils.functional import cached_property
 from django.utils import timezone
 from jalali_date import date2jalali
 from apps.core.models import BaseModel
@@ -76,12 +75,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     role = models.PositiveSmallIntegerField(
         verbose_name="نقش کاربر",
         choices=UserRole.choices,
-        default=UserRole.STUDENT,
-    )
-    coach_percent = models.PositiveSmallIntegerField(
-        default=40,
-        verbose_name="درصد همکاری مدرس",
-        help_text="درصد سهم مربی از فروش دوره",
+        default=UserRole.USER,
     )
     updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ بروزرسانی")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ثبت")
@@ -104,22 +98,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         full_name = "%s %s" % (self.first_name, self.last_name)
         return full_name.strip()
 
-    def get_cart_items(self):
-        cart = self.cart
-        return cart.items.all()
-
     @property
     def is_banned(self) -> bool:
         return self.meta.is_banned
 
-    def is_student(self) -> bool:
-        return self.role == UserRole.STUDENT
-
-    @property
-    def is_coach(self) -> bool:
-        return self.role == UserRole.COACH
-
-    # Staff can only delete their own account
     def has_delete_permission(self, request, obj=None):
         if not request.user.is_superuser:
             if obj is not None and obj.id != request.user.id:
@@ -139,15 +121,10 @@ class User(AbstractBaseUser, PermissionsMixin):
             return False
         return True
 
-    # Field makes specified fields as read-only for staff
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_superuser:
             return "is_superuser", "is_staff", "is_active"
         return super(User, self).get_readonly_fields(request)
-
-    @cached_property
-    def get_account_role_title(self) -> str:
-        return "مربی" if self.role == UserRole.COACH else "دانشجو"
 
     def is_registered(self):
         return self.meta.mobile_verified_at
@@ -184,24 +161,6 @@ class UserProfile(BaseModel):
         null=True,
         blank=True,
         verbose_name="بیوگرافی",
-    )
-    instagram = models.CharField(
-        verbose_name="اینستاگرام",
-        null=True,
-        blank=True,
-        max_length=75,
-    )
-    linkedin = models.CharField(
-        verbose_name="لینکدین",
-        null=True,
-        blank=True,
-        max_length=75,
-    )
-    site = models.CharField(
-        verbose_name="سایت",
-        null=True,
-        blank=True,
-        max_length=150,
     )
 
     def __str__(self):
@@ -291,19 +250,13 @@ class UserMeta(BaseModel):
     )
 
 
-class OtpRequest(models.Model):
-    class OtpChannel(models.TextChoices):
-        PHONE = "p", "Phone"
-        EMAIL = "e", "Email"
+class OtpChannel(models.TextChoices):
+    PHONE = "p", "Phone"
+    EMAIL = "e", "Email"
 
+
+class OtpRequest(BaseModel):
     objects = OTPManager()
-
-    uuid = models.UUIDField(
-        default=generate_unique_uuid,
-        editable=False,
-        db_index=True,
-        unique=True,
-    )
     request_id = models.UUIDField(
         default=generate_unique_uuid,
         editable=False,
@@ -325,10 +278,6 @@ class OtpRequest(models.Model):
     expired_at = models.DateTimeField(
         default=timezone.now() + timezone.timedelta(seconds=120),
         db_index=True,
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="تاریخ ثبت",
     )
 
     class Meta:
