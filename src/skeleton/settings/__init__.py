@@ -1,7 +1,4 @@
-import os
-
 from decouple import config
-
 from .common import *
 
 env = config("APP_ENV", default="production")

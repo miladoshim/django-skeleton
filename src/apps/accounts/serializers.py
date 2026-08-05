@@ -1,8 +1,6 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from apps.financial.models import Wallet
-
-from utils import validators
 from .models import (
     OtpRequest,
     User,

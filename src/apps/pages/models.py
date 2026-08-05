@@ -55,7 +55,7 @@ class ContactUs(BaseModel):
     subject = models.OneToOneField(ContactUsSubject, on_delete=models.CASCADE)
     fullname = models.TextField(max_length=255)
     message = models.TextField(max_length=255)
-    phone = models.TextField(max_length=255)
+    mobile = models.TextField(max_length=255)
 
     def __str__(self):
         return self.fullname

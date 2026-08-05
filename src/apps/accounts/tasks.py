@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Q
@@ -49,25 +50,27 @@ def send_otp_password(self, receiver: str, otp: str):
 def cleanup_expired_otp_requests():
     now = timezone.now()
 
-    query = Q(expired_at__lt=now) | Q(created_at__lt=now - timedelta(days=7))
+    with transaction.atomic():
+        query = Q(expired_at__lt=now) | Q(created_at__lt=now - timedelta(days=7))
 
-    deleted_count = OtpRequest.objects.filter(query).delete()[0]
+        deleted_count = OtpRequest.objects.filter(query).delete()[0]
 
-    if deleted_count:
-        print(f"🧹 {deleted_count} OTP قدیمی پاکسازی شد")
+        if deleted_count:
+            print(f"🧹 {deleted_count} OTP قدیمی پاکسازی شد")
 
-    return deleted_count
+        return deleted_count
 
 
 @shared_task
 def cleanup_inactive_users():
     now = timezone.now()
 
-    query = Q(is_active=False | Q(created_at__lt=now - timedelta(days=1)))
+    with transaction.atomic():
+        query = Q(is_active=False | Q(created_at__lt=now - timedelta(days=1)))
 
-    deleted_count = User.objects.filter(query).delete()[0]
+        deleted_count = User.objects.filter(query).delete()[0]
 
-    if deleted_count:
-        print(f"🧹 deleted inactive and not registered users.")
+        if deleted_count:
+            print(f"🧹 deleted inactive and not registered users.")
 
-    return deleted_count
+        return deleted_count

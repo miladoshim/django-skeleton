@@ -2,6 +2,7 @@ from django.core.cache import cache
 
 
 class Caching:
+
     @staticmethod
     def set(key, value, timeout: int = 200):
         cache.set(key, value, timeout=timeout)

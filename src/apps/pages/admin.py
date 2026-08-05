@@ -12,18 +12,18 @@ class ContactModelAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "subject",
-        "name",
+        "fullname",
         "mobile",
         "message",
         "created_at",
     )
     list_display_links = (
         "id",
-        "name",
+        "fullname",
         "mobile",
     )
     search_fields = (
-        "name",
+        "fullname",
         "mobile",
     )
     empty_value_display = "---"

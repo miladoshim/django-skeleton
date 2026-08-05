@@ -1,21 +1,20 @@
 import datetime
 import readtime
+from django.db.models.aggregates import Count
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.utils.functional import cached_property
 from django.db import models
-from django.db.models import Count
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
 from hitcount.models import HitCountMixin
 from hitcount.settings import MODEL_HITCOUNT
-from star_ratings.models import Rating
 from taggit_selectize.managers import TaggableManager
 from treebeard.mp_tree import MP_Node
 from apps.core.managers import PublishedManager
 from apps.core.models import BaseModel, Bookmarkable, Commentable
-from utils.enums import PublishStatusChoice, PostTypeChoice
+from utils.enums import PublishStatusChoice
 
 User = get_user_model()
 
@@ -112,18 +111,6 @@ class Post(BaseModel, Commentable, Bookmarkable, HitCountMixin):
         default=PublishStatusChoice.DRAFT,
         verbose_name="وضعیت انتشار",
     )
-    post_type = models.PositiveSmallIntegerField(
-        choices=PostTypeChoice.choices,
-        default=PostTypeChoice.POST.value,
-        verbose_name="نوع پست",
-    )
-    attachment_link = models.CharField(
-        "لینک پادکست یا سینما",
-        null=True,
-        blank=True,
-        help_text="لینک فایل پادکست یا سینما",
-        max_length=250,
-    )
     tags = TaggableManager(
         verbose_name="برچسب ها",
         related_name="tags",
@@ -133,7 +120,6 @@ class Post(BaseModel, Commentable, Bookmarkable, HitCountMixin):
         object_id_field="object_pk",
         related_query_name="hit_count_generic_relation",
     )
-    # ratings = GenericRelation(Rating, related_query_name="posts")
 
     objects = models.Manager()
     published = PublishedManager()
@@ -163,30 +149,12 @@ class Post(BaseModel, Commentable, Bookmarkable, HitCountMixin):
     def read_time(self):
         return readtime.of_text(self.body).minutes
 
-    # def get_similar_posts(self):
-    #     post_tags_ids = self.tags.values_list("id", flat=True)
-    #     similar_posts = (
-    #         Post.published.filter(tags__in=post_tags_ids)
-    #         .exclude(id=self.id)
-    #         .annotate(same_tags=Count("tags"))
-    #         .order_by("-same_tags", "-created_at")[:4]
-    #     )
-    #     return similar_posts
-
-    # def get_similar_courses(self):
-    #     post_tags_ids = self.tags.values_list("id", flat=True)
-    #     similar_courses = (
-    #         Course.published.filter(tags__in=post_tags_ids)
-    #         .exclude(id=self.id)
-    #         .annotate(same_tags=Count("tags"))
-    #         .order_by("-same_tags", "-created_at")[:8]
-    #     )
-    #     return similar_courses
-
-    def get_type(self) -> str:
-        if self.post_type == PostTypeChoice.POST.value:
-            return "مقاله"
-        elif self.post_type == PostTypeChoice.PODCAST.value:
-            return "پادکست"
-        else:
-            return "سینما"
+    def get_similar_posts(self):
+        post_tags_ids = self.tags.values_list("id", flat=True)
+        similar_posts = (
+            Post.published.filter(tags__in=post_tags_ids)
+            .exclude(id=self.id)
+            .annotate(same_tags=Count("tags"))
+            .order_by("-same_tags", "-created_at")[:4]
+        )
+        return similar_posts

@@ -13,14 +13,9 @@ class PaymentMethods(models.IntegerChoices):
 
 class PaymentFor(models.IntegerChoices):
     WALLET_CHARGE = 1, "شارژ کیف پول"
-    COURSE = 2, "خرید دوره"
-    COACHING = 3, "ثبت نام در کوچینگ"
-    SHOP = 4, "خرید از فروشگاه"
-    PLUS = 5, "شارژ حساب پلاس"
 
 
 class Payment(BaseModel):
-
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

@@ -253,9 +253,6 @@ class UserProfileEditForm(ModelForm):
             "avatar",
             "gender",
             "bio",
-            "instagram",
-            "linkedin",
-            "site",
         ]
         labels = {
             "avatar": "تصویر پروفایل",
@@ -263,11 +260,6 @@ class UserProfileEditForm(ModelForm):
         widgets = {
             "first_name": forms.TextInput(attrs={"class": "form-control"}),
             "last_name": forms.TextInput(attrs={"class": "form-control"}),
-            "instagram": forms.TextInput(attrs={"class": "form-control"}),
-            "facebook": forms.TextInput(attrs={"class": "form-control"}),
-            "linkedin": forms.TextInput(attrs={"class": "form-control"}),
-            "site": forms.TextInput(attrs={"class": "form-control"}),
-            "youtube": forms.TextInput(attrs={"class": "form-control"}),
             "avatar": forms.ClearableFileInput(attrs={"class": "form-control"}),
         }
 

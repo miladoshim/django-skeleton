@@ -1,7 +1,10 @@
 from django.urls import path
-from .views import (
+from apps.accounts.views.auth_views import (
     UserLoginView,
-    PasswordChangeView,
+    forgot_password_mobile,
+    forgot_password_mobile_reset,
+    user_register_otp_complete,
+    user_register_otp_verify,
 )
 
 app_name = "accounts"
@@ -32,8 +35,7 @@ urlpatterns = [
     ),
     path("auth/register/otp/complete", UserLoginView.as_view(), name="register_view"),
     path("auth/login/", UserLoginView.as_view(), name="login_view"),
-    path("auth/logout/", UserLoginView, name="logout"),
-    path("auth/login/", UserLoginView.as_view(), name="login_view"),
+    path("auth/logout/", UserLoginView.as_view(), name="logout"),
     path(
         "password/forgot/mobile/",
         forgot_password_mobile,
