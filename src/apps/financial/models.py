@@ -55,10 +55,6 @@ class Payment(BaseModel):
     def get_for(self):
         if self.payment_for == PaymentFor.WALLET_CHARGE:
             return "شارژ کیف پول"
-        elif self.payment_for == PaymentFor.COURSE:
-            return "خرید دوره"
-        elif self.payment_for == PaymentFor.COACHING:
-            return "ثبت نام در کوچینگ"
         else:
             return "خرید از فروشگاه"
 

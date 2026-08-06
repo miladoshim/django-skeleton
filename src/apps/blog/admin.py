@@ -1,10 +1,10 @@
-from django.utils.translation import gettext_lazy as _
 from django.contrib import admin
-from import_export.admin import ImportExportModelAdmin, ExportActionMixin
+from import_export.admin import ImportExportModelAdmin
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
 from apps.blog.models import Category, Post
-from apps.blog.forms import TagsForm
+
+# from apps.blog.forms import TagsForm
 
 # @admin.register(Comment)
 # class CommentAdmin(admin.ModelAdmin):
@@ -62,7 +62,7 @@ class PostAdmin(ImportExportModelAdmin):
     def tags_to_str(self, obj):
         return ", ".join(tag.title for tag in obj.tags.all())
 
-    tags_to_str.short_description = _("برسب ها")
+    tags_to_str.short_description = "برسب ها"
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related("tags")

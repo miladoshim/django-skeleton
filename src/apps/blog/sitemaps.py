@@ -1,6 +1,4 @@
 from django.contrib.sitemaps import Sitemap
-from django.urls import reverse
-
 from .models import Category, Post
 
 

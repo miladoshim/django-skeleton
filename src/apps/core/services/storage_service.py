@@ -176,3 +176,140 @@ class PrivateMediaStorage(S3Boto3Storage):
 
     def get_queryset_auth(self):
         return True
+
+
+from typing import Optional, List
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.conf import settings
+from django.db import transaction
+from PIL import Image
+import os
+import uuid
+import base64
+from io import BytesIO
+
+
+class FileService:
+    """
+    سرویس مدیریت فایل‌ها
+    استفاده مشترک در Web/API/GraphQL
+    """
+
+    def __init__(self):
+        self.allowed_images = ["jpg", "jpeg", "png", "gif", "webp"]
+        self.allowed_documents = ["pdf", "doc", "docx", "xls", "xlsx", "txt"]
+        self.max_file_size = 5 * 1024 * 1024  # 5MB
+
+    def upload_file(self, file, folder: str = "uploads/") -> dict:
+        """
+        آپلود فایل
+        استفاده در: Web upload، API upload، GraphQL upload
+        """
+        # بررسی حجم فایل
+        if file.size > self.max_file_size:
+            raise ValueError("حجم فایل نباید بیشتر از 5 مگابایت باشد")
+
+        # بررسی پسوند فایل
+        ext = file.name.split(".")[-1].lower()
+        if ext not in self.allowed_images + self.allowed_documents:
+            raise ValueError("فرمت فایل پشتیبانی نمی‌شود")
+
+        # ساخت نام یکتا
+        filename = f"{uuid.uuid4().hex}.{ext}"
+        filepath = os.path.join(folder, filename)
+
+        # اگر عکس است، بهینه‌سازی کن
+        if ext in self.allowed_images:
+            filepath = self._optimize_image(file, filepath)
+        else:
+            # ذخیره فایل
+            default_storage.save(filepath, ContentFile(file.read()))
+
+        return {
+            "file": filepath,
+            "url": f"/media/{filepath}",
+            "size": file.size,
+            "format": ext,
+        }
+
+    def upload_base64(self, data: str, folder: str = "uploads/") -> dict:
+        """
+        آپلود فایل با Base64
+        فقط برای API و GraphQL
+        """
+        try:
+            # جدا کردن metadata از data
+            format, imgstr = data.split(";base64,")
+            ext = format.split("/")[-1]
+
+            # تبدیل به فایل
+            file = ContentFile(base64.b64decode(imgstr))
+            file.name = f"file.{ext}"
+
+            return self.upload_file(file, folder)
+        except Exception as e:
+            raise ValueError("فرمت Base64 نامعتبر است")
+
+    def delete_file(self, filepath: str) -> bool:
+        """
+        حذف فایل
+        استفاده در: Web delete، API delete، GraphQL delete
+        """
+        try:
+            if default_storage.exists(filepath):
+                default_storage.delete(filepath)
+                return True
+            return False
+        except Exception:
+            return False
+
+    def get_file_url(self, filepath: str) -> str:
+        """
+        دریافت URL فایل
+        استفاده در: Web template، API serializer، GraphQL resolver
+        """
+        if not filepath:
+            return None
+
+        return default_storage.url(filepath)
+
+    def _optimize_image(self, image, filepath: str) -> str:
+        """بهینه‌سازی عکس"""
+        try:
+            img = Image.open(image)
+
+            # تغییر اندازه اگر خیلی بزرگ است
+            max_width = 1920
+            if img.width > max_width:
+                ratio = max_width / img.width
+                new_height = int(img.height * ratio)
+                img = img.resize((max_width, new_height), Image.Resampling.LANCZOS)
+
+            # ذخیره بهینه
+            buffer = BytesIO()
+            if img.mode in ("RGBA", "LA"):
+                img.save(buffer, format="PNG", optimize=True)
+                filepath = (
+                    filepath.replace(".jpg", ".png")
+                    .replace(".jpeg", ".png")
+                    .replace(".webp", ".png")
+                )
+            else:
+                img = img.convert("RGB")
+                img.save(buffer, format="JPEG", quality=85, optimize=True)
+                filepath = (
+                    filepath.replace(".png", ".jpg")
+                    .replace(".gif", ".jpg")
+                    .replace(".webp", ".jpg")
+                )
+
+            # ذخیره فایل
+            default_storage.save(filepath, ContentFile(buffer.getvalue()))
+            return filepath
+
+        except Exception as e:
+            # اگر بهینه‌سازی نشد، فایل اصلی را ذخیره کن
+            image.seek(0)
+            default_storage.save(filepath, ContentFile(image.read()))
+            return filepath

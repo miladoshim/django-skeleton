@@ -3,7 +3,6 @@ from django.core.cache import cache
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from utils.helpers import Helpers
-
 from .models import Post, Category
 
 
@@ -33,16 +32,3 @@ def create_post(sender, instance, created, *args, **kwargs):
     if created or not instance.slug:
         instance.slug = Helpers.create_unique_slug(instance)
         instance.save()
-
-
-# @receiver(post_save, sender=Post)
-# def create_new_post_notification_signal(sender, instance, *args, **kwargs):
-#     """
-#     create notification when created new post
-#     """
-#     if created:
-#         message = f''
-#         post = instance
-#         users = User.objects.all()
-#         broadcastNotification = BroadcastNotification.objects.create(message=message)
-#         broadcastNotification.users.set(users)

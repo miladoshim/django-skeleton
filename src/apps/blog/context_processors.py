@@ -1,13 +1,5 @@
-from .models import Category, Tag
+from .models import Category
 
 
 def blog_categories(request):
-    return {
-        'blog_categories': Category.objects.all()
-    }
-
-
-def blog_tags(request):
-        return {
-        'blog_tags': Tag.objects.all()
-    }
+    return {"blog_categories": Category.objects.all()}

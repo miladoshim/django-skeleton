@@ -18,15 +18,11 @@ app.conf.task_serializer = "json"
 app.conf.result_serializer = "json"
 app.conf.result_backend_transport_options = {"global_keyprefix": "celery_result_"}
 app.conf.beat_schedule = {
-    "check_available_pending_incomes": {
-        "task": "apps.financial.tasks.check_available_pending_incomes",
-        "schedule": crontab(minute="*/50"),
-    },
-    "remove-orphaned-files-daily": {
-        "task": "apps.orphan_files_cleaner.tasks.scan_and_remove_orphaned_files",
-        "schedule": 60 * 60 * 24,
-        "args": (),
-    },
+    # "remove-orphaned-files-daily": {
+    #     "task": "apps.orphan_files_cleaner.tasks.scan_and_remove_orphaned_files",
+    #     "schedule": 60 * 60 * 24,
+    #     "args": (),
+    # },
     "cleanup-otp-daily": {
         "task": "apps.accounts.tasks.cleanup_expired_otp_requests",
         "schedule": crontab(hour=3, minute=0),

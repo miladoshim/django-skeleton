@@ -1,9 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import TemplateView
-from django.views.decorators.http import require_POST
 from django.contrib.contenttypes.models import ContentType
 from apps.blog.models import Post
 from apps.core.services.bookmark_services import BookmarkService

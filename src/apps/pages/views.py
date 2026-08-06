@@ -6,7 +6,6 @@ from django.contrib.postgres.search import (
     TrigramSimilarity,
 )
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Count, Value, IntegerField
 from django.db.models.functions import Greatest
 from django.shortcuts import render
 from django.template.response import TemplateResponse
@@ -15,24 +14,11 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_safe
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, TemplateView
-from apps.academy.models import Course
 from apps.blog.models import Post
-from apps.core.models import Banner, BannerSection
-from apps.core.services.storage_service import storage_list_files
-from apps.library.models import Book
-from apps.shop.models import Brand, Product
 from .forms import ContactForm, SearchForm
 from .models import (
-    CocoonedTeam,
-    ContactSubject,
-    CustomerComment,
     FaqGroup,
 )
-
-
-def test(request):
-    result = storage_list_files()
-    return result
 
 
 class HomePageView(TemplateView):
@@ -41,25 +27,6 @@ class HomePageView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["posts"] = Post.published.all()[:8]
-        context["courses"] = (
-            Course.published.annotate(
-                episode_count=Count("episodes"),
-                chapter_count=Count("chapters"),
-            )
-            .select_related("category", "coach__profile")
-            .order_by("created_at")[:8]
-        )
-        context["products"] = Product.published.all()[:8]
-        context["books"] = Book.published.all()[:8]
-        context["brands"] = Brand.objects.all()
-        context["main_home_banners"] = Banner.objects.filter(
-            section=Value(BannerSection.MAIN_HOME.value, output_field=IntegerField())
-        ).all()
-        context["sub_home_banners"] = Banner.objects.filter(
-            section=Value(
-                BannerSection.SUB_SLIDER_HOME.value, output_field=IntegerField()
-            )
-        ).all()
         return context
 
 

@@ -14,11 +14,15 @@ class PaymentAdmin(ImportExportModelAdmin):
         "final_amount",
         "payment_method",
         "payment_for",
-        # "result__status",
+        "result__status",
     ]
-    list_display_links = ["id", "user"]
+    list_display_links = (
+        "id",
+        "user",
+    )
     empty_value_display = "---"
     date_hierarchy = "created_at"
-    search_fields = [
+    search_fields = (
         "user",
-    ]
+        "tracking_code",
+    )

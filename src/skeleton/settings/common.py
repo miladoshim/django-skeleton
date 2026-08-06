@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "drf_api_logger",
     "robots",
     "hitcount",
+    "meta",
     "django_extensions",
     "django_filters",
     "storages",
@@ -145,7 +146,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "js_asset.context_processors.importmap",
+                # "js_asset.context_processors.importmap",
                 "apps.core.context_processors.global_variables",
             ],
             "builtins": [

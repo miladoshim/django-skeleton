@@ -1,4 +1,3 @@
-from django.contrib.sitemaps.views import sitemap as sitemaps_views
 from django.urls import path
 from django.views.decorators.cache import cache_page
 from apps.blog.sitemaps import CategorySitemap, PostSitemap
@@ -11,19 +10,8 @@ from .views import (
 
 app_name = "apps.core"
 
-sitemaps = {
-    "posts": PostSitemap,
-    "categories": CategorySitemap,
-}
 
 urlpatterns = [
-    path(
-        "sitemap.xml",
-        cache_page(60)(sitemaps_views),
-        {"sitemaps": sitemaps},
-        name="django.contrib.sitemaps.views.sitemap",
-    ),
-    # path("robots.txt", RobotsTxtView.as_view(content_type="text/plain"), name="robots"),
     path("bookmarks/toggle/", bookmarks_toggle, name="bookmarks_toggle"),
     path("bookmarks/remove/", bookmarks_toggle, name="bookmarks_remove"),
     path(

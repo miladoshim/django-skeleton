@@ -2,9 +2,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.serializers import HyperlinkedModelSerializer, ModelSerializer
 from taggit.serializers import TaggitSerializer, TagListSerializerField
-
 from apps.accounts.models import User
-
 from .models import Category, Post
 
 

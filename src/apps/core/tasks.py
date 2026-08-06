@@ -1,13 +1,9 @@
 # import os
 # import ffmpeg
 from celery import shared_task
-
 from apps.core.services.sms_service import Kavenegar
 
 # from easy_thumbnails.files import generate_all_aliases
-# from celery.signals import task_prerun, task_postrun
-# from zeal import setup, teardown
-# from django.conf import settings
 
 
 @shared_task(bind=True, max_retries=3)
@@ -62,26 +58,3 @@ def send_comment_approved_notification(self, user: str):
 #             print(f"Image processed: {output_file}")
 #         except Exception as e:
 #             print(f"Failed to process image to {format}: {e}")
-
-
-# @shared_task
-# def process_audio_task(post_id, file_path):
-#     """Process audio to normalize and adjust bitrate."""
-#     output_file = f"media/audio/{post_id}.aac"
-#     try:
-#         ffmpeg.input(file_path).output(
-#             output_file, acodec="aac", audio_bitrate="128k", af="volume=0.8"
-#         ).run()
-#         print(f"Audio processed: {output_file}")
-#     except Exception as e:
-#         print(f"Failed to process audio: {e}")
-
-
-# @task_prerun.connect()
-# def setup_zeal(*args, **kwargs):
-#     setup()
-
-
-# @task_postrun.connect()
-# def teardown_zeal(*args, **kwargs):
-#     teardown()

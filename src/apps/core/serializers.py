@@ -1,6 +1,6 @@
-from apps.core.models import Bookmark
 from iranian_cities.models import Province
 from rest_framework import serializers
+from .models import Bookmark
 
 
 class ProvinceSerializer(serializers.ModelSerializer):

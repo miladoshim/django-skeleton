@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import GiftCode, IrBank, Payment, Payout, CoachIncome
+from .models import Payment, Wallet, WalletTransaction
 
 
 class PaymentSerializer(serializers.HyperlinkedModelSerializer):
@@ -8,25 +8,13 @@ class PaymentSerializer(serializers.HyperlinkedModelSerializer):
         fields = ["price", "url"]
 
 
-class PayoutSerializer(serializers.HyperlinkedModelSerializer):
+class WalletSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = Payout
-        fields = ["price", "url"]
+        model = Wallet
+        fields = ["user", "balance"]
 
 
-class IrBankSerializer(serializers.HyperlinkedModelSerializer):
+class WalletTransactionSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = IrBank
-        fields = ["price", "url"]
-
-
-class GiftCodeSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = GiftCode
-        fields = ["price", "url"]
-
-
-class CoachIncomeSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = CoachIncome
-        fields = ["price", "url"]
+        model = WalletTransaction
+        fields = ["user", "tracking_code", "amount", "is_processed", "processed_at"]

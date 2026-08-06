@@ -17,7 +17,7 @@ class ContactForm(forms.ModelForm):
         model = ContactUs
         fields = (
             "subject",
-            "name",
+            "fullname",
             "mobile",
             "message",
         )

@@ -21,7 +21,6 @@ def user_created_signal(sender, instance, created, *args, **kwargs):
         UserProfile.objects.create(user=instance)
         UserMeta.objects.create(user=instance)
         Wallet.objects.create(user=instance)
-        Cart.objects.create(user=instance)
         instance.username = "COND" + str(uuid.uuid4())[:4]
         instance.save()
 
