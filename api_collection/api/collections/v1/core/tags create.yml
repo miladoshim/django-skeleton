@@ -6,6 +6,15 @@ info:
 http:
   method: POST
   url: "{{baseurlv1}}tags/"
+  body:
+    type: multipart-form
+    data:
+      - name: name
+        type: text
+        value: new
+      - name: slug
+        type: text
+        value: newcourse
   auth: inherit
 
 settings:

@@ -3,7 +3,7 @@ from django.core.paginator import Paginator
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Q
-from taggit.models import Tag
+from taggit.models import Tag, slugify
 from apps.core.services.base_service import BaseService
 
 User = get_user_model()
@@ -26,8 +26,6 @@ class TagService(BaseService):
         if search:
             queryset = queryset.filter(Q(title__icontains=search))
 
-        queryset = queryset.order_by("-created_at")
-
         paginator = Paginator(queryset, page_size)
         tags = paginator.get_page(page)
 
@@ -43,40 +41,31 @@ class TagService(BaseService):
 
     def get_tag_detail(self, tag_id: int) -> Optional[Tag]:
         queryset = self.get_queryset()
-        print("--------------------")
-        print(tag_id)
-
         tag = queryset.filter(id=tag_id).first()
-
         return tag
 
     @transaction.atomic
     def create_tag(
         self,
-        title: str,
+        name: str,
     ) -> Tag:
 
-        if len(title) > self.MAX_TITLE_LENGTH:
+        if len(name) > self.MAX_TITLE_LENGTH:
             raise ValueError(
                 f"عنوان نمیتواند بیشتر از {self.MAX_TITLE_LENGTH} کاراکتر باشد"
             )
 
-        tag = self.model.objects.create(
-            title=title,
-        )
+        try:
+            tag, _ = self.model.objects.get_or_create(name=name.lower().strip())
+        except:
+            pass
 
         return tag
 
     @transaction.atomic
     def update_tag(self, tag: Tag, user: User, **validated_data) -> Tag:
-        """بهروزرسانی پست با بررسی دسترسی"""
 
-        # بررسی دسترسی نویسنده
-        if tag.author != user and not user.is_staff:
-            raise PermissionDenied("شما اجازه ویرایش این پست را ندارید")
-
-        # اگر اسلاگ تغییر کرد
-        if "title" in validated_data:
-            validated_data["slug"] = slugify(validated_data["title"])
+        if "name" in validated_data:
+            validated_data["slug"] = slugify(validated_data["name"])
 
         return self.update(tag, **validated_data)

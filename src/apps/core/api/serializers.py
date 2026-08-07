@@ -12,6 +12,7 @@ class ProvinceSerializer(serializers.ModelSerializer):
 
 class TagSerializer(serializers.Serializer):
     name = serializers.CharField()
+    slug = serializers.CharField()
 
 
 class BookmarkSerializer(serializers.ModelSerializer):

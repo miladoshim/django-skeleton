@@ -19,7 +19,6 @@ from apps.accounts.api.serializers import (
     UserProfileSerializer,
     UserSerializer,
 )
-from apps.api.renderers import CommonRenderer, UserRenderer
 
 
 ######## Start Dashboard Api ############
@@ -68,7 +67,6 @@ def get_user_profile(request, username):
 
 
 class UserProfileView(APIView):
-    renderer_classes = [UserRenderer]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, format=None):
@@ -105,7 +103,6 @@ def user_profile_update(request):
 
 
 # class UserChangePasswordAPIView(APIView):
-# renderer_classes = [UserRenderer]
 #     permission_classes = [IsAuthenticated]
 
 #     def post(self, request, format=None):

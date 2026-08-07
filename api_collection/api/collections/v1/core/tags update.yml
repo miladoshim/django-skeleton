@@ -6,6 +6,12 @@ info:
 http:
   method: PUT
   url: "{{baseurlv1}}tags/2/"
+  body:
+    type: multipart-form
+    data:
+      - name: name
+        type: text
+        value: test
   auth: inherit
 
 settings:

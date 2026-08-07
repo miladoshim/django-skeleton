@@ -1,21 +1,18 @@
+import json
+
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from taggit.serializers import TaggitSerializer, TagListSerializerField
+from django.core.exceptions import PermissionDenied
+from apps.api.renderers import CommonRenderer
+from apps.core.api.serializers import TagSerializer
 from apps.core.services.tag_service import TagService
-
-# class TagViewSet(ReadOnlyModelViewSet):
-
-#     queryset = Tag.objects.all()
-#     serializer_class = TaggitSerializer
-#     permission_classes = [IsAuthenticatedOrReadOnly]
-
-#     def list(self, request, *args, **kwargs):
-#         return super().list(request, *args, **kwargs)
 
 
 class TagViewSet(viewsets.ViewSet):
     # permission_classes = [IsAuthenticatedOrReadOnly]
+    renderer_classes = [CommonRenderer]
+
     service = TagService()
 
     def list(self, request):
@@ -25,7 +22,7 @@ class TagViewSet(viewsets.ViewSet):
             page_size=int(request.query_params.get("page_size", 10)),
         )
 
-        serializer = TaggitSerializer(result["items"], many=True)
+        serializer = TagSerializer(result["items"], many=True)
         return Response(
             {
                 "items": serializer.data,
@@ -49,18 +46,24 @@ class TagViewSet(viewsets.ViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        serializer = TaggitSerializer(tag, context={"request": request})
+        serializer = TagSerializer(tag, context={"request": request})
         return Response(serializer.data)
 
     def create(self, request):
-        serializer = TaggitSerializer(data=request.data)
+        if not request.user.is_staff:
+            return Response(
+                {"detail": "شما اجازه ایجاد برچسب را ندارید"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = TagSerializer(data=request.data)
         if serializer.is_valid():
             try:
                 tag = self.service.create_tag(
-                    title=serializer.validated_data["title"],
+                    name=serializer.validated_data["name"],
                 )
                 return Response(
-                    TaggitSerializer(tag).data,
+                    TagSerializer(tag).data,
                     status=status.HTTP_201_CREATED,
                 )
             except ValueError as e:
@@ -75,11 +78,16 @@ class TagViewSet(viewsets.ViewSet):
         )
 
     def update(self, request, pk=None):
-        """ویرایش پست"""
         tag = self.service.get(pk)
         if not tag:
             return Response(
-                {"detail": "پست پیدا نشد"}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "برچسب پیدا نشد"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if not request.user.is_staff:
+            return Response(
+                {"detail": "شما اجازه ویرایش این برچسب را ندارید"},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         serializer = TagSerializer(tag, data=request.data, partial=True)
@@ -91,23 +99,22 @@ class TagViewSet(viewsets.ViewSet):
                 return Response(TagSerializer(updated_tag).data)
             except PermissionDenied:
                 return Response(
-                    {"detail": "شما اجازه ویرایش این پست را ندارید"},
+                    {"detail": "شما اجازه ویرایش این برچسب را ندارید"},
                     status=status.HTTP_403_FORBIDDEN,
                 )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk=None):
-        """حذف پست"""
         tag = self.service.get(pk)
         if not tag:
             return Response(
-                {"detail": "پست پیدا نشد"}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "برچسب پیدا نشد"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        if tag.author != request.user and not request.user.is_staff:
+        if not request.user.is_staff:
             return Response(
-                {"detail": "شما اجازه حذف این پست را ندارید"},
+                {"detail": "شما اجازه حذف این برچسب را ندارید"},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
