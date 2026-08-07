@@ -1,17 +1,92 @@
-from django.contrib.auth import tokens
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError as DjangoValidationError
-from django.urls import reverse
-from django.utils.encoding import force_bytes, smart_str
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import serializers
-from rest_framework.serializers import ModelSerializer, Serializer, ValidationError
-from rest_framework_simplejwt.serializers import (
-    TokenObtainPairSerializer,
-    TokenRefreshSerializer,
+from rest_framework.serializers import ModelSerializer
+from apps.financial.models import Wallet
+from ..models import (
+    OtpRequest,
+    User,
+    UserMeta,
+    UserProfile,
 )
-from rest_framework_simplejwt.tokens import RefreshToken
-from apps.accounts.models import OtpRequest, User
+
+
+class UserProfileSerializer(ModelSerializer):
+    class Meta:
+        model = UserProfile
+        exclude = ["updated_at", "created_at"]
+
+
+class UserSerializer(ModelSerializer):
+    full_name = serializers.CharField(source="get_full_name")
+    role_title = serializers.CharField(source="get_account_role_title")
+    profile = UserProfileSerializer("profile")
+    # follower_count = serializers.SerializerMethodField()
+    # posts = serializers.HyperlinkedRelatedField(
+    #     many=True, read_only=True, view_name="post_detail"
+    # )
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "uuid",
+            "username",
+            "email",
+            "mobile",
+            "full_name",
+            "created_at",
+            "role_title",
+            "profile",
+            # "wallet_balance",
+        ]
+        read_only_fields = ["id", "username"]
+
+    # def to_representation(self, instance):
+    #     representation = super().to_representation(instance)
+    #     representation["wallet_balance"] = instance.wallet.balance
+    #     return representation
+
+    # def get_follower_count(self, obj):
+    #     return obj.followers.count()
+
+
+class WalletSerializer(ModelSerializer):
+    class Meta:
+        model = Wallet
+        fields = "__all__"
+
+
+class UserMetaSerializer(ModelSerializer):
+    class Meta:
+        model = UserMeta
+        fields = "__all__"
+
+
+class RequestOTPSerialize(serializers.Serializer):
+    receiver = serializers.CharField(min_length=11, max_length=11, allow_null=False)
+
+
+class RequestOTPResponseSerializer(ModelSerializer):
+    class Meta:
+        model = OtpRequest
+        fields = ["request_id", "receiver"]
+
+
+class VerifyOTPSerialize(serializers.Serializer):
+    request_id = serializers.UUIDField(allow_null=False)
+    receiver = serializers.CharField(min_length=11, max_length=11, allow_null=False)
+    password = serializers.CharField(min_length=6, max_length=6, allow_null=False)
+
+
+class ObtainTokenSerializer(serializers.Serializer):
+    token = serializers.CharField(max_length=128, allow_null=False)
+    refresh = serializers.CharField(max_length=128, allow_null=False)
+    created = serializers.BooleanField()
+
+
+class UserAddressSerializer(ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ["id", "title"]
 
 
 class UserLoginSerializer(serializers.Serializer):
@@ -216,58 +291,3 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         validated_data["user_uuid"] = self.user.uuid
         validated_data["user_mobile"] = self.user.mobile
         return validated_data
-
-
-# class DocumentSerializer(serializers.ModelSerializer):
-#     """Serializer for document uploads via API"""
-
-#     file_url = serializers.SerializerMethodField()
-#     filename = serializers.SerializerMethodField()
-
-#     class Meta:
-#         model = Document
-#         fields = [
-#             "id",
-#             "title",
-#             "file",
-#             "file_url",
-#             "filename",
-#             "category",
-#             "description",
-#             "file_size",
-#             "uploaded_at",
-#         ]
-#         read_only_fields = ["file_size", "uploaded_at"]
-
-#     def get_file_url(self, obj):
-#         """Return full URL for the file"""
-#         request = self.context.get("request")
-#         if obj.file and request:
-#             return request.build_absolute_uri(obj.file.url)
-#         return None
-
-#     def get_filename(self, obj):
-#         return obj.filename
-
-#     def validate_file(self, value):
-#         """Validate uploaded file"""
-#         validate_file_size(value, max_size_mb=10)
-#         validate_file_type(value, ALLOWED_DOCUMENT_TYPES)
-#         return value
-
-
-# class PhotoSerializer(serializers.ModelSerializer):
-#     """Serializer for photo uploads with thumbnails"""
-
-#     thumbnail_url = serializers.SerializerMethodField()
-
-#     class Meta:
-#         model = Photo
-#         fields = ["id", "title", "original", "thumbnail_url", "uploaded_at"]
-#         read_only_fields = ["uploaded_at"]
-
-#     def get_thumbnail_url(self, obj):
-#         request = self.context.get("request")
-#         if obj.thumbnail and request:
-#             return request.build_absolute_uri(obj.thumbnail.url)
-#         return None

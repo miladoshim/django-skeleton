@@ -1,12 +1,17 @@
 from iranian_cities.models import Province
 from rest_framework import serializers
-from .models import Bookmark
+
+from ..models import Bookmark
 
 
 class ProvinceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Province
         fields = ["name", "code"]
+
+
+class TagSerializer(serializers.Serializer):
+    name = serializers.CharField()
 
 
 class BookmarkSerializer(serializers.ModelSerializer):

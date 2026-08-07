@@ -1,10 +1,10 @@
 info:
-  name: tags detail
+  name: tags update
   type: http
   seq: 5
 
 http:
-  method: GET
+  method: PUT
   url: "{{baseurlv1}}tags/2/"
   auth: inherit
 

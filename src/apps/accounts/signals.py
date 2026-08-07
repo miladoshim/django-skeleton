@@ -87,3 +87,9 @@ def user_deleted_signal(sender, instance, *args, **kwargs):
             return
 
     delete_user_avatar_and_banner(old_instance, instance)
+
+
+# @receiver(post_save, sender=User)
+# def create_auth_token(sender, instance, created=False, **kwargs):
+#     if created:
+#         Token.objects.create(user=instance)

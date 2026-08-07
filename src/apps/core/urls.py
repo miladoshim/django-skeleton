@@ -1,6 +1,4 @@
 from django.urls import path
-from django.views.decorators.cache import cache_page
-from apps.blog.sitemaps import CategorySitemap, PostSitemap
 from .views import (
     bookmarks_toggle,
     comment_reply,
@@ -9,7 +7,6 @@ from .views import (
 )
 
 app_name = "apps.core"
-
 
 urlpatterns = [
     path("bookmarks/toggle/", bookmarks_toggle, name="bookmarks_toggle"),

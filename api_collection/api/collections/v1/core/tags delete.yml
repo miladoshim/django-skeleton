@@ -1,10 +1,10 @@
 info:
-  name: tags detail
+  name: tags delete
   type: http
-  seq: 5
+  seq: 4
 
 http:
-  method: GET
+  method: DELETE
   url: "{{baseurlv1}}tags/2/"
   auth: inherit
 

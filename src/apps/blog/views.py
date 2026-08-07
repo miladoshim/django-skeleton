@@ -140,124 +140,115 @@ def likePost(request, id):
     return ""
 
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views import View
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import JsonResponse
+# class PostListView(View):
+#     """نمایش لیست پستها"""
 
-from apps.core.services import PostService
-from apps.core.forms import PostForm
+#     template_name = "posts/list.html"
+#     service = PostService()
 
+#     def get(self, request):
+#         # استفاده از سرویس یکسان
+#         result = self.service.list_posts(
+#             user=request.user,
+#             is_published=True,
+#             search=request.GET.get("q"),
+#             category=request.GET.get("category"),
+#             page=request.GET.get("page", 1),
+#             page_size=12,
+#         )
 
-class PostListView(View):
-    """نمایش لیست پستها"""
-
-    template_name = "posts/list.html"
-    service = PostService()
-
-    def get(self, request):
-        # استفاده از سرویس یکسان
-        result = self.service.list_posts(
-            user=request.user,
-            is_published=True,
-            search=request.GET.get("q"),
-            category=request.GET.get("category"),
-            page=request.GET.get("page", 1),
-            page_size=12,
-        )
-
-        return render(
-            request,
-            self.template_name,
-            {
-                "posts": result["items"],
-                "total": result["total"],
-                "has_next": result["has_next"],
-                "has_previous": result["has_previous"],
-                "page": result["page"],
-                "total_pages": result["total_pages"],
-            },
-        )
+#         return render(
+#             request,
+#             self.template_name,
+#             {
+#                 "posts": result["items"],
+#                 "total": result["total"],
+#                 "has_next": result["has_next"],
+#                 "has_previous": result["has_previous"],
+#                 "page": result["page"],
+#                 "total_pages": result["total_pages"],
+#             },
+#         )
 
 
-class PostCreateView(LoginRequiredMixin, View):
-    """ایجاد پست جدید"""
+# class PostCreateView(LoginRequiredMixin, View):
+#     """ایجاد پست جدید"""
 
-    service = PostService()
+#     service = PostService()
 
-    def get(self, request):
-        form = PostForm()
-        return render(request, "posts/create.html", {"form": form})
+#     def get(self, request):
+#         form = PostForm()
+#         return render(request, "posts/create.html", {"form": form})
 
-    def post(self, request):
-        form = PostForm(request.POST)
-        if form.is_valid():
-            try:
-                # استفاده از سرویس یکسان
-                post = self.service.create_post(
-                    title=form.cleaned_data["title"],
-                    content=form.cleaned_data["content"],
-                    author=request.user,
-                    category_id=form.cleaned_data.get("category_id"),
-                    tags=form.cleaned_data.get("tags"),
-                )
-                messages.success(request, "پست با موفقیت ایجاد شد!")
-                return redirect("post_detail", pk=post.pk)
-            except ValueError as e:
-                form.add_error(None, str(e))
+#     def post(self, request):
+#         form = PostForm(request.POST)
+#         if form.is_valid():
+#             try:
+#                 # استفاده از سرویس یکسان
+#                 post = self.service.create_post(
+#                     title=form.cleaned_data["title"],
+#                     content=form.cleaned_data["content"],
+#                     author=request.user,
+#                     category_id=form.cleaned_data.get("category_id"),
+#                     tags=form.cleaned_data.get("tags"),
+#                 )
+#                 messages.success(request, "پست با موفقیت ایجاد شد!")
+#                 return redirect("post_detail", pk=post.pk)
+#             except ValueError as e:
+#                 form.add_error(None, str(e))
 
-        return render(request, "posts/create.html", {"form": form})
-
-
-class PostDetailView(View):
-    """نمایش جزئیات پست"""
-
-    service = PostService()
-
-    def get(self, request, pk):
-        post = self.service.get_post_detail(post_id=pk, user=request.user)
-
-        if not post:
-            raise Http404("پست پیدا نشد")
-
-        return render(
-            request,
-            "posts/detail.html",
-            {
-                "post": post,
-                "comments": post.comments.filter(is_approved=True),
-            },
-        )
+#         return render(request, "posts/create.html", {"form": form})
 
 
-class PostUpdateView(LoginRequiredMixin, View):
-    """ویرایش پست"""
+# class PostDetailView(View):
+#     """نمایش جزئیات پست"""
 
-    service = PostService()
+#     service = PostService()
 
-    def get(self, request, pk):
-        post = self.service.get(pk)
-        if not post or (post.author != request.user and not request.user.is_staff):
-            raise PermissionDenied()
+#     def get(self, request, pk):
+#         post = self.service.get_post_detail(post_id=pk, user=request.user)
 
-        form = PostForm(instance=post)
-        return render(request, "posts/update.html", {"form": form, "post": post})
+#         if not post:
+#             raise Http404("پست پیدا نشد")
 
-    def post(self, request, pk):
-        post = self.service.get(pk)
-        form = PostForm(request.POST, instance=post)
+#         return render(
+#             request,
+#             "posts/detail.html",
+#             {
+#                 "post": post,
+#                 "comments": post.comments.filter(is_approved=True),
+#             },
+#         )
 
-        if form.is_valid():
-            try:
-                # استفاده از سرویس یکسان
-                updated_post = self.service.update_post(
-                    post=post, user=request.user, **form.cleaned_data
-                )
-                messages.success(request, "پست بهروزرسانی شد!")
-                return redirect("post_detail", pk=updated_post.pk)
-            except PermissionDenied as e:
-                raise
-            except ValueError as e:
-                form.add_error(None, str(e))
 
-        return render(request, "posts/update.html", {"form": form, "post": post})
+# class PostUpdateView(LoginRequiredMixin, View):
+#     """ویرایش پست"""
+
+#     service = PostService()
+
+#     def get(self, request, pk):
+#         post = self.service.get(pk)
+#         if not post or (post.author != request.user and not request.user.is_staff):
+#             raise PermissionDenied()
+
+#         form = PostForm(instance=post)
+#         return render(request, "posts/update.html", {"form": form, "post": post})
+
+#     def post(self, request, pk):
+#         post = self.service.get(pk)
+#         form = PostForm(request.POST, instance=post)
+
+#         if form.is_valid():
+#             try:
+#                 # استفاده از سرویس یکسان
+#                 updated_post = self.service.update_post(
+#                     post=post, user=request.user, **form.cleaned_data
+#                 )
+#                 messages.success(request, "پست بهروزرسانی شد!")
+#                 return redirect("post_detail", pk=updated_post.pk)
+#             except PermissionDenied as e:
+#                 raise
+#             except ValueError as e:
+#                 form.add_error(None, str(e))
+
+#         return render(request, "posts/update.html", {"form": form, "post": post})

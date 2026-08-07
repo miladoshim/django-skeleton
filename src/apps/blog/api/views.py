@@ -3,15 +3,12 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 
-from apps.blog.services import PostService
-from apps.blog.api.serializers import PostSerializer, PostListSerializer
-
 
 class PostViewSet(viewsets.ViewSet):
     """API برای پستها - استفاده از سرویس یکسان"""
 
     permission_classes = [IsAuthenticatedOrReadOnly]
-    service = PostService()
+    # service = PostService()
 
     def list(self, request):
         """لیست پستها"""
