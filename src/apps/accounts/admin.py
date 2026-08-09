@@ -52,7 +52,7 @@ class UserMetaAdmin(admin.ModelAdmin):
 
 
 @admin.register(User)
-class UserAdmin(ImportExportModelAdmin):
+class UserAdmin(admin.ModelAdmin):
     # add_form = CustomUserCreationForm
     # form = CustomUserChangeForm
     model = User
@@ -94,7 +94,7 @@ class UserAdmin(ImportExportModelAdmin):
                     "is_active",
                     "is_staff",
                     "is_superuser",
-                    ("role", "coach_percent"),
+                    ("role"),
                     "groups",
                     "user_permissions",
                 )
@@ -107,9 +107,16 @@ class UserAdmin(ImportExportModelAdmin):
             "اطلاعات کاربر",
             {
                 "fields": (
-                    ("first_name", "last_name"),
-                    ("mobile", "email", "password1", "password2"),
-                    ("role", "coach_percent"),
+                    (
+                        "first_name",
+                        "last_name",
+                    ),
+                    (
+                        "mobile",
+                        "email",
+                        "password1",
+                    ),
+                    ("role"),
                 ),
             },
         ),

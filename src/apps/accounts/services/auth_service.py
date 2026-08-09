@@ -1,3 +1,4 @@
+from typing import Optional, Dict, Any
 from datetime import datetime
 from django.contrib.auth.tokens import (
     PasswordResetTokenGenerator,
@@ -7,24 +8,17 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail.message import EmailMessage
 from django.shortcuts import reverse
 from django.template.loader import render_to_string
-from django.utils.encoding import force_bytes
+from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from apps.accounts.admin import User
+from django.contrib.auth import get_user_model, authenticate
+from django.core.mail import send_mail
+from django.conf import settings
+from django.db import transaction
+from rest_framework_simplejwt.tokens import RefreshToken
+from apps.core.services.base_service import BaseService
 
-
-def send_activation_email(request, user):
-    current_site = get_current_site(request)
-    token = default_token_generator.make_token(user)
-    encoded_uid = urlsafe_base64_encode(force_bytes(user.pk))
-    activation_path = reverse("apps:accounts:activation", args=[encoded_uid, token])
-    activation_url = f"{request.scheme}://{current_site}{activation_path}"
-    print("----------------------Email Activation Url---------------------------")
-    print(activation_url)
-    message = render_to_string(
-        "activation_email.html", {"user": user, "activation_url": activation_url}
-    )
-    email = EmailMessage("ایمیل خود را تایید کنید", message, to=[user.email])
-    email.send()
+User = get_user_model()
 
 
 def verify_activation_email(request, uidb64, token):
@@ -42,34 +36,11 @@ def verify_activation_email(request, uidb64, token):
     return False
 
 
-def send_otp_sms(request, user):
-    pass
-
-
-def verify_otp_sms(request, user):
-    pass
-
-
 class TokenGenerator(PasswordResetTokenGenerator):
     pass
 
 
 token_generator = TokenGenerator()
-
-
-from typing import Optional, Dict, Any
-from django.contrib.auth import get_user_model, authenticate
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
-from django.core.mail import send_mail
-from django.conf import settings
-from django.db import transaction
-from rest_framework_simplejwt.tokens import RefreshToken
-
-from apps.core.services.base_service import BaseService
-
-User = get_user_model()
 
 
 class AuthService(BaseService):
@@ -266,10 +237,27 @@ class AuthService(BaseService):
             "access": str(refresh.access_token),
         }
 
+    def send_activation_email(request, user):
+        current_site = get_current_site(request)
+        token = default_token_generator.make_token(user)
+        encoded_uid = urlsafe_base64_encode(force_bytes(user.pk))
+        activation_path = reverse("apps:accounts:activation", args=[encoded_uid, token])
+        activation_url = f"{request.scheme}://{current_site}{activation_path}"
+        print("----------------------Email Activation Url---------------------------")
+        print(activation_url)
+        message = render_to_string(
+            "activation_email.html", {"user": user, "activation_url": activation_url}
+        )
+        email = EmailMessage("ایمیل خود را تایید کنید", message, to=[user.email])
+        email.send()
+
     def _send_activation_email(self, user: User):
-        """ارسال ایمیل فعال‌سازی"""
+
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
+        activation_path = reverse("apps:accounts:activation", args=[encoded_uid, token])
+        activation_url = f"{request.scheme}://{current_site}{activation_path}"
+
         activation_url = f"{settings.FRONTEND_URL}/verify-email/{uid}/{token}"
 
         send_mail(

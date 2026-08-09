@@ -23,22 +23,6 @@ def active(context, pattern_or_urlname):
     return ""
 
 
-@register.simple_tag(takes_context=True)
-def plan_is_preferred(context, is_preferred):
-    if is_preferred is True:
-        return "goold"
-    else:
-        return "gold"
-
-
-@register.simple_tag(takes_context=True)
-def plan_btn_is_preferred(context, is_preferred):
-    if is_preferred is True:
-        return "btn-is-preferred"
-    else:
-        return "btn-is-not-preferred"
-
-
 @register.filter("jalali")
 def jalali(value):
     return datetime2jalali(value).strftime("%y/%m/%d _ %H:%M:%S")
@@ -58,16 +42,6 @@ def settings_value(name):
 
 
 @register.filter
-def plan_css_class(value):
-    plan_class_map = {
-        "A": "goold",
-        "B": "gold",
-    }
-    user_plan = str(value).upper()
-    return plan_class_map.get(user_plan)
-
-
-@register.filter
 def json_dumps(value: Any) -> str:
     return json.dumps(value, indent=2, sort_keys=True)
 
@@ -75,14 +49,6 @@ def json_dumps(value: Any) -> str:
 @register.filter
 def md5(value):
     return hashlib.md5(value.encode("utf-8")).hexdigest()
-
-
-@register.filter
-def multiply(value, arg):
-    try:
-        return float(value) * float(arg)
-    except (ValueError, TypeError):
-        return 0.0
 
 
 @register.filter

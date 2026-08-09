@@ -2,8 +2,6 @@ from django.contrib import admin
 from apps.pages.models import (
     ContactUsSubject,
     ContactUs,
-    Faq,
-    FaqGroup,
 )
 
 
@@ -51,23 +49,23 @@ class ContactSubjectAdmin(admin.ModelAdmin):
     empty_value_display = "---"
 
 
-@admin.register(Faq)
-class FaqAdmin(admin.ModelAdmin):
-    list_display = ["id", "question", "group", "created_at"]
-    list_display_links = ["id", "question"]
-    search_fields = ["question", "group"]
-    autocomplete_fields = ("group",)
-    list_filter = ("group",)
-    list_select_related = ("group",)
-    empty_value_display = "---"
+# @admin.register(Faq)
+# class FaqAdmin(admin.ModelAdmin):
+#     list_display = ["id", "question", "group", "created_at"]
+#     list_display_links = ["id", "question"]
+#     search_fields = ["question", "group"]
+#     autocomplete_fields = ("group",)
+#     list_filter = ("group",)
+#     list_select_related = ("group",)
+#     empty_value_display = "---"
 
 
-@admin.register(FaqGroup)
-class FaqGroupAdmin(admin.ModelAdmin):
-    list_display = ["id", "title", "created_at"]
-    list_display_links = (
-        "id",
-        "title",
-    )
-    search_fields = ("title",)
-    empty_value_display = "---"
+# @admin.register(FaqGroup)
+# class FaqGroupAdmin(admin.ModelAdmin):
+#     list_display = ["id", "title", "created_at"]
+#     list_display_links = (
+#         "id",
+#         "title",
+#     )
+#     search_fields = ("title",)
+#     empty_value_display = "---"

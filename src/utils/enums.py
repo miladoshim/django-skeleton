@@ -1,16 +1,16 @@
-from django.db import models
+from django.db.models import IntegerChoices
 
 
-class UserRole(models.IntegerChoices):
+class UserRole(IntegerChoices):
     USER = 1, "کاربر معمولی"
 
 
-class PublishStatusChoice(models.IntegerChoices):
+class PublishStatusChoice(IntegerChoices):
     PUBLISHED = 1, "منتشر شده"
     DRAFT = 2, "پیش نویس"
 
 
-class GenderChoices(models.IntegerChoices):
+class GenderChoices(IntegerChoices):
     MALE = 1, "آقا"
     FEMALE = 2, "خانم"
     __empty__ = "نامشخص"

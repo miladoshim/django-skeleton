@@ -4,6 +4,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView,
 )
+from apps.accounts.views.account_views import DashboardView
 from apps.accounts.views.auth_views import (
     UserLoginView,
     forgot_password_mobile,
@@ -16,42 +17,42 @@ app_name = "apps.accounts"
 
 urlpatterns = [
     # Account Setting
-    path("accounts/", UserLoginView.as_view(), name="account_index"),
-    path("accounts/setting/", UserLoginView.as_view(), name="account_setting"),
-    path(
-        "accounts/setting/change_password",
-        UserLoginView.as_view(),
-        name="account_setting",
-    ),
-    path("accounts/comments", UserLoginView.as_view(), name="account_setting"),
-    # Authentication
-    path("auth/register", UserLoginView.as_view(), name="register_view"),
-    path("auth/register/otp/request", UserLoginView.as_view(), name="register_view"),
-    path("auth/register/otp/verify", UserLoginView.as_view(), name="register_view"),
-    path(
-        "register/otp/verify/<str:mobile>/<str:reqid>/",
-        user_register_otp_verify,
-        name="register_otp_verify_view",
-    ),
-    path(
-        "register/otp/complete/<str:mobile>/<str:reqid>/",
-        user_register_otp_complete,
-        name="register_otp_complete_view",
-    ),
-    path("auth/register/otp/complete", UserLoginView.as_view(), name="register_view"),
-    path("auth/login/", UserLoginView.as_view(), name="login_view"),
-    path("auth/logout/", UserLoginView.as_view(), name="logout"),
-    path(
-        "password/forgot/mobile/",
-        forgot_password_mobile,
-        name="password_forgot_mobile_view",
-    ),
-    path(
-        "password/forgot/mobile/reset/<str:mobile>/<str:reqid>/",
-        forgot_password_mobile_reset,
-        name="password_forgot_mobile_reset_view",
-    ),
-    path("auth/token/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("auth/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
+    path("accounts/", DashboardView.as_view(), name="dashboard_index"),
+    # path("accounts/setting/", UserLoginView.as_view(), name="account_setting"),
+    # path(
+    #     "accounts/setting/change_password",
+    #     UserLoginView.as_view(),
+    #     name="account_setting",
+    # ),
+    # path("accounts/comments", UserLoginView.as_view(), name="account_setting"),
+    # # Authentication
+    # path("auth/register", UserLoginView.as_view(), name="register_view"),
+    # path("auth/register/otp/request", UserLoginView.as_view(), name="register_view"),
+    # path("auth/register/otp/verify", UserLoginView.as_view(), name="register_view"),
+    # path(
+    #     "register/otp/verify/<str:mobile>/<str:reqid>/",
+    #     user_register_otp_verify,
+    #     name="register_otp_verify_view",
+    # ),
+    # path(
+    #     "register/otp/complete/<str:mobile>/<str:reqid>/",
+    #     user_register_otp_complete,
+    #     name="register_otp_complete_view",
+    # ),
+    # path("auth/register/otp/complete", UserLoginView.as_view(), name="register_view"),
+    # path("auth/login/", UserLoginView.as_view(), name="login_view"),
+    # path("auth/logout/", UserLoginView.as_view(), name="logout"),
+    # path(
+    #     "password/forgot/mobile/",
+    #     forgot_password_mobile,
+    #     name="password_forgot_mobile_view",
+    # ),
+    # path(
+    #     "password/forgot/mobile/reset/<str:mobile>/<str:reqid>/",
+    #     forgot_password_mobile_reset,
+    #     name="password_forgot_mobile_reset_view",
+    # ),
+    # path("auth/token/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    # path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    # path("auth/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
 ]

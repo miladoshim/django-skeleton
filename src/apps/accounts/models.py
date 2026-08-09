@@ -54,6 +54,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     mobile = models.CharField(
         "موبایل",
         unique=True,
+        blank=True,
+        null=True,
         max_length=11,
     )
     password = models.CharField(
@@ -77,8 +79,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         choices=UserRole.choices,
         default=UserRole.USER,
     )
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ بروزرسانی")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ثبت")
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="تاریخ بروزرسانی",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="تاریخ ثبت",
+    )
 
     def get_jalali_date(self):
         return date2jalali(self.created_at)

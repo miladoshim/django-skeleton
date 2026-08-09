@@ -15,18 +15,25 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from apps.accounts.models import User
 from apps.accounts.api.serializers import (
-    UserAddressSerializer,
     UserProfileSerializer,
     UserSerializer,
 )
 
-
 ######## Start Dashboard Api ############
-class AccountBankView(GenericAPIView):
-    permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
-        user = request.user
+
+class UserProfileAPIView(generics.RetrieveAPIView):
+    """
+    Endpoint to retrieve user profile.
+
+    """
+
+    permission_classes = (IsAuthenticated,)
+    # authentication_classes = (TokenAuthentication,)
+    # serializer_class = serializers.UserProfileSerializer
+
+    def get_object(self):
+        return self.request.user.userprofile
 
 
 ######## End Dashboard Api ############
@@ -117,61 +124,3 @@ def user_profile_update(request):
 #     def post(self, request):
 #         mobile = request.data.get('mobile')
 #         code = request.data.get('code')
-
-
-def user_bank_api(request, pk=None):
-    if request.method == "GET":
-        if pk:
-            note = get_object_or_404(UserBank, pk=pk)
-            # تبدیل به دیکشنری JSON
-            return JsonResponse(
-                {
-                    "id": note.id,
-                    "title": note.title,
-                    "content": note.content,
-                    "created_at": note.created_at.strftime("%Y-%m-%d"),
-                }
-            )
-        else:
-            # لیست تمام یادداشت‌ها
-            data = list(UserBank.objects.values())
-            return JsonResponse({"data": data}, safe=False)
-
-    elif request.method in ["POST", "PUT"]:
-        # دریافت داده JSON از درخواست
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse(
-                {"success": False, "message": "داده‌های نامعتبر"}, status=400
-            )
-
-        if pk:
-            # آپدیت
-            instance = get_object_or_404(UserBank, pk=pk)
-            form = UserBankForm(data, instance=instance)
-        else:
-            # ایجاد جدید
-            form = UserBankForm(data)
-
-        if form.is_valid():
-            form.save()
-            return JsonResponse(
-                {
-                    "success": True,
-                    "message": f'یادداشت {"به‌روزرسانی" if pk else "ثبت"} شد.',
-                    "id": form.instance.id,
-                }
-            )
-        else:
-            return JsonResponse(
-                {"success": False, "errors": form.errors.as_json()}, status=400
-            )
-
-    elif request.method == "DELETE":
-        try:
-            note = get_object_or_404(UserBank, pk=pk)
-            note.delete()
-            return JsonResponse({"success": True, "message": "یادداشت حذف شد."})
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)}, status=500)

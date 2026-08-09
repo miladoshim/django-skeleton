@@ -32,7 +32,6 @@ STATICFILES_DIRS = [
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-    # "compressor.finders.CompressorFinder",
 )
 
 
@@ -146,7 +145,6 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                # "js_asset.context_processors.importmap",
                 "apps.core.context_processors.global_variables",
             ],
             "builtins": [
@@ -159,7 +157,6 @@ TEMPLATES = [
                         "django_cotton.cotton_loader.Loader",
                         "django.template.loaders.filesystem.Loader",
                         "django.template.loaders.app_directories.Loader",
-                        "django.template.loaders.app_directories.Loader",
                     ],
                 )
             ],
@@ -171,7 +168,6 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
-# WSGI_APPLICATION = "skeleton.wsgi.application"
 ASGI_APPLICATION = "skeleton.asgi.application"
 
 CHANNEL_LAYERS = {
@@ -324,7 +320,6 @@ SILKY_PYTHON_PROFILER = True
 IMPORT_EXPORT_FORMATS = [CSV, XLSX]
 
 GUNICORN_MAX_REQUESTS = 2000
-
 
 DRF_API_LOGGER_DATABASE = False
 DRF_API_LOGGER_SIGNAL = True

@@ -12,6 +12,7 @@ urlpatterns = [
     path("secret/", admin.site.urls),
     path("", include("apps.core.urls")),
     path("", include("apps.pages.urls")),
+    path("", include("apps.accounts.urls")),
     path("api/v1/", include("apps.api.urls")),
     path("", include("pwa.urls")),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),

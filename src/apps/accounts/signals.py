@@ -5,7 +5,6 @@ from django.contrib.auth.signals import (
     user_logged_out,
     user_login_failed,
 )
-from django.core.cache import cache
 from django.core.files.storage import default_storage
 from django.db.models.base import pre_save
 from django.db.models.signals import post_delete, post_save, pre_delete
@@ -21,7 +20,7 @@ def user_created_signal(sender, instance, created, *args, **kwargs):
         UserProfile.objects.create(user=instance)
         UserMeta.objects.create(user=instance)
         Wallet.objects.create(user=instance)
-        instance.username = "COND" + str(uuid.uuid4())[:4]
+        instance.username = "SKL" + str(uuid.uuid4())[:4]
         instance.save()
 
 

@@ -1,5 +1,10 @@
-from rest_framework import serializers
-from rest_framework.serializers import ModelSerializer
+from rest_framework import reverse, serializers
+from rest_framework.serializers import ModelSerializer, Serializer, ValidationError
+from rest_framework_simplejwt.serializers import (
+    TokenObtainPairSerializer,
+    TokenRefreshSerializer,
+)
+from rest_framework_simplejwt.tokens import RefreshToken
 from apps.financial.models import Wallet
 from ..models import (
     OtpRequest,
@@ -7,6 +12,46 @@ from ..models import (
     UserMeta,
     UserProfile,
 )
+
+
+class UserEmailRegisterSerializer(ModelSerializer):
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        style={"input_type": "password"},
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            "first_name",
+            "last_name",
+            "email",
+            "password",
+        ]
+        extra_kwargs = {
+            "password": {
+                "write_only": True,
+            }
+        }
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise ValidationError("Email already exists.")
+        return value
+
+    def validate_password(self, value):
+        if len(value) < 8:
+            raise ValidationError("Password should be at least %s characters long.")
+        return value
+
+    def create(self, validated_data):
+        password = validated_data.pop("password", None)
+        instance = self.Meta.model(**validated_data)
+        if password is not None:
+            instance.set_password(password)
+        instance.save()
+        return instance
 
 
 class UserProfileSerializer(ModelSerializer):
@@ -19,10 +64,6 @@ class UserSerializer(ModelSerializer):
     full_name = serializers.CharField(source="get_full_name")
     role_title = serializers.CharField(source="get_account_role_title")
     profile = UserProfileSerializer("profile")
-    # follower_count = serializers.SerializerMethodField()
-    # posts = serializers.HyperlinkedRelatedField(
-    #     many=True, read_only=True, view_name="post_detail"
-    # )
 
     class Meta:
         model = User
@@ -83,12 +124,6 @@ class ObtainTokenSerializer(serializers.Serializer):
     created = serializers.BooleanField()
 
 
-class UserAddressSerializer(ModelSerializer):
-    class Meta:
-        model = Address
-        fields = ["id", "title"]
-
-
 class UserLoginSerializer(serializers.Serializer):
     mobile = serializers.CharField(
         min_length=11,
@@ -100,69 +135,6 @@ class UserLoginSerializer(serializers.Serializer):
         max_length=64,
         write_only=True,
     )
-
-
-# class UserRegisterSerializer(ModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = [
-#             "username",
-#             "email",
-#             "password",
-#         ]
-#         extra_kwargs = {"password": {"write_only": True,}}
-
-#     def validate(self, attrs):
-#         username = attrs.get("username", "")
-#         if not username.isalnum():
-#             raise ValidationError("The username should be contain alpha chars")
-#         if attrs["password"] != attrs["password2"]:
-#             raise ValidationError("password and password confirmation does not match!")
-
-#         return attrs
-
-
-#     def create(self, validated_data):
-#         password = validated_data.pop("password", None)
-#         instance = self.Meta.model(**validated_data)
-#         if password is not None:
-#             instance.set_password(password)
-#         instance.save()
-#         return instance
-#
-class RegisterSerializer(Serializer):
-    mobile = serializers.CharField(required=True)
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    password = serializers.CharField(
-        write_only=True,
-        required=True,
-        style={"input_type": "password"},
-    )
-    password2 = serializers.CharField(
-        write_only=True,
-        required=True,
-        style={"input_type": "password"},
-    )
-
-    def validate(self, attrs):
-        if attrs["password"] != attrs["password2"]:
-            raise ValidationError({"password2": "رمز عبور یکسان نیست!"})
-        try:
-            validate_password(attrs["password"])
-        except DjangoValidationError as e:
-            raise ValidationError({"password": list(e.messages)})
-        return attrs
-
-    def create(self, validated_data):
-        user = User.objects.create(
-            mobile=validated_data["mobile"],
-            first_name=validated_data["first_name"],
-            last_name=validated_data["last_name"],
-        )
-        user.set_password(validated_data["password"])
-        user.save()
-        return user
 
 
 class CookieTokenRefreshSerializer(TokenRefreshSerializer):
@@ -246,6 +218,11 @@ class UserForgotPasswordMobileSerializer(Serializer):
             raise ValidationError("همچین کاربری پیدا نشد.")
 
 
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.encoding import force_bytes, smart_str
+from django.contrib.sites.shortcuts import get_current_site
+
+
 class UserForgotPasswordEmailSerializer(Serializer):
     email = serializers.EmailField(min_length=2)
 
@@ -257,7 +234,7 @@ class UserForgotPasswordEmailSerializer(Serializer):
         if User.objects.filter(email=email).exists():
             user = User.objects.get(email=email)
             uid = urlsafe_base64_encode(force_bytes(user.id))
-            token = tokens.PasswordResetTokenGenerator().make_token(user)
+            # token = tokens.PasswordResetTokenGenerator().make_token(user)
             currentSite = get_current_site().domain
             relativeLink = reverse("")
             link = "https://localhost:3000/api/password_reset/" + uid + "/" + token
@@ -277,8 +254,8 @@ class UserResetPasswordSerializer(Serializer):
 
         id = smart_str(urlsafe_base64_decode(uid))
         user = User.objects.get(id=id)
-        if not tokens.PasswordResetTokenGenerator().check_token(user, token):
-            raise ValidationError("token is not valid")
+        # if not tokens.PasswordResetTokenGenerator().check_token(user, token):
+        #     raise ValidationError("token is not valid")
         user.set_password(password)
         user.save()
         return attrs

@@ -1,0 +1,52 @@
+{% load static %} {% load meta %} {% load pwa %}
+
+<!DOCTYPE html>
+<!-- [if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif] -->
+<!-- [if IE 7]> <html class="no-js lt-ie9 lt-ie8"> <![endif] -->
+<!-- [if IE 8]> <html class="no-js lt-ie9"> <![endif] -->
+<!-- [if gt IE 8]> <html class="no-js"> <![endif] -->
+<html lang="fa" dir="rtl">
+  <head>
+    {% include 'meta/meta.html' %}
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}" />
+
+    <title>
+      Skeleton -{% block title %}
+
+      {% endblock %}
+    </title>
+
+    {% block styles %}
+
+    {% endblock %}
+
+    {% progressive_web_app_meta %}
+  </head>
+  <body>
+    <!--      [if lt IE 7]>
+      <p class="browsehappy">
+        You are using an <strong>outdated</strong> browser. Please
+        <a href="#">upgrade your browser</a> to improve your experience.
+      </p>
+    <![endif]       -->
+
+    {% csrf_token %}
+
+    <main class="main">
+      {% block content %}
+
+      {% endblock %}
+    </main>
+
+    <script src="{% static 'js/scripts.js' %}"></script>
+
+    {% block scripts %}
+
+    {% endblock %}
+  </body>
+</html>

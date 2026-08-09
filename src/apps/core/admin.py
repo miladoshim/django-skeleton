@@ -3,7 +3,6 @@ from django import forms
 from django.db import models
 from django.utils import timezone
 from import_export.admin import ImportExportModelAdmin
-from .models import Banner, Bookmark, NewsletterSubscriber
 
 
 class BaseAdminMixin(admin.ModelAdmin):
@@ -43,50 +42,50 @@ class SoftDeleteAdmin(admin.ModelAdmin):
         queryset.hard_delete()
 
 
-@admin.register(NewsletterSubscriber)
-class NewsletterSubscriberAdmin(ImportExportModelAdmin):
-    list_display = ["id", "email", "created_at"]
-    date_hierarchy = "created_at"
-    search_fields = ("email",)
-    list_display_links = ["id", "email"]
-    empty_value_display = "---"
+# @admin.register(NewsletterSubscriber)
+# class NewsletterSubscriberAdmin(ImportExportModelAdmin):
+#     list_display = ["id", "email", "created_at"]
+#     date_hierarchy = "created_at"
+#     search_fields = ("email",)
+#     list_display_links = ["id", "email"]
+#     empty_value_display = "---"
 
 
-class BannerAdminForm(forms.ModelForm):
-    class Meta:
-        model = Banner
-        fields = "__all__"
-        widgets = {
-            "image": forms.FileInput(
-                attrs={
-                    "class": "upload-field",
-                    "accept": "image/*",
-                }
-            ),
-        }
+# class BannerAdminForm(forms.ModelForm):
+#     class Meta:
+#         model = Banner
+#         fields = "__all__"
+#         widgets = {
+#             "image": forms.FileInput(
+#                 attrs={
+#                     "class": "upload-field",
+#                     "accept": "image/*",
+#                 }
+#             ),
+#         }
 
 
-@admin.register(Banner)
-class BannerAdmin(ImportExportModelAdmin):
-    list_display = ["id", "title", "section", "link", "created_at"]
-    date_hierarchy = "created_at"
-    search_fields = ["title"]
-    list_display_links = ["id", "title", "link"]
-    prepopulated_fields = {"slug": ["title"]}
-    empty_value_display = "---"
-    form = BannerAdminForm
+# @admin.register(Banner)
+# class BannerAdmin(ImportExportModelAdmin):
+#     list_display = ["id", "title", "section", "link", "created_at"]
+#     date_hierarchy = "created_at"
+#     search_fields = ["title"]
+#     list_display_links = ["id", "title", "link"]
+#     prepopulated_fields = {"slug": ["title"]}
+#     empty_value_display = "---"
+#     form = BannerAdminForm
 
-    class Media:
-        css = {"all": ("admin/css/upload_progress.css",)}
-        js = ("admin/js/upload_progress.js",)
+#     class Media:
+#         css = {"all": ("admin/css/upload_progress.css",)}
+#         js = ("admin/js/upload_progress.js",)
 
 
-@admin.register(Bookmark)
-class BookmarkAdmin(admin.ModelAdmin):
-    list_display = ["user", "content_type", "object_id", "created_at"]
-    list_filter = ["content_type", "created_at"]
-    search_fields = ["user__mobile"]
-    date_hierarchy = "created_at"
+# @admin.register(Bookmark)
+# class BookmarkAdmin(admin.ModelAdmin):
+#     list_display = ["user", "content_type", "object_id", "created_at"]
+#     list_filter = ["content_type", "created_at"]
+#     search_fields = ["user__mobile"]
+#     date_hierarchy = "created_at"
 
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related("user", "content_type")
+#     def get_queryset(self, request):
+#         return super().get_queryset(request).select_related("user", "content_type")

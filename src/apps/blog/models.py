@@ -13,7 +13,7 @@ from hitcount.settings import MODEL_HITCOUNT
 from taggit_selectize.managers import TaggableManager
 from treebeard.mp_tree import MP_Node
 from apps.core.managers import PublishedManager
-from apps.core.models import BaseModel, Bookmarkable, Commentable
+from apps.core.models import BaseModel
 from utils.enums import PublishStatusChoice
 
 User = get_user_model()
@@ -73,7 +73,7 @@ class Category(MP_Node):
         return reverse("apps.blog:category_detail", args=[str(self.slug)])
 
 
-class Post(BaseModel, Commentable, Bookmarkable, HitCountMixin):
+class Post(BaseModel, HitCountMixin):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

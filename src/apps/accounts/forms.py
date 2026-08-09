@@ -6,6 +6,49 @@ from django.forms import Form, ModelForm
 from .models import User, UserProfile
 
 
+class UserEmailRegisterForm(Form):
+    first_name = forms.CharField(
+        validators=[
+            validators.MinLengthValidator(3),
+        ],
+        label="نام",
+        required=True,
+        widget=forms.TextInput(attrs={"placeholder": "نام", "class": "form-control"}),
+    )
+
+    last_name = forms.CharField(
+        validators=[
+            validators.MinLengthValidator(3),
+        ],
+        label="نام خانوادگی",
+        required=True,
+        widget=forms.TextInput(
+            attrs={"placeholder": "نام خانوادگی", "class": "form-control"},
+        ),
+    )
+    email = forms.EmailField(
+        min_length=5,
+        max_length=150,
+        label="ایمیل",
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "مثال : youremail@gmail.com",
+                "class": "form-control",
+            },
+        ),
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={"placeholder": "رمز عبور", "class": "form-control"},
+        ),
+        validators=[
+            validators.MinLengthValidator(8),
+        ],
+        label="رمز عبور",
+    )
+
+
 class UserLoginForm(Form):
     mobile = forms.CharField(
         max_length=11,
@@ -74,7 +117,6 @@ class UserOtpCompleteForm(Form):
             attrs={"placeholder": "نام خانوادگی", "class": "form-control"},
         ),
     )
-
     password = forms.CharField(
         widget=forms.PasswordInput(
             attrs={"placeholder": "رمز عبور", "class": "form-control"},

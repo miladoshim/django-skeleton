@@ -15,10 +15,8 @@ from django.views.decorators.http import require_safe
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, TemplateView
 from apps.blog.models import Post
+from apps.pages.models import ContactUsSubject
 from .forms import ContactForm, SearchForm
-from .models import (
-    FaqGroup,
-)
 
 
 class HomePageView(TemplateView):
@@ -38,7 +36,7 @@ class ContactCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["subjects"] = ContactSubject.objects.all()
+        context["subjects"] = ContactUsSubject.objects.all()
         return context
 
     def post(self, request, *args, **kwargs):
@@ -47,15 +45,15 @@ class ContactCreateView(CreateView):
         return post
 
 
-@method_decorator(cache_page(60 * 15), name="dispatch")
-class AboutView(TemplateView):
-    template_name = "pages/about.html"
+# @method_decorator(cache_page(60 * 15), name="dispatch")
+# class AboutView(TemplateView):
+#     template_name = "pages/about.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["comments"] = CustomerComment.objects.all()
-        context["team"] = CocoonedTeam.objects.all()
-        return context
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context["comments"] = CustomerComment.objects.all()
+#         context["team"] = CocoonedTeam.objects.all()
+#         return context
 
 
 def search(request):
@@ -81,32 +79,9 @@ def search(request):
             .all
         )
 
-        courses_result = (
-            Course.published.annotate(search=search_vector, rank=search_rank)
-            .filter(search=search_query)
-            .order_by("-rank")
-            .all()
-        )
-
-        books_result = (
-            Book.published.annotate(search=search_vector, rank=search_rank)
-            .filter(search=search_query)
-            .order_by("-rank")
-            .all()
-        )
-
-        products_result = (
-            Product.published.annotate(search=search_vector, rank=search_rank)
-            .filter(search=search_query)
-            .order_by("-rank")
-            .all()
-        )
         context = {
             "query": query,
             "posts_result": posts_result,
-            "courses_result": courses_result,
-            "books_result": books_result,
-            "products_result": products_result,
         }
         return TemplateResponse(request, "pages/search.html", context)
 
@@ -155,10 +130,3 @@ def search_posts_trgm(request):
 @method_decorator(cache_page(60 * 15), name="dispatch")
 class MobileAppView(TemplateView):
     template_name = "pages/pwa.html"
-
-
-@method_decorator(cache_page(60 * 15), name="dispatch")
-class FaqView(ListView):
-    model = FaqGroup
-    template_name = "pages/faqs.html"
-    context_object_name = "groups"

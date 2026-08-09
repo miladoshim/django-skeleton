@@ -22,7 +22,6 @@ from azbankgateways import (
 from azbankgateways import (
     models as bank_models,
 )
-from apps.core.models import Comment
 from apps.financial.services.payment_service import Payment as PaymentService
 from apps.financial.models import (
     Payment,
@@ -38,6 +37,15 @@ from apps.accounts.models import (
 )
 
 ####### Start Dashboard #############
+
+
+class DashboardView(TemplateView):
+    template_name = "accounts/dashboard.html"
+    login_url = reverse_lazy("apps.accounts:login_view")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
 
 
 @cache_page(60 * 15)
@@ -147,20 +155,6 @@ class DashboardSettingView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         return super().form_invalid(form)
-
-
-# @method_decorator(vary_on_cookie, name="dispatch")
-# @method_decorator(cache_page(60 * 15), name="dispatch")
-class DashboardView(LoginRequiredMixin, TemplateView):
-    template_name = "accounts/dashboard.html"
-    login_url = reverse_lazy("apps.accounts:login_view")
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["enrollment_count"] = self.request.user.enrollments.count
-        context["coaching_count"] = self.request.user.coaching.count
-        context["order_count"] = self.request.user.orders.count
-        return context
 
 
 # @method_decorator(vary_on_cookie, name="dispatch")
