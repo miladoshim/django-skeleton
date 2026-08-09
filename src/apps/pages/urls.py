@@ -4,7 +4,7 @@ from django.views.decorators.cache import cache_page
 from apps.blog.sitemaps import PostSitemap, CategorySitemap
 from .views import HomePageView
 
-app_name = "core"
+app_name = "apps.pages"
 
 sitemaps = {
     "posts": PostSitemap,

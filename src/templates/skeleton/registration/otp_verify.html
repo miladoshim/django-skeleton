@@ -1,8 +1,7 @@
 {% extends 'base.html' %}
-{% load static %} {% load crispy_forms_tags %}
 
-{% block page_title %}
-  ثبت نام
+{% block title %}
+
 {% endblock %}
 
 {% block content %}
@@ -18,43 +17,53 @@
       </div>
       <form class="card card-md" action="./" method="get" autocomplete="off" novalidate>
         <div class="card-body">
-          <h2 class="card-title text-center mb-4">در اسکلتون ثبت نام کنید</h2>
-          <div class="mb-3">
-            <label class="form-label">نام</label>
-            <input type="text" class="form-control" placeholder="نام" name="first_name" required />
-          </div>
-          <div class="mb-3">
-            <label class="form-label">نام خانودگی</label>
-            <input type="text" class="form-control" placeholder="نام خانوادگی" name="last_name" required />
-          </div>
-          <div class="mb-3">
-            <label class="form-label">ایمیل</label>
-            <input type="email" class="form-control" placeholder="ایمیل" name="email" required />
-          </div>
-          <div class="mb-3">
-            <label class="form-label">رمز عبور</label>
-            <div class="input-group input-group-flat">
-              <input type="password" class="form-control" placeholder="Password" autocomplete="off" required name="password" />
-              <span class="input-group-text">
-                <a href="#" class="link-secondary" title="Show password" data-bs-toggle="tooltip">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
-                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-                    <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
-                  </svg>
-                </a>
-              </span>
+          <h2 class="card-title card-title-lg text-center mb-4">Authenticate Your Account</h2>
+          <p class="my-4 text-center">
+            Please confirm your account by entering the authorization code sent to <strong>+1 856-672-8552</strong>.
+          </p>
+          <div class="my-5">
+            <div class="row g-4">
+              <div class="col">
+                <div class="row g-2">
+                  <div class="col">
+                    <input type="text" class="form-control form-control-lg text-center px-3 py-3" maxlength="1" inputmode="numeric" pattern="[0-9]*" data-code-input />
+                  </div>
+                  <div class="col">
+                    <input type="text" class="form-control form-control-lg text-center px-3 py-3" maxlength="1" inputmode="numeric" pattern="[0-9]*" data-code-input />
+                  </div>
+                  <div class="col">
+                    <input type="text" class="form-control form-control-lg text-center px-3 py-3" maxlength="1" inputmode="numeric" pattern="[0-9]*" data-code-input />
+                  </div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="row g-2">
+                  <div class="col">
+                    <input type="text" class="form-control form-control-lg text-center px-3 py-3" maxlength="1" inputmode="numeric" pattern="[0-9]*" data-code-input />
+                  </div>
+                  <div class="col">
+                    <input type="text" class="form-control form-control-lg text-center px-3 py-3" maxlength="1" inputmode="numeric" pattern="[0-9]*" data-code-input />
+                  </div>
+                  <div class="col">
+                    <input type="text" class="form-control form-control-lg text-center px-3 py-3" maxlength="1" inputmode="numeric" pattern="[0-9]*" data-code-input />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="mb-3">
-            <label class="form-check"><span>با ثبت نام در اسکلتون <a href="./terms-of-service.html" tabindex="-1">قوانین و شرایط</a> را میپذیرم.</span></label>
+          <div class="my-4">
+            <label class="form-check"><input type="checkbox" class="form-check-input" />Dont't ask for codes again on this device</label>
           </div>
           <div class="form-footer">
-            <button type="submit" class="btn btn-primary w-100">ثبت نام کنید</button>
+            <div class="btn-list flex-nowrap">
+              <a href="/2-step-verification.html" class="btn btn-3 w-100">Cancel</a>
+              <a href="#" class="btn btn-primary btn-3 w-100">Verify</a>
+            </div>
           </div>
         </div>
       </form>
       <div class="text-center text-secondary mt-3">
-        قبلا ثبت نام کردید؟ <a href="{% url 'apps.accounts:login_view' %}" tabindex="-1">لاگین کنید</a>
+        It may take a minute to receive your code. Haven't received it? <a href="./">Resend a new code.</a>
       </div>
     </div>
   </div>

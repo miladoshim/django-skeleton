@@ -49,6 +49,14 @@ DOMAIN = config("APP_DOMAIN", default="skeleton.ir")
 SITE_NAME = config("APP_NAME", default="کوکوند")
 SITE_ID = 1
 
+DJANGO_APPS = []
+
+THIRD_PARTY_APPS = []
+
+LOCAL_APPS = []
+
+# INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+
 INSTALLED_APPS = [
     "daphne",
     "channels",
@@ -72,6 +80,12 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.github",
+    "allauth.socialaccount.providers.gitlab",
+    "allauth.socialaccount.providers.google",
     "corsheaders",
     "import_export",
     "drf_spectacular",
@@ -125,6 +139,7 @@ MIDDLEWARE = [
     "django_minify_html.middleware.MinifyHtmlMiddleware",
     "apps.core.middlewares.RequestIdMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 if DEBUG:
@@ -166,6 +181,8 @@ TEMPLATES = [
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+    # "apps.accounts.backends.EmailOrUsernameBackend",
 ]
 
 ASGI_APPLICATION = "skeleton.asgi.application"
@@ -213,23 +230,39 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.User"
 USE_DJANGO_JQUERY = True
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
+        # "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
     ],
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.ScopedRateThrottle",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
         "apps.api.renderers.CommonRenderer",
     ],
-    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
+    "DEFAULT_FILTER_BACKENDS": (
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ),
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "100/day",
-        "user": "1000/day",
+        "anon": "100/hour",
+        "user": "1000/hour",
+        "login": "5/minute",
+        "register": "10/hour",
+        "password_reset": "5/hour",
+        "social_auth": "30/hour",
+        "verify_email": "5/minute",
+        "profile": "1000/day",
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_CACHE_KEY_DEFAULT_PERMISSIONS": [],
@@ -741,3 +774,14 @@ MATOMO_SITE_ID = config("MATOMO_SITE_ID", cast=int, default=1)
 
 
 ATOMIC_REQUESTS = True
+
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "APP": {
+            "client_id": "123",
+            "secret": "456",
+            "key": "",
+        }
+    }
+}

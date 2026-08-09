@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils import timezone
 from jalali_date import date2jalali
+from django.core.exceptions import PermissionDenied
 from apps.core.models import BaseModel
 from utils.enums import GenderChoices, UserRole
 from utils.helpers import generate_unique_uuid
@@ -137,6 +138,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     def is_registered(self):
         return self.meta.mobile_verified_at
 
+    def check_login_allowed(self):
+        """بررسی مجاز بودن ورود"""
+        if self.is_blocked:
+            raise PermissionDenied("Your account is blocked.")
+        if not self.is_active:
+            raise PermissionDenied("Your account is inactive.")
+        return True
+
 
 class UserProfile(BaseModel):
     user = models.OneToOneField(
@@ -197,6 +206,12 @@ class UserMeta(BaseModel):
         blank=True,
         verbose_name="تاریخ آخرین لاگین",
     )
+    # last_login_failed_at = models.DateTimeField(
+    #     "last failed login",
+    #     null=True,
+    #     blank=True,
+    # )
+
     last_login_ip = models.GenericIPAddressField(
         null=True,
         blank=True,
@@ -256,6 +271,33 @@ class UserMeta(BaseModel):
         blank=True,
         verbose_name="تاریخ رفع مسدودی ",
     )
+    # two_factor_enabled = models.BooleanField("2FA enabled", default=False)
+
+
+# class LoginHistory(models.Model):
+#     """تاریخچه ورود کاربران"""
+
+#     user = models.ForeignKey(
+#         User, on_delete=models.CASCADE, related_name="login_history"
+#     )
+#     login_time = models.DateTimeField("login time", auto_now_add=True)
+#     logout_time = models.DateTimeField("logout time", null=True, blank=True)
+#     ip_address = models.GenericIPAddressField("IP address", null=True)
+#     user_agent = models.TextField("user agent", blank=True)
+#     device = models.CharField("device", max_length=100, blank=True)
+#     browser = models.CharField("browser", max_length=100, blank=True)
+#     os = models.CharField("operating system", max_length=100, blank=True)
+#     location = models.CharField("location", max_length=100, blank=True)
+#     is_successful = models.BooleanField("successful login", default=True)
+#     auth_method = models.CharField("auth method", max_length=50, blank=True)
+
+#     class Meta:
+#         verbose_name = "login history"
+#         verbose_name_plural = "login histories"
+#         ordering = ["-login_time"]
+
+#     def __str__(self):
+#         return f"{self.user.email} - {self.login_time}"
 
 
 class OtpChannel(models.TextChoices):
@@ -305,3 +347,7 @@ class OtpRequest(BaseModel):
         """حذف همه رکوردهای منقضی شده"""
         expired_count = cls.objects.filter(expires_at__lt=timezone.now()).delete()[0]
         return expired_count
+
+    # @property
+    # def is_valid(self):
+    #     return not self.is_used and self.expires_at > timezone.now()

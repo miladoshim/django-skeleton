@@ -29,6 +29,22 @@ from utils.decorators import anonymous_required
 from utils.mixins import IsUnAuthenticatedMixin
 
 
+class UserClassicRegisterView(TemplateView):
+    template_name = "registration/register.html"
+
+
+class UserOTPRegisterRequestView(TemplateView):
+    template_name = "registration/otp_request.html"
+
+
+class UserOTPRegisterVerifyView(TemplateView):
+    template_name = "registration/otp_verify.html"
+
+
+class ForgotPasswordView(TemplateView):
+    template_name = "registration/forgot_password.html"
+
+
 @anonymous_required("apps.pages:home_view")
 def user_register_otp(request):
     if request.method == "POST":

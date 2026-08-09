@@ -9,7 +9,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 from hitcount.models import HitCount
 from hitcount.views import HitCountMixin
-from apps.core.models import Comment
 from utils.enums import PublishStatusChoice
 from .forms import CommentCreateForm
 from .models import Category, Post
