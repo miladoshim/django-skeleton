@@ -8,6 +8,7 @@ from apps.accounts.views.account_views import (
     DashboardView,
     DashboardSettingView,
     DashboardChangePasswordView,
+    UserProfileView,
 )
 from apps.accounts.views.auth_views import (
     UserLoginView,
@@ -15,6 +16,7 @@ from apps.accounts.views.auth_views import (
     UserOTPRegisterRequestView,
     UserOTPRegisterVerifyView,
     ForgotPasswordView,
+    UserLogoutView,
 )
 
 app_name = "apps.accounts"
@@ -22,6 +24,7 @@ app_name = "apps.accounts"
 urlpatterns = [
     path("accounts/", include("allauth.urls")),
     # Account Setting
+    path("@<str:username>/", UserProfileView.as_view(), name="user_profile"),
     path("accounts/", DashboardView.as_view(), name="dashboard_index"),
     path("accounts/setting/", DashboardSettingView.as_view(), name="dashboard_setting"),
     path(
@@ -31,7 +34,7 @@ urlpatterns = [
     ),
     # path("accounts/comments", UserLoginView.as_view(), name="account_setting"),
     # # Authentication
-    path("auth/register/", UserClassicRegisterView.as_view(), name="register_view"),
+    path("auth/register/", UserClassicRegisterView.as_view(), name="register_classic"),
     path(
         "auth/register/otp/request/",
         UserOTPRegisterRequestView.as_view(),
@@ -53,8 +56,8 @@ urlpatterns = [
     #     name="register_otp_complete_view",
     # ),
     # path("auth/register/otp/complete", UserLoginView.as_view(), name="register_view"),
-    path("auth/login/", UserLoginView.as_view(), name="login_view"),
-    # path("auth/logout/", UserLoginView.as_view(), name="logout"),
+    path("auth/login/", UserLoginView.as_view(), name="login_classic"),
+    path("auth/logout/", UserLogoutView.as_view(), name="logout"),
     path(
         "password/forgot/",
         ForgotPasswordView.as_view(),

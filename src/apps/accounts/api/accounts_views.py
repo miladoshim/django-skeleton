@@ -73,7 +73,7 @@ def get_user_profile(request, username):
     )
 
 
-class UserProfileView(APIView):
+class UserProfileApiView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, format=None):

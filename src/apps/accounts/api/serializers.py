@@ -1,3 +1,6 @@
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.encoding import force_bytes, smart_str
+from django.contrib.sites.shortcuts import get_current_site
 from rest_framework import reverse, serializers
 from rest_framework.serializers import ModelSerializer, Serializer, ValidationError
 from rest_framework_simplejwt.serializers import (
@@ -56,7 +59,7 @@ class UserEmailRegisterSerializer(ModelSerializer):
 
 class UserProfileSerializer(ModelSerializer):
     class Meta:
-        model = UserProfile
+        model = User
         exclude = ["updated_at", "created_at"]
 
 
@@ -216,11 +219,6 @@ class UserForgotPasswordMobileSerializer(Serializer):
             return attrs
         else:
             raise ValidationError("همچین کاربری پیدا نشد.")
-
-
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from django.utils.encoding import force_bytes, smart_str
-from django.contrib.sites.shortcuts import get_current_site
 
 
 class UserForgotPasswordEmailSerializer(Serializer):

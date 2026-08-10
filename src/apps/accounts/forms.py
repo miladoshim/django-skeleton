@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserChangeForm
 from django.core import validators
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.forms import Form, ModelForm
 from .models import User, UserProfile
 
@@ -64,6 +65,117 @@ class UserLoginForm(Form):
         min_length=8,
         max_length=30,
     )
+
+
+class ClassicLoginForm(forms.Form):
+    username = forms.CharField(
+        label="ایمیل، موبایل یا نام کاربری",
+        max_length=150,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "ایمیل، موبایل یا نام کاربری",
+                "autofocus": True,
+            },
+        ),
+        validators=[
+            validators.MinLengthValidator(6),
+        ],
+    )
+
+    password = forms.CharField(
+        label="رمز عبور",
+        widget=forms.PasswordInput(
+            attrs={"class": "form-control", "placeholder": "رمز عبور"},
+        ),
+        min_length=8,
+        max_length=30,
+    )
+
+    def clean_username(self):
+
+        username = self.cleaned_data.get("username", "").strip().lower()
+
+        if not username:
+            raise ValidationError(_("نام کاربری یا ایمیل یا موبایل الزامی است"))
+
+        if len(username) < 3:
+            raise ValidationError(_("نام کاربری یا ایمیل حداقل ۳ کاراکتر باید باشد"))
+
+        user = User.objects.filter(
+            Q(username__iexact=username)
+            | Q(email__iexact=username)
+            | Q(mobile__iexact=username)
+        ).first()
+
+        if user is None:
+            raise ValidationError("کاربری با این مشخصات یافت نشد")
+
+        # if not user.is_active:
+        #     raise ValidationError(_("حساب کاربری شما غیرفعال است"))
+
+        # if getattr(user, "is_blocked", False):
+        #     raise ValidationError(_("حساب کاربری شما مسدود شده است"))
+
+        return username
+
+    def clean_password(self):
+        password = self.cleaned_data.get("password", "")
+
+        if not password:
+            raise ValidationError("رمز عبور الزامی است")
+
+        if len(password) < 8:
+            raise ValidationError("رمز عبور حداقل ۸ کاراکتر باید باشد")
+
+        return password
+
+    # def clean(self):
+
+    #     cleaned_data = super().clean()
+
+    #     username = cleaned_data.get("username")
+    #     password = cleaned_data.get("password")
+
+    #     # اگر هر دو فیلد معتبر بودند
+    #     if username and password:
+
+    #         # پیدا کردن کاربر
+    #         user = User.objects.filter(
+    #             Q(username__iexact=username) | Q(email__iexact=username)
+    #         ).first()
+
+    #         if user is not None:
+    #             # بررسی رمز عبور
+    #             if not user.check_password(password):
+    #                 # ثبت تلاش ناموفق
+    #                 self._handle_failed_login(user)
+    #                 raise ValidationError(
+    #                     _("رمز عبور اشتباه است"), code="invalid_password"
+    #                 )
+
+    #             # بررسی تعداد تلاش‌های ناموفق
+    #             if (
+    #                 hasattr(user, "failed_login_attempts")
+    #                 and user.failed_login_attempts >= 5
+    #             ):
+    #                 raise ValidationError(
+    #                     _(
+    #                         "تعداد تلاش‌های ناموفق بیش از حد مجاز است. لطفا بعدا تلاش کنید"
+    #                     )
+    #                 )
+    #         else:
+    #             raise ValidationError(_("کاربری با این مشخصات یافت نشد"))
+
+    #     return cleaned_data
+
+    # def _handle_failed_login(self, user):
+    #     """
+    #     ثبت تلاش ناموفق ورود
+    #     """
+    #     if hasattr(user, "failed_login_attempts"):
+    #         user.failed_login_attempts += 1
+    #         user.save(update_fields=["failed_login_attempts"])
 
 
 class UserOtpForm(Form):

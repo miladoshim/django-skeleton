@@ -100,8 +100,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.get_full_name()
 
-    def get_absolute_url(self):
-        return reverse("accounts:profile_view", kwargs={"uuid": self.uuid})
+    def get_profile_url(self):
+        return reverse("apps.accounts:user_profile", kwargs={"username": self.username})
 
     def get_full_name(self):
         full_name = "%s %s" % (self.first_name, self.last_name)

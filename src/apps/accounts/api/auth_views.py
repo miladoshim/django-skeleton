@@ -27,6 +27,45 @@ class UserRegistrationAPIView(CreateAPIView):
     queryset = User.objects.all()
 
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
+class LogoutAPIView(APIView):
+    """
+    خروج از طریق API - مناسب برای Vue/React
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            # دریافت refresh token از request
+            refresh_token = request.data.get("refresh")
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                token.blacklist()  # غیرفعال کردن توکن
+
+            # اگر از JWT cookie استفاده میکنید
+            response = Response(
+                {"detail": "با موفقیت خارج شدید"}, status=status.HTTP_200_OK
+            )
+
+            # پاک کردن کوکیها
+            response.delete_cookie("access_token")
+            response.delete_cookie("refresh_token")
+
+            return response
+
+        except Exception as e:
+            return Response(
+                {"detail": "خطا در خروج"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+
 # OTP Register with mobile : step one request otp code
 def logout():
     pass

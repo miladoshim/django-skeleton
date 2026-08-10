@@ -3,9 +3,14 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views import View
 from django.contrib import messages
 from django.db import transaction
-from django.views.generic import TemplateView
+from django.views.generic import FormView, TemplateView
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import (
     LoginView as BaseLoginView,
@@ -18,6 +23,7 @@ from django.contrib.auth.views import (
 )
 from celery.result import AsyncResult
 from apps.accounts.forms import (
+    ClassicLoginForm,
     ResetPasswordMobileForm,
     UserOtpCompleteForm,
     UserOtpForm,
@@ -155,7 +161,7 @@ def user_register_otp_complete(request, *args, **kwargs):
 
                     messages.success(request, "با موفقیت در کوکوند ثبت نام کردید")
 
-                    return HttpResponseRedirect(reverse("apps.accounts:login_view"))
+                    return HttpResponseRedirect(reverse("apps.accounts:login_classic"))
         else:
             for key, error in list(form.errors.items()):
                 messages.error(request, error)
@@ -168,27 +174,53 @@ def user_register_otp_complete(request, *args, **kwargs):
     return render(request, "registration/register_otp_complete.html", context=context)
 
 
-class UserLoginView(IsUnAuthenticatedMixin, BaseLoginView):
+class UserLoginView(IsUnAuthenticatedMixin, FormView):
+    template_name = "registration/login.html"
     success_url = reverse_lazy("apps.pages:home_view")
+    form_class = ClassicLoginForm
 
     def form_valid(self, form):
         username = form.cleaned_data.get("username")
         password = form.cleaned_data.get("password")
+
         user = authenticate(request=self.request, username=username, password=password)
+
         if user is not None:
             login(self.request, user)
-            messages.success(self.request, "به حساب کاربری خود خوش آمدید.")
+            messages.success(self.request, "خوش آمدید.")
             return HttpResponseRedirect(self.success_url)
         else:
             messages.error(self.request, "نام کاربری یا رمز عبور اشتباه است")
-            return HttpResponseRedirect(reverse("apps.accounts:login_view"))
+            return HttpResponseRedirect(reverse("apps.accounts:login_classic"))
+
+    def form_invalid(self, form):
+
+        if form.non_field_errors():
+            for error in form.non_field_errors():
+                messages.error(self.request, error)
+
+        for field_name, errors in form.errors.items():
+            for error in errors:
+                field_label = (
+                    form.fields[field_name].label
+                    if field_name in form.fields
+                    else field_name
+                )
+                messages.error(self.request, f"{field_label}: {error}")
+
+        return super().form_invalid(form)
 
 
-@login_required(login_url="apps.accounts:login_view")
-def user_logout(request):
-    logout(request)
-    messages.success(request, "از حساب کاربری خود خارج شدید.")
-    return redirect("apps.pages:home_view")
+class UserLogoutView(LoginRequiredMixin, View):
+    login_url = "apps.accounts:login_classic"
+    success_url = reverse_lazy("apps.pages:home_view")
+
+    @method_decorator(csrf_protect)
+    @method_decorator(require_POST)  # فقط POST - امنتر
+    def post(self, request):
+        logout(request)
+        messages.success(request, "از حساب کاربری خود خارج شدید.")
+        return redirect(self.success_url)
 
 
 @anonymous_required("apps.pages:home_view")
@@ -265,7 +297,7 @@ def forgot_password_mobile_reset(request, *args, **kwargs):
 
                 messages.success(request, "رمز عبور شما با موفقیت تغییر کرد")
 
-                return HttpResponseRedirect(reverse("apps.accounts:login_view"))
+                return HttpResponseRedirect(reverse("apps.accounts:login_classic"))
             else:
                 messages.error(request, "کد تایید وارد شده صحیح نمی باشد.")
 

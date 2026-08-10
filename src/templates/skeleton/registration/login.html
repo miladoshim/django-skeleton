@@ -20,14 +20,15 @@
       <div class="card card-md">
         <div class="card-body">
           <h2 class="h2 text-center mb-4">لاگین کنید</h2>
-          <form action="./" method="get" autocomplete="off" novalidate>
+          <form action="{% url 'apps.accounts:login_classic' %}" method="POST" autocomplete="off">
+            {% csrf_token %}
             <div class="mb-3">
-              <label class="form-label">ایمیل یا موبایل</label>
-              <input type="text" class="form-control" name="username" id="username" required placeholder="ایمیل یا شماره موبایل خود را وارید کنید" autocomplete="off" />
+              <label class="form-label">موبایل یا ایمیل یا نام کاربری</label>
+              <input type="text" class="form-control" name="username" id="username" required placeholder="موبایل یا ایمیل یا نام کاربری خود را وارد کنید" autocomplete="off" />
             </div>
             <div class="mb-2">
               <label class="form-label">
-                Password
+                رمز عبور
                 <span class="form-label-description"><a href="{% url 'apps.accounts:password_forgot_view' %}">رمز عبورم را فراموش کردم!</a></span>
               </label>
               <div class="input-group input-group-flat">
@@ -77,7 +78,7 @@
         </div>
       </div>
       <div class="text-center text-secondary mt-3">
-        اگر ثبت نام نکردید <a href="{% url 'apps.accounts:register_view' %}" tabindex="-1">ثبت نام</a> کنید.
+        اگر ثبت نام نکردید <a href="{% url 'apps.accounts:register_classic' %}" tabindex="-1">ثبت نام</a> کنید.
       </div>
     </div>
   </div>

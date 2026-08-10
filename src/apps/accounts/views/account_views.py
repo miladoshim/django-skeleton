@@ -6,12 +6,13 @@ from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404, HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.vary import vary_on_cookie
 from django.views.generic import (
+    DetailView,
     ListView,
     TemplateView,
     UpdateView,
@@ -48,8 +49,7 @@ class DashboardView(TemplateView):
         return context
 
 
-# LoginRequiredMixin,
-class DashboardSettingView(TemplateView):
+class DashboardSettingView(LoginRequiredMixin, TemplateView):
     template_name = "accounts/setting.html"
     # form_class = UserAccountEditForm
     # model = User
@@ -69,16 +69,15 @@ class DashboardChangePasswordView(TemplateView):
     template_name = "accounts/change_password.html"
 
 
-@cache_page(60 * 15)
-@vary_on_cookie
-def user_profile(request, *args, **kwargs):
-    user_uuid = kwargs.get("user_uuid")
-    try:
-        user = User.objects.get(uuid=user_uuid)
-    except Exception as e:
-        return HttpResponse("کاربر وجود ندارد")
+class UserProfileView(DetailView):
+    model = User
+    template_name = "accounts/profile.html"
+    context_object_name = "user"
+    slug_field = "username"
+    slug_url_kwarg = "username"
 
-    return render(request, "accounts/profile.html", {"user": user})
+    def get_queryset(self):
+        return User.objects.filter(is_active=True)
 
 
 @login_required

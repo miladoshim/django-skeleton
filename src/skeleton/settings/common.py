@@ -182,7 +182,7 @@ TEMPLATES = [
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
-    # "apps.accounts.backends.EmailOrUsernameBackend",
+    "apps.accounts.backends.EmailPhoneUsernameBackend",
 ]
 
 ASGI_APPLICATION = "skeleton.asgi.application"
@@ -562,7 +562,7 @@ PWA_APP_SCREENSHOTS = [
 MESSAGE_TAGS = {
     messages.DEBUG: "debug",
     messages.INFO: "info",
-    messages.SUCCESS: "success",
+    messages.SUCCESS: "alert-success",
     messages.WARNING: "warning",
     messages.ERROR: "danger",
 }
