@@ -1,0 +1,15 @@
+info:
+  name: profile edit
+  type: http
+  seq: 2
+
+http:
+  method: PUT
+  url: "{{baseurlv1}}/accounts/settings/"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

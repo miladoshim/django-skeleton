@@ -1,5 +1,67 @@
 {% extends 'accounts/layout.html' %}
 
+{% block title %}
+  تنظیمات
+{% endblock %}
+
 {% block inner %}
-  setting
+  <div class="col-12 col-md-9 d-flex flex-column">
+    <form action="." method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="card-body">
+        <h2 class="mb-4">تنظیمات حساب کاربری</h2>
+        <h3 class="card-title">پروفایل</h3>
+        <div class="row align-items-center">
+          <div class="col-auto">
+            <span class="avatar avatar-xl" style="background-image: url(./static/avatars/000m.jpg)"></span>
+          </div>
+          <div class="col-auto">
+            <a href="#" class="btn btn-1">تغییر آواتار</a>
+          </div>
+          <div class="col-auto">
+            <a href="#" class="btn btn-ghost-danger btn-3">حذف آواتار</a>
+          </div>
+        </div>
+        <div class="row g-3 mt-3">
+          <div class="col-md">
+            <div class="form-label">نام</div>
+            <input type="text" class="form-control" name="first_name" id="first_name" required value="" />
+          </div>
+          <div class="col-md">
+            <div class="form-label">نام خانوادگی</div>
+            <input type="text" class="form-control" name="last_name" id="last_name" required value="" />
+          </div>
+          <div class="col-md">
+            <div class="form-label">نام کاربری</div>
+            <input type="text" class="form-control" name="username" id="username" required value="" />
+          </div>
+        </div>
+        <div class="row g-3 my-3">
+          <div class="col-md d-flex justify-content-between">
+            <div class="w-100">
+              <div class="form-label">ایمیل</div>
+              <input type="text" class="form-control" name="email" id="email" required value="" />
+            </div>
+            <div class="text-center align-self-center mt-auto mx-2">
+              <a href="#" class="btn btn-1">تایید</a>
+            </div>
+          </div>
+          <div class="col-md d-flex justify-content-between">
+            <div class="w-100">
+              <div class="form-label">موبایل</div>
+              <input type="text" class="form-control" name="mobile" id="mobile" required value="" />
+            </div>
+            <div class="text-center align-self-center mt-auto mx-2">
+              <a href="#" class="btn btn-1">تایید</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer bg-transparent mt-auto">
+        <div class="btn-list justify-content-center">
+          <a href="#" class="btn btn-primary btn-2 w-25">تغییر</a>
+        </div>
+      </div>
+    </form>
+  </div>
 {% endblock %}

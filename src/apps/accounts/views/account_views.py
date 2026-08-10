@@ -48,6 +48,27 @@ class DashboardView(TemplateView):
         return context
 
 
+# LoginRequiredMixin,
+class DashboardSettingView(TemplateView):
+    template_name = "accounts/setting.html"
+    # form_class = UserAccountEditForm
+    # model = User
+    # success_url = reverse_lazy("apps.dashboard:dashboard_setting")
+
+    # def get_object(self, queryset):
+    #     return User.objects.get(pk=self.request.user.pk)
+
+    # def form_valid(self, form):
+    #     return super().form_valid(form)
+
+    # def form_invalid(self, form):
+    #     return super().form_invalid(form)
+
+
+class DashboardChangePasswordView(TemplateView):
+    template_name = "accounts/change_password.html"
+
+
 @cache_page(60 * 15)
 @vary_on_cookie
 def user_profile(request, *args, **kwargs):
@@ -139,22 +160,6 @@ def change_password(request):
     else:
         form = ChangePasswordForm()
     return render(request, "accounts/change_password.html", {"password_form": form})
-
-
-class DashboardSettingView(LoginRequiredMixin, UpdateView):
-    template_name = "accounts/setting.html"
-    form_class = UserAccountEditForm
-    model = User
-    # success_url = reverse_lazy()
-
-    def get_object(self, queryset):
-        return User.objects.get(pk=self.request.user.pk)
-
-    def form_valid(self, form):
-        return super().form_valid(form)
-
-    def form_invalid(self, form):
-        return super().form_invalid(form)
 
 
 # @method_decorator(vary_on_cookie, name="dispatch")

@@ -1,5 +1,3 @@
-(function ($) {
-  "use strict";
-
-  console.log("Skeleton ...");
-})(jQuery);
+document.addEventListener("DOMContentLoaded", function () {
+  console.log("Skeleton Started ...");
+});

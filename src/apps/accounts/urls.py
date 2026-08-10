@@ -4,7 +4,11 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView,
 )
-from apps.accounts.views.account_views import DashboardView
+from apps.accounts.views.account_views import (
+    DashboardView,
+    DashboardSettingView,
+    DashboardChangePasswordView,
+)
 from apps.accounts.views.auth_views import (
     UserLoginView,
     UserClassicRegisterView,
@@ -19,10 +23,10 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
     # Account Setting
     path("accounts/", DashboardView.as_view(), name="dashboard_index"),
-    path("accounts/setting/", DashboardView.as_view(), name="dashboard_setting"),
+    path("accounts/setting/", DashboardSettingView.as_view(), name="dashboard_setting"),
     path(
         "accounts/setting/change_password/",
-        DashboardView.as_view(),
+        DashboardChangePasswordView.as_view(),
         name="dashboard_setting_password",
     ),
     # path("accounts/comments", UserLoginView.as_view(), name="account_setting"),
