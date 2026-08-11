@@ -90,3 +90,10 @@ class CategoryAdmin(TreeAdmin):
     form = movenodeform_factory(Category)
     prepopulated_fields = {"slug": ["name"]}
     empty_value_display = "---"
+    list_display = ["icon", "name", "slug", "parent", "is_active"]
+    list_display_links = (
+        "name",
+        "slug",
+    )
+    list_filter = ("is_active",)
+    search_fields = ("name",)

@@ -85,6 +85,7 @@ class Post(BaseModel, HitCountMixin):
         Category,
         verbose_name="دسته بندی",
         on_delete=models.PROTECT,
+        related_name="posts",
     )
     title = models.CharField(
         "عنوان مقاله",
@@ -144,6 +145,10 @@ class Post(BaseModel, HitCountMixin):
 
     def thumbnail_tag(self):
         return format_html("<img width=50 src='{}' />".format(self.thumbnail.url))
+
+    @property
+    def view_count(self):
+        return self.hit_count.hits
 
     @cached_property
     def read_time(self):

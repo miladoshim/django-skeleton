@@ -1,27 +1,28 @@
+from django.core.exceptions import PermissionDenied
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from apps.api.renderers import CommonRenderer
+from apps.blog.api.serializers import PostSerializer
+from apps.blog.services.post_service import PostService
 
 
 class PostViewSet(viewsets.ViewSet):
-    """API برای پستها - استفاده از سرویس یکسان"""
 
     permission_classes = [IsAuthenticatedOrReadOnly]
-    # service = PostService()
+    service = PostService()
+    renderer_classes = [CommonRenderer]
 
     def list(self, request):
-        """لیست پستها"""
-        result = self.service.list_posts(
-            user=request.user,
-            is_published=request.query_params.get("is_published"),
+        result = self.service.list_public_posts(
             category=request.query_params.get("category"),
             search=request.query_params.get("search"),
             page=int(request.query_params.get("page", 1)),
             page_size=int(request.query_params.get("page_size", 10)),
         )
 
-        serializer = PostListSerializer(result["items"], many=True)
+        serializer = PostSerializer(result["items"], many=True)
         return Response(
             {
                 "items": serializer.data,
@@ -37,8 +38,10 @@ class PostViewSet(viewsets.ViewSet):
         )
 
     def retrieve(self, request, pk=None):
-        """جزئیات پست"""
-        post = self.service.get_post_detail(post_id=pk, user=request.user)
+        post = self.service.get_post_detail(
+            request=request,
+            post_slug=pk,
+        )
 
         if not post:
             return Response(

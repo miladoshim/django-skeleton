@@ -10,32 +10,17 @@
       <div class="row g-4">
         <div class="col-md-3">
           <form action="./" method="get" autocomplete="off" novalidate>
-            <div class="subheader mb-2">دسته بندی</div>
-            <div class="list-group list-group-transparent mb-3">
-              <a class="list-group-item list-group-item-action d-flex align-items-center active" href="#">
-                برنامه نویسی
-                <small class="text-secondary ms-auto">24</small>
-              </a>
-            </div>
-
-            <div class="subheader mb-2">Tags</div>
+            <div class="subheader mb-2">دسته بندی ها</div>
             <div class="mb-3">
-              <label class="form-check">
-                <input type="checkbox" class="form-check-input" name="form-tags[]" value="business" checked />
-                <span class="form-check-label">business</span>
-              </label>
-              <label class="form-check">
-                <input type="checkbox" class="form-check-input" name="form-tags[]" value="evening" />
-                <span class="form-check-label">evening</span>
-              </label>
-              <label class="form-check">
-                <input type="checkbox" class="form-check-input" name="form-tags[]" value="leisure" />
-                <span class="form-check-label">leisure</span>
-              </label>
-              <label class="form-check">
-                <input type="checkbox" class="form-check-input" name="form-tags[]" value="party" />
-                <span class="form-check-label">party</span>
-              </label>
+              {% for category in categories %}
+                <div class="d-flex justify-content-between">
+                  <label class="form-check" for="{{ category.id }}">
+                    <input type="checkbox" class="form-check-input" name="cat[]" value="{{ category.id }}" id="{{ category.id }}" />
+                    <span class="form-check-label">{{ category.name }}</span>
+                  </label>
+                  <p>{{ category.post_count }}</p>
+                </div>
+              {% endfor %}
             </div>
             <div class="subheader mb-2">Shipping</div>
             <div>
@@ -53,47 +38,55 @@
             </div>
           </form>
         </div>
+
         <div class="col-md-9">
           <div class="row row-cards">
-            <div class="col-sm-6 col-lg-4">
-              <div class="card card-sm">
-                <a href="#" class="d-block"><img src="./static/photos/pink-desk-in-the-home-office.jpg" class="card-img-top" /></a>
-                <div class="card-body">
-                  <div class="d-flex align-items-center">
-                    <span class="avatar avatar-2 me-3 rounded">SA</span>
-                    <div>
-                      <div>Sunny Airey</div>
-                      <div class="text-secondary">5 days ago</div>
+            {% for post in posts %}
+              <div class="col-sm-6 col-lg-4">
+                <div class="card card-sm">
+                  <a href="{{ post.get_absolute_url }}" class="d-block"><img src="{{ post.thumbnail.url }}" class="card-img-top" alt="{{ post.title }}" /></a>
+                  <div class="card-body">
+                    <div class="d-flex align-items-center">
+                      <span class="avatar avatar-2 me-3 rounded">SA</span>
+                      <div>
+                        <div>
+                          <h3><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h3>
+                        </div>
+                        <div class="text-secondary">{{ post.created_at }}</div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div class="page-center">
-              <div class="empty">
-                <div class="empty-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <circle cx="12" cy="12" r="9" />
-                    <line x1="9" y1="10" x2="9.01" y2="10" />
-                    <line x1="15" y1="10" x2="15.01" y2="10" />
-                    <path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
-                  </svg>
-                </div>
-                <p class="empty-title">مقاله ای یافت نشد!</p>
-                <p class="empty-subtitle text-secondary">هنوز مقاله ای ثبت نشده است.</p>
-                <div class="empty-action">
-                  <a href="#" class="btn btn-primary">
+            {% empty %}
+              <div class="page-center">
+                <div class="empty">
+                  <div class="empty-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                      <circle cx="10" cy="10" r="7" />
-                      <line x1="21" y1="21" x2="15" y2="15" />
-                    </svg>Search again
-                  </a>
+                      <circle cx="12" cy="12" r="9" />
+                      <line x1="9" y1="10" x2="9.01" y2="10" />
+                      <line x1="15" y1="10" x2="15.01" y2="10" />
+                      <path d="M9.5 15.25a3.5 3.5 0 0 1 5 0" />
+                    </svg>
+                  </div>
+                  <p class="empty-title">مقاله ای یافت نشد!</p>
+                  <p class="empty-subtitle text-secondary">هنوز مقاله ای ثبت نشده است.</p>
+                  <div class="empty-action">
+                    <a href="#" class="btn btn-primary">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <circle cx="10" cy="10" r="7" />
+                        <line x1="21" y1="21" x2="15" y2="15" />
+                      </svg>Search again
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
+            {% endfor %}
+          </div>
+          <div class="d-flex mx-auto text-center justify-content-center mt-5">
+            {% include 'partials/_pagination.html' %}
           </div>
         </div>
       </div>

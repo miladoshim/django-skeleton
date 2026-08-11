@@ -2,7 +2,10 @@ from typing import Optional, List, Dict, Any
 from django.db import transaction
 from django.core.paginator import Paginator
 from django.contrib.auth import get_user_model
-from django.db.models import Q
+from django.db.models import Q, QuerySet
+from django.core.exceptions import PermissionDenied
+from hitcount.models import HitCount
+from hitcount.views import HitCountMixin
 from apps.blog.models import Post
 from apps.core.services.base_service import BaseService
 
@@ -16,9 +19,58 @@ class PostService(BaseService):
     MAX_TITLE_LENGTH = 200
     MIN_CONTENT_LENGTH = 10
 
-    def list_posts(
+    def list_public_posts(
         self,
-        user: Optional[User] = None,
+        category: Optional[str] = None,
+        search: Optional[str] = None,
+        page: int = 1,
+        page_size: int = 10,
+    ) -> Dict[str, Any]:
+
+        queryset = self.get_queryset()
+
+        if category:
+            queryset = queryset.filter(category__slug=category)
+
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search)
+                | Q(short_description__icontains=search)
+                | Q(body__icontains=search)
+            )
+
+        queryset = queryset.order_by("-created_at")
+
+        paginator = Paginator(queryset, page_size)
+        posts = paginator.get_page(page)
+
+        return {
+            "items": posts.object_list,
+            "total": paginator.count,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": paginator.num_pages,
+            "has_next": posts.has_next(),
+            "has_previous": posts.has_previous(),
+        }
+
+    def get_post_detail(
+        self,
+        request,
+        post_slug: str,
+    ) -> Optional[Post]:
+        queryset = self.get_queryset()
+
+        post = queryset.filter(slug=post_slug).first()
+        if post:
+            hit_count = HitCount.objects.get_for_object(post)
+            HitCountMixin.hit_count(request, hit_count)
+
+        return post
+
+    def list_my_posts(
+        self,
+        user: Optional[User] = None,  # type: ignore
         is_published: Optional[bool] = None,
         category: Optional[str] = None,
         search: Optional[str] = None,
@@ -65,24 +117,6 @@ class PostService(BaseService):
             "has_next": posts.has_next(),
             "has_previous": posts.has_previous(),
         }
-
-    def get_post_detail(
-        self, post_id: int, user: Optional[User] = None
-    ) -> Optional[Post]:
-        """دریافت جزئیات پست"""
-        queryset = self.get_queryset()
-
-        # اگر کاربر نویسنده نیست، فقط پست منتشر شده
-        if user and not user.is_staff:
-            queryset = queryset.filter(is_published=True)
-
-        # افزایش بازدید
-        post = queryset.filter(pk=post_id).first()
-        if post:
-            post.views_count += 1
-            post.save(update_fields=["views_count"])
-
-        return post
 
     @transaction.atomic
     def create_post(

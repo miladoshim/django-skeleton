@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     "drf_api_logger",
     "robots",
     "hitcount",
+    "treebeard",
     "meta",
     "django_extensions",
     "django_filters",

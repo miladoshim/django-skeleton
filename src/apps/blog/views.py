@@ -2,22 +2,18 @@ from django.contrib import messages
 from django.db.models import Count
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView, FormView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views import View
 from hitcount.models import HitCount
-from hitcount.views import HitCountMixin
+from hitcount.views import HitCountDetailView, HitCountMixin
 from utils.enums import PublishStatusChoice
 from .forms import CommentCreateForm
 from .models import Category, Post
 
-# from apps.blog.services import PostService
-# from apps.blog.forms import PostForm
 
-
-# @method_decorator(cache_page(60 * 15), name="dispatch")
 class PostListView(ListView):
     model = Post
     queryset = Post.published.select_related("category", "author").order_by(
@@ -30,43 +26,106 @@ class PostListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["post_count"] = Post.published.aggregate(count=Count("id"))
-        context["categories"] = Post.published.values("category").annotate(
-            category_count=Count("category")
+        context["categories"] = (
+            Category.objects.annotate(
+                post_count=Count(
+                    "posts",
+                )
+            )
+            .filter(post_count__gt=0)
+            .order_by("-post_count", "name")
         )
         # context['popular_tags'] = Post.objects.values("tags__name").annotate(total_view=Sum("viewCount")).order_by("-total_views")[:8]
         return context
 
 
-# from django.utils.decorators import method_decorator
-# from django.views.decorators.cache import cache_page, vary_on_cookie
-# class PostDetailView(HitCountDetailView):
-#     count_hit = True
-#     model = Post
-#     slug_field = "slug"
-#     template_name = "blog/blog_detail.html"
-#     context_object_name = "blog"
+class PostDetailView(HitCountDetailView):
+    model = Post
+    template_name = "blog/post_detail.html"
+    context_object_name = "post"
+    slug_field = "slug"
+    slug_url_kwarg = "slug"
+    count_hit = True
 
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         blog = self.get_object()
-#         comment = blog.comments.all().order_by("-created_at")
-#         context = {
-#             "comments": comment,
-#             "blog": blog,
-#         }
-#         return context
+    def get_queryset(self):
+        return (
+            Post.published.all()
+            .select_related("author", "category")
+            .prefetch_related("tags")
+        )
 
-#     def post(self, request, slug):
-#         if not request.user.is_authenticated:
-#             return redirect("account:sign-in")
-#         slug = unquote(slug)
-#         blog = get_object_or_404(Post, slug=slug)
-#         parent_id = request.POST.get("parent_id")
-#         body = request.POST.get("body")
-#         Comment.objects.create(
-#             body=body, blog=blog, user=request.user, parent_id=parent_id
-#         )
-#         return redirect(reverse("blog:blog-detail", kwargs={"slug": slug}))
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        post = self.get_object()
+        # comments = (
+        #     post.comments.filter(is_approved=True, parent__isnull=True)
+        #     .order_by("-created_at")
+        #     .select_related("user")
+        #     .prefetch_related("replies")
+        # )
+        # comment_form = CommentCreateForm()
+
+        context.update(
+            {
+                # "comments": comments,
+                # "comment_form": comment_form,
+                "post": post,
+                "similar_posts": post.get_similar_posts(),
+            }
+        )
+        return context
+
+
+class PostCommentCreateView(LoginRequiredMixin, FormView):
+    form_class = CommentCreateForm
+
+    def get_post_object(self):
+        return get_object_or_404(
+            Post,
+            slug=self.kwargs.get("slug"),
+            published_status=PublishStatusChoice.PUBLISHED,
+        )
+
+    def get_back_url(self):
+        return self.request.META.get(
+            "HTTP_REFERER",
+            self.request.build_absolute_uri(
+                reverse(
+                    "apps.blog:post_detail", kwargs={"slug": self.kwargs.get("slug")}
+                )
+            ),
+        )
+
+    def form_valid(self, form):
+        post = self.get_post_object()
+
+        recent_comment = Comment.objects.filter(
+            user=self.request.user,
+            post=post,
+            created_at__gte=timezone.now() - timezone.timedelta(minutes=5),
+        ).exists()
+
+        if recent_comment:
+            messages.error(
+                self.request, "شما به تازگی دیدگاهی ثبت کردهاید. لطفا کمی صبر کنید."
+            )
+            return redirect(self.get_back_url())
+
+        Comment.objects.create(
+            post=post,
+            comment=form.cleaned_data["comment"],
+            user=self.request.user,
+        )
+
+        messages.success(
+            self.request, "دیدگاه شما با موفقیت ثبت شد و پس از تایید نمایش داده میشود."
+        )
+
+        return redirect(self.get_back_url())
+
+    def form_invalid(self, form):
+        messages.error(self.request, "خطا در ثبت دیدگاه. لطفا دوباره تلاش کنید.")
+        return redirect(self.get_back_url())
 
 
 # @cache_page(60 * 15)
@@ -94,15 +153,13 @@ def post_detail(request, slug):
             messages.success(
                 request, "دیدگاه ثبت شد بعد از تایید مدیریت نمایش داده می شود."
             )
-            # post_url = request.build_absolute_uri(post.get_absolute_url())
-            # return HttpResponseRedirect(post_url)
             return HttpResponseRedirect(request.META["HTTP_REFERER"])
         else:
             print(form.errors.as_data())
             messages.error(request, "خطا در ثبت دیدگاه")
     else:
         hit_count = HitCount.objects.get_for_object(post)
-        hit_count_response = HitCountMixin.hit_count(request, hit_count)
+        HitCountMixin.hit_count(request, hit_count)
 
         form = CommentCreateForm()
 
