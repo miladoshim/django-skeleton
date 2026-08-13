@@ -1,4 +1,5 @@
 import magic
+import re
 from django.core.exceptions import ValidationError
 from persian_tools import national_id, phone_number
 from persian_tools.bank import card_number, sheba
@@ -131,6 +132,30 @@ def sanitize_filename(filename):
         name = name[:100]
 
     return f"{name}{ext}"
+
+
+def validate_password_strength(password):
+    """بررسی قدرت رمز عبور"""
+
+    errors = []
+
+    if len(password) < 8:
+        errors.append("رمز باید حداقل ۸ کاراکتر باشد")
+
+    if not re.search(r"[A-Z]", password):
+        errors.append("رمز باید حداقل یک حرف بزرگ داشته باشد")
+
+    if not re.search(r"[a-z]", password):
+        errors.append("رمز باید حداقل یک حرف کوچک داشته باشد")
+
+    if not re.search(r"\d", password):
+        errors.append("رمز باید حداقل یک عدد داشته باشد")
+
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        errors.append("رمز باید حداقل یک کاراکتر خاص داشته باشد")
+
+    if errors:
+        raise ValidationError(errors)
 
 
 # def scan_for_malware(file):

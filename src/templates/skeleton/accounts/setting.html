@@ -8,22 +8,21 @@
 
 {% block scripts %}
   <script>
-    const avatarInput = document.getElementById('avatarInput')
-    const avatarName = document.getElementById('avatarName')
-    
-    avatarInput.addEventListener('change', function (e) {
+    document.getElementById('avatarInput').addEventListener('change', function (e) {
       const file = e.target.files[0]
     
       if (file) {
-        avatarName.textContent = '📎 ' + file.name
-    
         const reader = new FileReader()
+    
         reader.onload = function (event) {
-          const avatarImg = document.querySelector('.avatar-wrapper img, .avatar-wrapper div')
-          if (avatarImg && avatarImg.tagName === 'IMG') {
-            avatarImg.src = event.target.result
-          }
+          const avatar = document.getElementById('avatar')
+          const preview = document.getElementById('avatarPreview')
+          preview.src = event.target.result
+          preview.style.display = 'block'
+          avatar.classList.add('d-none')
+          preview.classList.remove('d-none')
         }
+    
         reader.readAsDataURL(file)
       }
     })
@@ -41,10 +40,11 @@
         <div class="row align-items-center">
           <div class="col-auto">
             {% if user.has_avatar %}
-              <span class="avatar avatar-xl" style="background-image: url({{ user.get_avatar_url }})"></span>
+              <span class="avatar avatar-xl" style="background-image: url({{ user.get_avatar_url }})" id="avatar"></span>
             {% else %}
-              <span class="avatar avatar-xl" style="background-image: url({% static 'images/default_man_avatar.jpg' %})"></span>
+              <span class="avatar avatar-xl" style="background-image: url({% static 'images/default_man_avatar.jpg' %})" id="avatar"></span>
             {% endif %}
+            <img src="" class="avatar avatar-xl d-none" id="avatarPreview" />
           </div>
           <div class="col-auto">
             <label for="avatarInput" class="btn btn-1">تغییر آواتار</label>

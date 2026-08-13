@@ -35,8 +35,8 @@ def custom_date(value, arg="%c"):
 
 @register.filter
 def disabled_attributes(user):
-    if user.is_email_verified:
-        return "disabled"
+    if user.meta.email_verified_at:
+        return "disabled readonly"
     return ""
 
 

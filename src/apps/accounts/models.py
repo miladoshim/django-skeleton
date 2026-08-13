@@ -126,8 +126,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_avatar_url(self):
         if self.profile.avatar.url:
             return self.profile.avatar.url
-        else:
-            return "/images/default_man_avatar.jpg/"
 
     def has_delete_permission(self, request, obj=None):
         if not request.user.is_superuser:
@@ -375,6 +373,19 @@ class AuthenticateHistory(BaseModel):
 
     def __str__(self):
         return f"{self.user.email} - {self.login_at}"
+
+
+class PasswordResetHistory(models.Model):
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    method = models.CharField(
+        max_length=20, choices=[("email", "Email"), ("mobile", "Mobile")]
+    )
+    identifier = models.CharField(max_length=100)
+    ip_address = models.GenericIPAddressField(null=True)
+    user_agent = models.TextField(blank=True)
+    is_successful = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class OtpChannel(models.TextChoices):

@@ -6,6 +6,11 @@ from apps.accounts.views.account_views import (
     UserProfileView,
 )
 from apps.accounts.views.auth_views import (
+    ForgotPasswordDoneView,
+    ForgotPasswordMobileResetView,
+    ForgotPasswordMobileVerifyView,
+    PasswordResetConfirmView,
+    ResendOtpView,
     SocialAccountsListView,
     SocialCallbackView,
     SocialDisconnectView,
@@ -56,19 +61,35 @@ urlpatterns = [
     # path("auth/register/otp/complete", UserLoginView.as_view(), name="register_view"),
     path("auth/login/", UserLoginView.as_view(), name="login_classic"),
     path("auth/logout/", UserLogoutView.as_view(), name="logout"),
+    # فراموشی رمز
+    path("password/forgot/", ForgotPasswordView.as_view(), name="password_forgot_view"),
     path(
-        "password/forgot/",
-        ForgotPasswordView.as_view(),
-        name="password_forgot_view",
+        "password/forgot/done/",
+        ForgotPasswordDoneView.as_view(),
+        name="password_forgot_done_view",
     ),
-    # path(
-    #     "password/forgot/mobile/reset/<str:mobile>/<str:reqid>/",
-    #     forgot_password_mobile_reset,
-    #     name="password_forgot_mobile_reset_view",
-    # ),
-    # path("auth/token/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    # path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    # path("auth/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
+    # موبایل
+    path(
+        "password/forgot/mobile/verify/",
+        ForgotPasswordMobileVerifyView.as_view(),
+        name="password_forgot_mobile_verify_view",
+    ),
+    path(
+        "password/forgot/mobile/reset/",
+        ForgotPasswordMobileResetView.as_view(),
+        name="password_forgot_mobile_reset_view",
+    ),
+    path(
+        "password/forgot/mobile/resend/",
+        ResendOtpView.as_view(),
+        name="password_forgot_mobile_resend",
+    ),
+    # ایمیل
+    path(
+        "reset/<str:uidb64>/<str:token>/",
+        PasswordResetConfirmView.as_view(),
+        name="password_reset_confirm",
+    ),
     path("auth/login/<str:provider>/", SocialLoginView.as_view(), name="social_login"),
     path(
         "auth/callback/<str:provider>/",

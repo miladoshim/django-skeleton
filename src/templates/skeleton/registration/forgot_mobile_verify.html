@@ -1,0 +1,32 @@
+<!-- templates/registration/forgot_mobile_verify.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-5">
+        <div class="card shadow">
+          <div class="card-body">
+            <h4 class="text-center mb-4">تایید کد</h4>
+
+            {% if messages %}
+              {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+              {% endfor %}
+            {% endif %}
+
+            <p class="text-muted text-center">کد ارسال شده به {{ masked_mobile }} را وارد کنید</p>
+
+            <form method="post">
+              {% csrf_token %}
+              <div class="mb-3">
+                <input type="text" name="otp" class="form-control form-control-lg text-center" placeholder="••••••" maxlength="6" required autofocus />
+              </div>
+              <button type="submit" class="btn btn-primary btn-lg w-100">تایید کد</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

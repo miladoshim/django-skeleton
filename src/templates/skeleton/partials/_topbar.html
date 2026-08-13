@@ -1,3 +1,4 @@
+{% load static %}
 <header class="navbar navbar-expand-md d-print-none">
   <div class="container-xl">
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
@@ -131,7 +132,11 @@
       {% if user.is_authenticated %}
         <div class="nav-item dropdown">
           <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown" aria-label="Open user menu">
-            <span class="avatar avatar-sm" style="background-image: url({{ user.get_avatar_url }})"></span>
+            {% if user.profile.avatar %}
+              <span class="avatar avatar-sm" style="background-image: url({{ user.get_avatar_url }})"></span>
+            {% else %}
+              <span class="avatar avatar-sm" style="background-image: url({% static 'images/default_man_avatar.jpg' %})"></span>
+            {% endif %}
             <div class="d-none d-xl-block ps-2">
               <div>{{ user.get_full_name }}</div>
               <div class="mt-1 small text-secondary">{{ user.username }}@</div>

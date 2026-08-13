@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.contrib.auth.forms import UserChangeForm
 from django.core import validators
@@ -472,6 +474,55 @@ class UserAccountEditForm(Form):
                 raise ValidationError("فرمت عکس باید jpg, jpeg, png, gif یا webp باشد")
 
         return avatar
+
+
+class ForgotPasswordForm(forms.Form):
+    identifier = forms.CharField(
+        label="ایمیل یا شماره موبایل",
+        max_length=100,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "example@email.com یا 09123456789",
+                "autofocus": True,
+            }
+        ),
+    )
+
+    def clean_identifier(self):
+        identifier = self.cleaned_data["identifier"].strip()
+
+        if not identifier:
+            raise forms.ValidationError("این فیلد الزامی است")
+
+        return identifier
+
+    def clean(self):
+        cleaned_data = super().clean()
+        identifier = cleaned_data.get("identifier")
+
+        if identifier:
+            is_email = "@" in identifier
+
+            if is_email:
+                # بررسی وجود کاربر با این ایمیل
+                user = User.objects.filter(email__iexact=identifier).first()
+                if not user:
+                    raise forms.ValidationError("کاربری با این ایمیل یافت نشد")
+            else:
+                mobile = self._normalize_mobile(identifier)
+
+                user = User.objects.filter(mobile=mobile).first()
+                if not user:
+                    raise forms.ValidationError("کاربری با این شماره موبایل یافت نشد")
+
+        return cleaned_data
+
+    def _normalize_mobile(self, mobile):
+        """نرمال‌سازی شماره موبایل"""
+        mobile = re.sub(r"[^\d]", "", mobile)
+
+        return mobile
 
 
 # # uploads/forms.py - updated with validators

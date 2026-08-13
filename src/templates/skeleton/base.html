@@ -21,7 +21,9 @@
     <link href="{% static 'css/tabler/tabler-themes.rtl.min.css' %}" rel="stylesheet" />
     <link href="{% static 'css/tabler/demo.min.css' %}" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'css/custom.css' %}" />
+    {% block styles %}
 
+    {% endblock %}
     <style>
       @import url('https://rsms.me/inter/inter.css');
     </style>
@@ -386,6 +388,10 @@
     <script src="{% static 'js/tabler/demo.min.js' %}" defer></script>
     <script src="{% static 'js/tabler/pages.js' %}" defer></script>
     <script src="{% static 'js/custom.js' %}" defer></script>
+
+    {% block scripts %}
+
+    {% endblock %}
     <!-- END DEMO SCRIPTS -->
   </body>
 </html>

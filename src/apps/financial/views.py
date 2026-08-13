@@ -15,7 +15,6 @@ from azbankgateways.exceptions import AZBankGatewaysException
 from .models import Payment
 
 
-# @login_required("apps.accounts:login_view")
 def go_to_gateway_view(request):
     user = request.user
     amount = 20000
