@@ -1,8 +1,7 @@
-<!-- templates/registration/forgot_mobile_verify.html -->
 {% extends 'base.html' %}
 
 {% block content %}
-  <div class="container mt-5">
+  <div class="container my-5">
     <div class="row justify-content-center">
       <div class="col-md-5">
         <div class="card shadow">
@@ -15,9 +14,9 @@
               {% endfor %}
             {% endif %}
 
-            <p class="text-muted text-center">کد ارسال شده به {{ masked_mobile }} را وارد کنید</p>
+            <p class="text-muted text-center">کد ارسال شده به {{ mobile }} را وارد کنید</p>
 
-            <form method="post">
+            <form method="post" action="{% url 'apps.accounts:password_forgot_mobile_verify_view' %}">
               {% csrf_token %}
               <div class="mb-3">
                 <input type="text" name="otp" class="form-control form-control-lg text-center" placeholder="••••••" maxlength="6" required autofocus />

@@ -4,8 +4,8 @@ import time
 import uuid
 import logging
 from django.contrib.auth import authenticate, login, logout
-from django.core import cache
 from django.http import HttpResponseRedirect
+from django.core.cache import cache
 from django.shortcuts import redirect, render
 from django.conf import settings
 from django.urls import reverse, reverse_lazy
@@ -233,46 +233,38 @@ class UserLogoutView(LoginRequiredMixin, View):
         return redirect(self.success_url)
 
 
-class ForgotPasswordView(View):
-
+class ForgotPasswordView(IsUnAuthenticatedMixin, View):
     template_name = "registration/forgot_password.html"
     form_class = ForgotPasswordForm
 
     def get(self, request):
-        if request.user.is_authenticated:
-            return redirect("apps.pages:home_view")
-
         form = self.form_class()
         return render(request, self.template_name, {"form": form})
 
     def post(self, request):
-
         identifier = request.POST.get("identifier", "").strip().lower()
 
         if not identifier:
             messages.error(request, "ایمیل یا موبایل را وارد کنید")
             return redirect("apps.accounts:password_forgot_view")
 
-        # تشخیص ایمیل یا موبایل
         if "@" in identifier:
             return self._handle_email(request, identifier)
         else:
             return self._handle_mobile(request, identifier)
 
     def _handle_email(self, request, email):
-        user = User.objects.filter(email__iexact=email, is_active=True).first()
+        user = User.objects.filter(email__iexact=email).first()
 
         if not user:
             messages.error(request, "کاربری با این ایمیل یافت نشد")
             return redirect("apps.accounts:password_forgot_view")
 
-        # ساخت لینک
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         domain = get_current_site(request).domain
         reset_link = f"http://{domain}{reverse('apps.accounts:password_reset_confirm', kwargs={'uidb64': uid, 'token': token})}"
 
-        # ارسال ایمیل
         try:
             send_mail(
                 subject="بازیابی رمز عبور",
@@ -295,31 +287,27 @@ class ForgotPasswordView(View):
             messages.error(request, "خطا در ارسال ایمیل. لطفا بعدا تلاش کنید")
             return redirect("apps.accounts:password_forgot_view")
 
-    # ---------- موبایل ----------
-
     def _handle_mobile(self, request, mobile):
-        """ارسال کد به موبایل"""
-        # نرمال‌سازی موبایل
         mobile = self._normalize_mobile(mobile)
 
-        user = User.objects.filter(mobile=mobile, is_active=True).first()
+        user = User.objects.filter(mobile=mobile).first()
 
         if not user:
             messages.error(request, "کاربری با این شماره یافت نشد")
             return redirect("apps.accounts:password_forgot_view")
 
-        # ساخت کد ۶ رقمی
-        otp = str(random.randint(100000, 999999))
+        otp_data = {
+            "channel": "p",
+            "receiver": mobile,
+        }
+        otp = OtpRequest.objects.generate_otp(otp_data)
 
-        # ذخیره کد (۵ دقیقه)
-        cache.set(f"otp_{mobile}", otp, timeout=300)
+        cache.set(f"otp_{mobile}", otp.password, timeout=300)
 
-        # ارسال SMS (سرویس شما)
         try:
             # Kavenegar.send_otp(receptor=mobile, otp=otp)
-            pass  # جایگزین با سرویس واقعی
+            print(f"OTP : {otp.password}")
 
-            # ذخیره در session
             request.session["reset_mobile"] = mobile
 
             messages.success(request, "کد یکبار مصرف به موبایل شما ارسال شد")
@@ -356,16 +344,12 @@ class ForgotPasswordMobileVerifyView(View):
             messages.error(request, "لطفا ابتدا شماره موبایل را وارد کنید")
             return redirect("apps.accounts:password_forgot_view")
 
-        # نمایش شماره با ماسک
-        masked_mobile = f"***{mobile[-4:]}"
-
-        return render(request, self.template_name, {"masked_mobile": masked_mobile})
+        return render(request, self.template_name, {"mobile": mobile})
 
     def post(self, request):
         mobile = request.session.get("reset_mobile")
         otp_code = request.POST.get("otp", "").strip()
 
-        # بررسی ورودی
         if not mobile:
             messages.error(request, "لطفا ابتدا شماره موبایل را وارد کنید")
             return redirect("apps.accounts:password_forgot_view")
@@ -374,21 +358,17 @@ class ForgotPasswordMobileVerifyView(View):
             messages.error(request, "کد باید ۶ رقم باشد")
             return render(request, self.template_name)
 
-        # بررسی کد
         saved_otp = cache.get(f"otp_{mobile}")
 
         if saved_otp == otp_code:
-            # پیدا کردن کاربر
-            user = User.objects.filter(mobile=mobile, is_active=True).first()
+            user = User.objects.filter(mobile=mobile).first()
 
             if not user:
                 messages.error(request, "کاربر یافت نشد")
                 return redirect("apps.accounts:password_forgot_view")
 
-            # پاک کردن کد
             cache.delete(f"otp_{mobile}")
 
-            # ذخیره در session
             request.session["reset_user_id"] = str(user.id)
             request.session.pop("reset_mobile", None)
 
@@ -399,8 +379,6 @@ class ForgotPasswordMobileVerifyView(View):
 
 
 class ForgotPasswordMobileResetView(View):
-    """تنظیم رمز جدید با موبایل"""
-
     template_name = "registration/forgot_mobile_reset.html"
 
     def get(self, request):
@@ -450,12 +428,9 @@ class ForgotPasswordMobileResetView(View):
 
 
 class PasswordResetConfirmView(View):
-    """تایید لینک ایمیل و تنظیم رمز جدید"""
-
     template_name = "registration/password_reset_confirm.html"
 
     def get(self, request, uidb64, token):
-        # بررسی توکن
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
@@ -463,12 +438,10 @@ class PasswordResetConfirmView(View):
             messages.error(request, "لینک نامعتبر است")
             return redirect("apps.accounts:password_forgot_view")
 
-        # بررسی اعتبار توکن
         if not default_token_generator.check_token(user, token):
             messages.error(request, "لینک منقضی شده است. لطفا دوباره درخواست دهید.")
             return redirect("apps.accounts:password_forgot_view")
 
-        # ذخیره در session
         request.session["reset_user_id"] = str(user.id)
 
         return render(request, self.template_name)
@@ -483,7 +456,6 @@ class PasswordResetConfirmView(View):
         password = request.POST.get("password", "")
         confirm_password = request.POST.get("confirm_password", "")
 
-        # اعتبارسنجی
         if len(password) < 8:
             messages.error(request, "رمز عبور باید حداقل ۸ کاراکتر باشد")
             return render(request, self.template_name)
@@ -497,7 +469,6 @@ class PasswordResetConfirmView(View):
             user.set_password(password)
             user.save()
 
-            # پاکسازی session
             request.session.pop("reset_user_id", None)
 
             messages.success(request, "رمز عبور شما تغییر کرد. وارد شوید.")

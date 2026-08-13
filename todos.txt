@@ -62,3 +62,7 @@ https://github.com/ebertti/django-admin-easy
 
 
 
+if login with github add github avatar
+
+
+masked_mobile = f"***{mobile[-4:]}"

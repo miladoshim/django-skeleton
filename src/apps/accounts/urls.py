@@ -61,14 +61,12 @@ urlpatterns = [
     # path("auth/register/otp/complete", UserLoginView.as_view(), name="register_view"),
     path("auth/login/", UserLoginView.as_view(), name="login_classic"),
     path("auth/logout/", UserLogoutView.as_view(), name="logout"),
-    # فراموشی رمز
     path("password/forgot/", ForgotPasswordView.as_view(), name="password_forgot_view"),
     path(
         "password/forgot/done/",
         ForgotPasswordDoneView.as_view(),
         name="password_forgot_done_view",
     ),
-    # موبایل
     path(
         "password/forgot/mobile/verify/",
         ForgotPasswordMobileVerifyView.as_view(),
@@ -84,9 +82,8 @@ urlpatterns = [
         ResendOtpView.as_view(),
         name="password_forgot_mobile_resend",
     ),
-    # ایمیل
     path(
-        "reset/<str:uidb64>/<str:token>/",
+        "auth/password/reset/<str:uidb64>/<str:token>/",
         PasswordResetConfirmView.as_view(),
         name="password_reset_confirm",
     ),
