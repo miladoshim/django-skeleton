@@ -389,21 +389,11 @@ class SocialCallbackView(View):
             if not user.is_active:
                 user.is_active = True
                 user.save()
-                user.meta.last_login_at = datetime.datetime.now()
+            if not user.meta.email_verified_at:
+                user.meta.email_verified_at = datetime.datetime.now()
                 user.meta.save()
 
-            # ========== دیباگ ==========
-            print(f"User created: {user.id}")
-            print(f"User active: {user.is_active}")
-            # ========== دیباگ ==========
-
             login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-
-            # ========== دیباگ ==========
-            print(f"After login, authenticated: {request.user.is_authenticated}")
-            print(f"After login, user: {request.user.id}")
-            print(f"Session keys: {request.session.keys()}")
-            # ========== دیباگ ==========
 
             request.session.save()
 

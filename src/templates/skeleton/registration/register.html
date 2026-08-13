@@ -53,8 +53,22 @@
           <div class="form-footer">
             <button type="submit" class="btn btn-primary w-100">ثبت نام کنید</button>
           </div>
+          <div class="hr-text">یا</div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col">
+                <a href="{% url 'apps.accounts:social_login' 'github' %}" class="btn btn-4 w-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-x icon-2">
+                    <path d="M4 4l11.733 16h4.267l-11.733 -16z" />
+                    <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" />
+                  </svg>لاگین با github
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </form>
+
       <div class="text-center text-secondary mt-3">
         قبلا ثبت نام کردید؟ <a href="{% url 'apps.accounts:login_classic' %}" tabindex="-1">لاگین کنید</a>
       </div>

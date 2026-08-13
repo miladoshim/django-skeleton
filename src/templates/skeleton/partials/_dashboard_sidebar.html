@@ -7,7 +7,10 @@
       <a href="{% url 'apps.accounts:dashboard_index' %}" class="list-group-item list-group-item-action d-flex align-items-center {% active 'apps.accounts:dashboard_index' %}">داشبورد</a>
       <a href="{% url 'apps.accounts:dashboard_setting_password' %}" class="list-group-item list-group-item-action d-flex align-items-center {% active 'apps.accounts:dashboard_setting_password' %}">تغییر رمز عبور</a>
       <a href="{% url 'apps.accounts:dashboard_setting' %}" class="list-group-item list-group-item-action d-flex align-items-center {% active 'apps.accounts:dashboard_setting' %}">تنظیمات</a>
-      <a href="#" class="list-group-item list-group-item-action d-flex align-items-center">خروج</a>
+      <form method="post" action="{% url 'apps.accounts:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="list-group-item list-group-item-action d-flex align-items-center">خروج</button>
+      </form>
     </div>
   </div>
 </div>

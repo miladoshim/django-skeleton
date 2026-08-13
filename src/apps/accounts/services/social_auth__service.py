@@ -239,15 +239,10 @@ class SocialAuthService:
                 is_active=True,
             )
             user.meta.last_login_at = datetime.datetime.now()
+            user.meta.email_verified_at = datetime.datetime.now()
             user.meta.save()
 
             logger.info(f"New user created: {user.username}")
-
-        elif not user.is_active:
-            user.is_active = True
-            user.save()
-            user.meta.last_login_at = datetime.datetime.now()
-            user.meta.save()
 
         return user
 

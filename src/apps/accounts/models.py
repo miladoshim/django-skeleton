@@ -111,6 +111,24 @@ class User(AbstractBaseUser, PermissionsMixin):
     def is_banned(self) -> bool:
         return self.meta.is_banned
 
+    @property
+    def is_mobile_verified(self) -> bool:
+        return self.meta.mobile_verified_at
+
+    @property
+    def is_email_verified(self) -> bool:
+        return self.meta.email_verified_at
+
+    @property
+    def has_avatar(self) -> bool:
+        return self.profile.avatar
+
+    def get_avatar_url(self):
+        if self.profile.avatar.url:
+            return self.profile.avatar.url
+        else:
+            return "/images/default_man_avatar.jpg/"
+
     def has_delete_permission(self, request, obj=None):
         if not request.user.is_superuser:
             if obj is not None and obj.id != request.user.id:
@@ -157,14 +175,12 @@ class UserProfile(BaseModel):
         upload_to="users/avatars/%Y/%m/%d/",
         blank=True,
         null=True,
-        default="images/default_man_avatar.jpg",
         verbose_name="تصویر پروفایل",
     )
     banner = models.ImageField(
         upload_to="users/banners/%Y/%m/%d/",
         blank=True,
         null=True,
-        default="images/default_banner.jpg",
         verbose_name="بنر پروفایل",
     )
     gender = models.CharField(

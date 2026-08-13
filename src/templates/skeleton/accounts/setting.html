@@ -1,65 +1,110 @@
 {% extends 'accounts/layout.html' %}
 
+{% load core_tags %} {% load static %}
+
 {% block title %}
   تنظیمات
 {% endblock %}
 
+{% block scripts %}
+  <script>
+    const avatarInput = document.getElementById('avatarInput')
+    const avatarName = document.getElementById('avatarName')
+    
+    avatarInput.addEventListener('change', function (e) {
+      const file = e.target.files[0]
+    
+      if (file) {
+        avatarName.textContent = '📎 ' + file.name
+    
+        const reader = new FileReader()
+        reader.onload = function (event) {
+          const avatarImg = document.querySelector('.avatar-wrapper img, .avatar-wrapper div')
+          if (avatarImg && avatarImg.tagName === 'IMG') {
+            avatarImg.src = event.target.result
+          }
+        }
+        reader.readAsDataURL(file)
+      }
+    })
+  </script>
+{% endblock %}
+
 {% block inner %}
   <div class="col-12 col-md-9 d-flex flex-column">
-    <form action="." method="POST" enctype="multipart/form-data">
+    <form action="{% url 'apps.accounts:dashboard_setting' %}" method="POST" enctype="multipart/form-data">
       {% csrf_token %}
       <div class="card-body">
         <h2 class="mb-4">تنظیمات حساب کاربری</h2>
         <h3 class="card-title">پروفایل</h3>
+
         <div class="row align-items-center">
           <div class="col-auto">
-            <span class="avatar avatar-xl" style="background-image: url(./static/avatars/000m.jpg)"></span>
+            {% if user.has_avatar %}
+              <span class="avatar avatar-xl" style="background-image: url({{ user.get_avatar_url }})"></span>
+            {% else %}
+              <span class="avatar avatar-xl" style="background-image: url({% static 'images/default_man_avatar.jpg' %})"></span>
+            {% endif %}
           </div>
           <div class="col-auto">
-            <a href="#" class="btn btn-1">تغییر آواتار</a>
-          </div>
-          <div class="col-auto">
-            <a href="#" class="btn btn-ghost-danger btn-3">حذف آواتار</a>
+            <label for="avatarInput" class="btn btn-1">تغییر آواتار</label>
+            <input type="file" id="avatarInput" name="avatar" accept="image/*" class="d-none" />
+            <small id="avatarName" class="d-block text-muted mt-1"></small>
           </div>
         </div>
+
         <div class="row g-3 mt-3">
           <div class="col-md">
             <div class="form-label">نام</div>
-            <input type="text" class="form-control" name="first_name" id="first_name" required value="" />
+            <input type="text" class="form-control" name="first_name" id="first_name" required value="{{ user.first_name }}" />
           </div>
           <div class="col-md">
             <div class="form-label">نام خانوادگی</div>
-            <input type="text" class="form-control" name="last_name" id="last_name" required value="" />
+            <input type="text" class="form-control" name="last_name" id="last_name" required value="{{ user.last_name }}" />
           </div>
           <div class="col-md">
             <div class="form-label">نام کاربری</div>
-            <input type="text" class="form-control" name="username" id="username" required value="" />
+            <input type="text" class="form-control" name="username" id="username" required value="{{ user.username }}" />
           </div>
         </div>
         <div class="row g-3 my-3">
           <div class="col-md d-flex justify-content-between">
             <div class="w-100">
               <div class="form-label">ایمیل</div>
-              <input type="text" class="form-control" name="email" id="email" required value="" />
+              <input type="email" class="form-control" name="email" id="email" required value="{{ user.email|default:'' }}" {{ disabled_attributes }} />
             </div>
             <div class="text-center align-self-center mt-auto mx-2">
-              <a href="#" class="btn btn-1">تایید</a>
+              {% if user.is_email_verified %}
+                <button type="button" class="btn btn-1 text-success" disable>تایید شده</button>
+              {% else %}
+                <a href="#" class="btn btn-1">ارسال لینک تایید</a>
+              {% endif %}
             </div>
           </div>
           <div class="col-md d-flex justify-content-between">
             <div class="w-100">
               <div class="form-label">موبایل</div>
-              <input type="text" class="form-control" name="mobile" id="mobile" required value="" />
+              <input type="text" class="form-control" name="mobile" id="mobile" required value="{{ user.mobile|default:'' }}" {{ disabled_attributes }} />
             </div>
             <div class="text-center align-self-center mt-auto mx-2">
-              <a href="#" class="btn btn-1">تایید</a>
+              {% if user.is_mobile_verified %}
+                <button type="button" class="btn btn-1 text-success" disable>تایید شده</button>
+              {% else %}
+                <a href="#" class="btn btn-1">ارسال رمز تایید</a>
+              {% endif %}
             </div>
+          </div>
+        </div>
+        <div class="row g-3 my-3">
+          <div class="col-md">
+            <div class="form-label">بیوگرافی</div>
+            <textarea class="form-control" name="bio" id="bio" required rows="6" placeholder="مختصری درباره خود بنویسید...">{{ user.profile.bio|default:'' }}</textarea>
           </div>
         </div>
       </div>
       <div class="card-footer bg-transparent mt-auto">
         <div class="btn-list justify-content-center">
-          <a href="#" class="btn btn-primary btn-2 w-25">تغییر</a>
+          <button type="submit" class="btn btn-primary btn-2 w-25">تغییر</button>
         </div>
       </div>
     </form>

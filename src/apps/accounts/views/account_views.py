@@ -1,22 +1,18 @@
 import logging
+import os
 from django.contrib import messages
-from rest_framework import status
 from django.utils import timezone
 from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import Http404, HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, redirect, render
+from django.http import Http404, HttpResponseRedirect
+from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
-from django.views.decorators.cache import cache_page
-from django.views.decorators.http import require_http_methods
-from django.views.decorators.vary import vary_on_cookie
+from django.views import View
 from django.views.generic import (
     DetailView,
     FormView,
-    ListView,
     TemplateView,
-    UpdateView,
 )
 from azbankgateways import (
     default_settings as settings,
@@ -49,20 +45,76 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class DashboardSettingView(LoginRequiredMixin, TemplateView):
+class DashboardSettingView(LoginRequiredMixin, View):
+
     template_name = "accounts/setting.html"
     form_class = UserAccountEditForm
-    model = User
-    success_url = reverse_lazy("apps.dashboard:dashboard_setting")
+    success_url = reverse_lazy("apps.accounts:dashboard_setting")
 
-    # def get_object(self, queryset):
-    #     return User.objects.get(pk=self.request.user.pk)
+    def get(self, request):
+        return render(
+            request,
+            self.template_name,
+            {"user": request.user},
+        )
 
-    # def form_valid(self, form):
-    #     return super().form_valid(form)
+    @transaction.atomic
+    def post(self, request):
+        form = self.form_class(
+            data=request.POST,
+            files=request.FILES,
+            user=request.user,
+        )
 
-    # def form_invalid(self, form):
-    #     return super().form_invalid(form)
+        if form.is_valid():
+            user = request.user
+            user.username = form.cleaned_data["username"]
+            user.first_name = form.cleaned_data["first_name"]
+            user.last_name = form.cleaned_data["last_name"]
+
+            user.email = form.cleaned_data["email"]
+
+            form_mobile = form.cleaned_data["mobile"]
+            if user.mobile == form_mobile:
+                pass
+            elif User.objects.filter(mobile=form_mobile).exists():
+                messages.info(request, f"کاربری با شماره {form_mobile} وجود دارد.")
+            else:
+                user.mobile = form_mobile
+                user.meta.mobile_verified_at = None
+
+            user.save()
+            user.profile.bio = form.cleaned_data["bio"]
+            avatar = form.cleaned_data.get("avatar")
+            if avatar:
+                self._save_avatar(user, avatar)
+                user.profile.avatar = avatar
+
+            user.profile.save()
+
+            messages.success(request, "پروفایل با موفقیت ویرایش شد.")
+            return HttpResponseRedirect(self.success_url)
+
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f"{field} - {error}")
+
+        return HttpResponseRedirect(self.success_url)
+
+    def _save_avatar(self, user, avatar):
+
+        if user.profile.avatar and user.profile.avatar != avatar:
+            self._delete_old_avatar(user.profile.avatar.path)
+
+        user.profile.avatar = avatar
+        user.profile.save()
+
+    def _delete_old_avatar(self, path):
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+        except Exception:
+            pass
 
 
 class DashboardChangePasswordView(LoginRequiredMixin, FormView):

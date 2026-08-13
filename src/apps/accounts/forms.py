@@ -344,6 +344,7 @@ class UserAccountEditForm(Form):
     first_name = forms.CharField(
         validators=[
             validators.MinLengthValidator(3),
+            validators.MaxLengthValidator(20),
         ],
         label="نام",
         required=True,
@@ -353,6 +354,7 @@ class UserAccountEditForm(Form):
     last_name = forms.CharField(
         validators=[
             validators.MinLengthValidator(3),
+            validators.MaxLengthValidator(20),
         ],
         label="نام خانوادگی",
         required=True,
@@ -361,9 +363,21 @@ class UserAccountEditForm(Form):
         ),
     )
 
+    username = forms.CharField(
+        validators=[
+            validators.MinLengthValidator(6),
+            validators.MaxLengthValidator(30),
+        ],
+        label="نام کاربری",
+        required=True,
+        widget=forms.TextInput(
+            attrs={"placeholder": "نام کاربری", "class": "form-control"},
+        ),
+    )
+
     email = forms.EmailField(
         label="ایمیل",
-        required=False,
+        required=True,
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
@@ -373,11 +387,9 @@ class UserAccountEditForm(Form):
 
     mobile = forms.CharField(
         label="موبایل",
-        required=False,
+        required=True,
         widget=forms.TextInput(
             attrs={
-                "disabled": "disabled",
-                "readonly": "readonly",
                 "class": "form-control",
             },
         ),
@@ -386,57 +398,80 @@ class UserAccountEditForm(Form):
     bio = forms.CharField(
         validators=[
             validators.MinLengthValidator(10),
+            validators.MaxLengthValidator(300),
         ],
         label="بیوگرافی",
         required=True,
         widget=forms.Textarea(
-            attrs={"placeholder": "بیوگرافی", "class": "form-control"},
-        ),
-    )
-
-
-class UserProfileEditForm(ModelForm):
-    # avatar = forms.ImageField(widget=ImageUploaderWidget())
-
-    bio = forms.CharField(
-        label="بیوگرافی",
-        widget=forms.Textarea(
             attrs={
+                "placeholder": "بیوگرافی",
                 "class": "form-control",
-                "style": "text-align: right;direction: ltr;line-height: 24px;",
-            }
+                "rows": 6,
+            },
         ),
-        required=True,
     )
-    # gender = forms.ChoiceField(
-    #     choices=Gender,
-    #     widget=forms.RadioSelect,
-    # )
 
-    class Meta:
-        model = UserProfile
-        fields = [
-            "avatar",
-            "gender",
-            "bio",
-        ]
-        labels = {
-            "avatar": "تصویر پروفایل",
-        }
-        widgets = {
-            "first_name": forms.TextInput(attrs={"class": "form-control"}),
-            "last_name": forms.TextInput(attrs={"class": "form-control"}),
-            "avatar": forms.ClearableFileInput(attrs={"class": "form-control"}),
-        }
+    avatar = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={"class": "form-control", "accept": "image/*"}),
+    )
 
-    # def __init__(self, *args, **kwargs):
-    #     super(UserProfileEditForm, self).__init__(*args, **kwargs)
-    #     self.fields["birthday"] = JalaliDateField(
-    #         label="تاریخ تولد", widget=AdminJalaliDateWidget
-    #     )
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
 
-    def save(self, commit):
-        super(UserProfileEditForm, self).save(commit=False)
+        if self.user:
+            self.fields["first_name"].initial = self.user.first_name or ""
+            self.fields["last_name"].initial = self.user.last_name or ""
+            if hasattr(self.user, "profile"):
+                self.fields["bio"].initial = self.user.profile.bio or ""
+
+            avatar = self._get_avatar()
+            if avatar:
+                self.fields["avatar"].initial = avatar
+
+    def clean_first_name(self):
+        first_name = self.cleaned_data.get("first_name", "").strip()
+        return first_name
+
+    def clean_last_name(self):
+        last_name = self.cleaned_data.get("last_name", "").strip()
+        return last_name
+
+    def clean_bio(self):
+        bio = self.cleaned_data.get("bio", "").strip()
+        return bio
+
+    def clean_mobile(self):
+        mobile = self.cleaned_data.get("mobile", "").strip()
+
+        # if not User.objects.filter(mobile=mobile).first():
+        return mobile
+        # else:
+        #     raise ValidationError(f"کابری با شماره {mobile} وجود دارد")
+
+    def _get_avatar(self):
+        """دریافت آواتار از پروفایل یا مدل کاربر"""
+        if hasattr(self.user, "profile"):
+            return self.user.profile.avatar or getattr(self.user, "avatar", None)
+        return getattr(self.user, "avatar", None)
+
+    def clean_avatar(self):
+        """اعتبارسنجی آواتار"""
+        avatar = self.cleaned_data.get("avatar")
+
+        if avatar:
+            # بررسی حجم (حداکثر 2 مگابایت)
+            if avatar.size > 2 * 1024 * 1024:
+                raise ValidationError("حجم عکس نباید بیشتر از 2 مگابایت باشد")
+
+            # بررسی پسوند
+            allowed_extensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"]
+            ext = avatar.name.lower()
+            if not any(ext.endswith(e) for e in allowed_extensions):
+                raise ValidationError("فرمت عکس باید jpg, jpeg, png, gif یا webp باشد")
+
+        return avatar
 
 
 # # uploads/forms.py - updated with validators

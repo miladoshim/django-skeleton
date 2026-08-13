@@ -33,6 +33,13 @@ def custom_date(value, arg="%c"):
     return JalaliDate(value, locale=("fa")).strftime("%c")
 
 
+@register.filter
+def disabled_attributes(user):
+    if user.is_email_verified:
+        return "disabled"
+    return ""
+
+
 # {{ my_date|custom_date:"d F Y" }}
 
 
