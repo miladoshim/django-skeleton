@@ -206,11 +206,6 @@ class UserMeta(BaseModel):
         blank=True,
         verbose_name="تاریخ آخرین لاگین",
     )
-    # last_login_failed_at = models.DateTimeField(
-    #     "last failed login",
-    #     null=True,
-    #     blank=True,
-    # )
 
     last_login_ip = models.GenericIPAddressField(
         null=True,
@@ -274,30 +269,96 @@ class UserMeta(BaseModel):
     # two_factor_enabled = models.BooleanField("2FA enabled", default=False)
 
 
-# class LoginHistory(models.Model):
-#     """تاریخچه ورود کاربران"""
+class SocialAccountProvider(models.TextChoices):
+    GITHUB = "github"
+    GITLAB = "gitlab"
+    BITBUCKET = "bitbucket"
+    GOOGLE = "google"
 
-#     user = models.ForeignKey(
-#         User, on_delete=models.CASCADE, related_name="login_history"
-#     )
-#     login_time = models.DateTimeField("login time", auto_now_add=True)
-#     logout_time = models.DateTimeField("logout time", null=True, blank=True)
-#     ip_address = models.GenericIPAddressField("IP address", null=True)
-#     user_agent = models.TextField("user agent", blank=True)
-#     device = models.CharField("device", max_length=100, blank=True)
-#     browser = models.CharField("browser", max_length=100, blank=True)
-#     os = models.CharField("operating system", max_length=100, blank=True)
-#     location = models.CharField("location", max_length=100, blank=True)
-#     is_successful = models.BooleanField("successful login", default=True)
-#     auth_method = models.CharField("auth method", max_length=50, blank=True)
 
-#     class Meta:
-#         verbose_name = "login history"
-#         verbose_name_plural = "login histories"
-#         ordering = ["-login_time"]
+class SocialAccount(BaseModel):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="social_accounts",
+    )
+    provider = models.CharField(
+        verbose_name="provider",
+        choices=SocialAccountProvider.choices,
+    )
+    provider_id = models.CharField(
+        max_length=255,
+        db_index=True,
+    )
+    provider_username = models.CharField(
+        max_length=255,
+        blank=True,
+    )
+    provider_email = models.EmailField(blank=True)
+    provider_avatar_url = models.URLField(blank=True)
+    access_token = models.TextField()
+    refresh_token = models.TextField(blank=True)
+    token_expires_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+    extra_data = models.JSONField(default=dict)
+    is_active = models.BooleanField(default=True)
 
-#     def __str__(self):
-#         return f"{self.user.email} - {self.login_time}"
+    class Meta:
+        verbose_name = "حساب سوشیال"
+        verbose_name_plural = "حسابهای سوشیال"
+        unique_together = [["user", "provider"]]
+        indexes = [
+            models.Index(fields=["provider", "provider_id"]),
+            models.Index(fields=["user", "provider"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.provider}"
+
+    @property
+    def is_token_valid(self):
+        """بررسی اعتبار توکن"""
+        if self.token_expires_at:
+            return self.token_expires_at > timezone.now()
+        return True
+
+
+class AuthenticatedHistoryMethod(models.IntegerChoices):
+    SOCIAL_GITHUB = 1, "github"
+    SOCIAL_GITLAB = 2, "gitlab"
+    SOCIAL_GOOGLE = 3, "google"
+    CLASSIC_LOGIN = 4, "classic"
+    OTP = 5, "otp"
+
+
+class AuthenticateHistory(BaseModel):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="login_history",
+    )
+    login_at = models.DateTimeField("login time", auto_now_add=True)
+    logout_at = models.DateTimeField("logout time", null=True, blank=True)
+    ip_address = models.GenericIPAddressField("IP address", null=True)
+    user_agent = models.TextField("user agent", blank=True)
+    device = models.CharField("device", max_length=100, blank=True)
+    browser = models.CharField("browser", max_length=100, blank=True)
+    os = models.CharField("operating system", max_length=100, blank=True)
+    location = models.CharField("location", max_length=100, blank=True)
+    is_successful = models.BooleanField("successful login", default=True)
+    auth_method = models.PositiveSmallIntegerField(
+        "auth method", choices=AuthenticatedHistoryMethod.choices
+    )
+
+    class Meta:
+        verbose_name = "login history"
+        verbose_name_plural = "login histories"
+        ordering = ["-login_at"]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.login_at}"
 
 
 class OtpChannel(models.TextChoices):

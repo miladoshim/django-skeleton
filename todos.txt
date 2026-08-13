@@ -51,7 +51,6 @@ https://django-compressor.readthedocs.io/en/stable/index.html
 https://django-components.github.io/django-components/latest/overview/welcome/
 https://django-polymorphic.readthedocs.io/en/latest/quickstart.html
 https://github.com/fabiocaccamo/django-treenode
-https://github.com/pennersr/django-allauth/
 https://django-organizations.readthedocs.io/en/latest/
 https://django-import-export.readthedocs.io/
 https://drf-spectacular.readthedocs.io/en/latest/index.html

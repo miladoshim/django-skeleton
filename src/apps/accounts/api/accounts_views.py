@@ -109,6 +109,55 @@ def user_profile_update(request):
     return Response({**serializer.error, "success": False})
 
 
+class ChangePasswordAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        old_password = request.data.get("old_password")
+        new_password = request.data.get("password")
+        confirm_password = request.data.get("password_confirmation")
+
+        # اعتبارسنجی
+        if not user.check_password(old_password):
+            return Response(
+                {"detail": "رمز عبور فعلی اشتباه است"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if new_password != confirm_password:
+            return Response(
+                {"detail": "رمز عبورها یکسان نیستند"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if len(new_password) < 8:
+            return Response(
+                {"detail": "رمز عبور حداقل ۸ کاراکتر باید باشد"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # تغییر رمز
+        user.set_password(new_password)
+        user.save()
+
+        # ارسال ایمیل اطلاعرسانی
+        self._send_notification(user)
+
+        return Response(
+            {"detail": "رمز عبور با موفقیت تغییر کرد"}, status=status.HTTP_200_OK
+        )
+
+    def _send_notification(self, user):
+        """ارسال ایمیل اطلاعرسانی"""
+        send_mail(
+            subject="تغییر رمز عبور",
+            message=f"سلام {user.username}، رمز عبور شما با موفقیت تغییر کرد.",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+        )
+
+
 # class UserChangePasswordAPIView(APIView):
 #     permission_classes = [IsAuthenticated]
 

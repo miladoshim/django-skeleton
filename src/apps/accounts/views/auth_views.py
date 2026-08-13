@@ -1,7 +1,10 @@
 import datetime
+import uuid
+import logging
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, render
+from django.conf import settings
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
@@ -29,10 +32,13 @@ from apps.accounts.forms import (
     UserOtpForm,
     UserOtpVerifyForm,
 )
+from apps.accounts.services.social_auth__service import SocialAuthService
 from apps.accounts.tasks import send_otp_password
-from apps.accounts.models import OtpRequest, User
+from apps.accounts.models import OtpRequest, SocialAccount, User
 from utils.decorators import anonymous_required
 from utils.mixins import IsUnAuthenticatedMixin
+
+logger = logging.getLogger(__name__)
 
 
 class UserClassicRegisterView(TemplateView):
@@ -323,3 +329,133 @@ class PasswordChangeDoneView(TemplateView):
 
 class PasswordResetView(BasePasswordResetView):
     success_url = reverse_lazy("apps.accounts:password_reset_done")
+
+
+def get_authorize_url(provider):
+    urls = {
+        "github": f"https://github.com/login/oauth/authorize?client_id={settings.GITHUB_CLIENT_ID}&redirect_uri={settings.GITHUB_REDIRECT_URI}&scope=user:email",
+        "google": f"https://accounts.google.com/o/oauth2/v2/auth?client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.GOOGLE_REDIRECT_URI}&response_type=code&scope=openid email profile",
+        "gitlab": f"https://gitlab.com/oauth/authorize?client_id={settings.GITLAB_CLIENT_ID}&redirect_uri={settings.GITLAB_REDIRECT_URI}&scope=read_user",
+    }
+
+    return urls.get(provider)
+
+
+class SocialLoginView(View):
+
+    def get(self, request, provider):
+        try:
+            state = str(uuid.uuid4())
+            request.session["oauth_state"] = state
+            request.session["oauth_provider"] = provider
+
+            service = SocialAuthService(provider)
+            url = service.get_authorize_url(state)
+
+            return redirect(url)
+
+        except ValueError as e:
+            logger.error(f"Login error: {str(e)}")
+            messages.error(request, f"خطا: {str(e)}")
+            return redirect("apps.accounts:login_classic")
+
+
+class SocialCallbackView(View):
+
+    def get(self, request, provider):
+        code = request.GET.get("code")
+        state = request.GET.get("state")
+        error = request.GET.get("error")
+
+        if error:
+            messages.error(request, f"ورود با {provider} لغو شد")
+            return redirect("apps.accounts:login_classic")
+
+        saved_state = request.session.get("oauth_state")
+        saved_provider = request.session.get("oauth_provider")
+
+        if provider != saved_provider or state != saved_state:
+            messages.error(request, "خطای امنیتی: درخواست نامعتبر")
+            return redirect("apps.accounts:login_classic")
+
+        if not code:
+            messages.error(request, "کد اعتبارسنجی دریافت نشد")
+            return redirect("apps.accounts:login_classic")
+
+        try:
+            service = SocialAuthService(provider, code=code)
+            user, info = service.login()
+
+            if not user.is_active:
+                user.is_active = True
+                user.save()
+                user.meta.last_login_at = datetime.datetime.now()
+                user.meta.save()
+
+            # ========== دیباگ ==========
+            print(f"User created: {user.id}")
+            print(f"User active: {user.is_active}")
+            # ========== دیباگ ==========
+
+            login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+
+            # ========== دیباگ ==========
+            print(f"After login, authenticated: {request.user.is_authenticated}")
+            print(f"After login, user: {request.user.id}")
+            print(f"Session keys: {request.session.keys()}")
+            # ========== دیباگ ==========
+
+            request.session.save()
+
+            request.session.pop("oauth_state", None)
+            request.session.pop("oauth_provider", None)
+
+            messages.success(request, f"با موفقیت لاگین کردید!")
+
+            next_url = request.GET.get("next")
+            if next_url:
+                return redirect(next_url)
+
+            return redirect("apps.pages:home_view")
+
+        except ValueError as e:
+            logger.error(f"Callback error: {str(e)}")
+            messages.error(request, f"خطا در ورود: {str(e)}")
+            return redirect("apps.accounts:login_classic")
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}")
+            messages.error(request, "خطای غیرمنتظره در ورود")
+            return redirect("apps.accounts:login_classic")
+
+
+class SocialAccountsListView(LoginRequiredMixin, View):
+
+    template_name = "accounts/social_accounts.html"
+    login_url = "apps.accounts:login_classic"
+
+    def get(self, request):
+        accounts = SocialAccount.objects.filter(user=request.user)
+
+        context = {
+            "accounts": accounts,
+            "providers": ["github", "google", "gitlab"],
+        }
+
+        return render(request, self.template_name, context)
+
+
+class SocialDisconnectView(LoginRequiredMixin, View):
+
+    login_url = "apps.accounts:login_classic"
+
+    def post(self, request, provider):
+        try:
+            service = SocialAuthService(provider)
+            service.disconnect(request.user)
+
+            messages.success(request, f"حساب {provider} با موفقیت قطع شد")
+            return redirect("apps.accounts:social_accounts")
+
+        except Exception as e:
+            messages.error(request, f"خطا در قطع اتصال: {str(e)}")
+            return redirect("apps.accounts:social_accounts")

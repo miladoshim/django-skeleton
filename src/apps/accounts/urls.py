@@ -1,9 +1,4 @@
-from django.urls import include, path
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-    TokenVerifyView,
-)
+from django.urls import path
 from apps.accounts.views.account_views import (
     DashboardView,
     DashboardSettingView,
@@ -11,6 +6,10 @@ from apps.accounts.views.account_views import (
     UserProfileView,
 )
 from apps.accounts.views.auth_views import (
+    SocialAccountsListView,
+    SocialCallbackView,
+    SocialDisconnectView,
+    SocialLoginView,
     UserLoginView,
     UserClassicRegisterView,
     UserOTPRegisterRequestView,
@@ -22,7 +21,6 @@ from apps.accounts.views.auth_views import (
 app_name = "apps.accounts"
 
 urlpatterns = [
-    path("accounts/", include("allauth.urls")),
     # Account Setting
     path("@<str:username>/", UserProfileView.as_view(), name="user_profile"),
     path("accounts/", DashboardView.as_view(), name="dashboard_index"),
@@ -71,4 +69,20 @@ urlpatterns = [
     # path("auth/token/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     # path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     # path("auth/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
+    path("auth/login/<str:provider>/", SocialLoginView.as_view(), name="social_login"),
+    path(
+        "auth/callback/<str:provider>/",
+        SocialCallbackView.as_view(),
+        name="social_callback",
+    ),
+    path(
+        "auth/social/accounts/",
+        SocialAccountsListView.as_view(),
+        name="social_accounts",
+    ),
+    path(
+        "auth/disconnect/<str:provider>/",
+        SocialDisconnectView.as_view(),
+        name="social_disconnect",
+    ),
 ]

@@ -25,7 +25,7 @@ class EmailPhoneUsernameBackend(ModelBackend):
         except User.MultipleObjectsReturned:
             return None
 
-        if user and user.check_password(password) and self.user_can_authenticate(user):
+        if user and user.check_password(password):
             # user.register_login_attempt(success=True)
 
             return user

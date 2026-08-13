@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from import_export.admin import ImportExportModelAdmin
 from .models import (
     OtpRequest,
+    SocialAccount,
     UserMeta,
     UserProfile,
 )
@@ -151,3 +152,41 @@ class OtpRequestAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+
+@admin.register(SocialAccount)
+class SocialAccountAdmin(admin.ModelAdmin):
+
+    list_display = [
+        "user",
+        "provider",
+        "provider_username",
+        "provider_email",
+        "created_at",
+    ]
+    list_filter = ["provider", "created_at"]
+    search_fields = [
+        "user__email",
+        "user__username",
+        "provider_username",
+        "provider_email",
+    ]
+    readonly_fields = ["created_at", "updated_at"]
+
+    fieldsets = (
+        ("کاربر", {"fields": ("user", "provider")}),
+        (
+            "اطلاعات سرویس",
+            {
+                "fields": (
+                    "provider_id",
+                    "provider_username",
+                    "provider_email",
+                    "provider_avatar_url",
+                )
+            },
+        ),
+        ("توکن‌ها", {"fields": ("access_token", "refresh_token", "token_expires_at")}),
+        ("اطلاعات اضافی", {"fields": ("extra_data",)}),
+        ("زمان‌بندی", {"fields": ("created_at", "updated_at")}),
+    )

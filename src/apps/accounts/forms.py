@@ -285,24 +285,36 @@ class ResetPasswordMobileForm(Form):
 
 
 class ChangePasswordForm(Form):
-    old_password = forms.PasswordInput()
-    password = forms.PasswordInput()
-    password_confirmation = forms.PasswordInput()
 
-    def clean_old_password(self):
-        old_password = self.cleaned_data["old_password"]
-        if not self.user.check_password(old_password):
-            raise ValidationError(
-                "گذرواژه فعلی تان اشتباه وارد شد. لطفا دوباره تلاش کنید"
-            )
-        return old_password
+    old_password = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={"placeholder": "رمز عبور فعلی", "class": "form-control"},
+        ),
+        validators=[
+            validators.MinLengthValidator(8),
+        ],
+        label="رمز عبور فعلی",
+    )
 
-    def clean_password(self):
-        password = self.cleaned_data["password"]
-        if len(password) < 8:
-            raise forms.ValidationError("رمز عبور باید بیشتر از 8 کاراکتر باشد")
-        else:
-            return password
+    password = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={"placeholder": "رمز عبور جدید", "class": "form-control"},
+        ),
+        validators=[
+            validators.MinLengthValidator(8),
+        ],
+        label="رمز عبور جدید",
+    )
+
+    password_confirmation = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={"placeholder": "تکرار رمز عبور جدید", "class": "form-control"},
+        ),
+        validators=[
+            validators.MinLengthValidator(8),
+        ],
+        label="تکرار رمز عبور جدید",
+    )
 
     def clean_password_confirmation(self):
         password = self.cleaned_data.get("password")

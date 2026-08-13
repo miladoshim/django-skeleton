@@ -6,13 +6,14 @@ from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404, HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.vary import vary_on_cookie
 from django.views.generic import (
     DetailView,
+    FormView,
     ListView,
     TemplateView,
     UpdateView,
@@ -40,9 +41,8 @@ from apps.accounts.models import (
 ####### Start Dashboard #############
 
 
-class DashboardView(TemplateView):
+class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "accounts/dashboard.html"
-    login_url = reverse_lazy("apps.accounts:login_view")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -51,9 +51,9 @@ class DashboardView(TemplateView):
 
 class DashboardSettingView(LoginRequiredMixin, TemplateView):
     template_name = "accounts/setting.html"
-    # form_class = UserAccountEditForm
-    # model = User
-    # success_url = reverse_lazy("apps.dashboard:dashboard_setting")
+    form_class = UserAccountEditForm
+    model = User
+    success_url = reverse_lazy("apps.dashboard:dashboard_setting")
 
     # def get_object(self, queryset):
     #     return User.objects.get(pk=self.request.user.pk)
@@ -65,8 +65,37 @@ class DashboardSettingView(LoginRequiredMixin, TemplateView):
     #     return super().form_invalid(form)
 
 
-class DashboardChangePasswordView(TemplateView):
+class DashboardChangePasswordView(LoginRequiredMixin, FormView):
     template_name = "accounts/change_password.html"
+    form_class = ChangePasswordForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["password_form"] = self.get_form()
+        return context
+
+    def form_valid(self, form):
+        user = self.request.user
+
+        if not user.check_password(form.cleaned_data["old_password"]):
+            messages.error(self.request, "رمز عبور فعلی شما درست نیست")
+            return self.form_invalid(form)
+
+        user.set_password(form.cleaned_data["password"])
+        user.save()
+
+        messages.success(self.request, "رمز عبور شما با موفقیت تغییر کرد")
+        return HttpResponseRedirect(
+            reverse(
+                "apps.accounts:dashboard_setting_password",
+            )
+        )
+
+    def form_invalid(self, form):
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f"{field} - {error}")
+        return super().form_invalid(form)
 
 
 class UserProfileView(DetailView):
@@ -122,54 +151,15 @@ def edit_profile(request):
         )
 
 
-@login_required
-def change_password(request):
-    if request.method == "POST":
-        user = request.user
-        form = ChangePasswordForm(request.POST)
-        if form.is_valid():
-            old_password = form.data.get("old_password")
-            password = form.data.get("password")
-            password_confirmation = form.data.get("password_confirmation")
-            if not user.check_password(old_password):
-                messages.error(request, "رمز عبور فعلی شما درست نیست")
+# # @method_decorator(vary_on_cookie, name="dispatch")
+# # @method_decorator(cache_page(60 * 15), name="dispatch")
+# class CommentListView(LoginRequiredMixin, ListView):
+#     context_object_name = "comments"
+#     paginate_by = 24
+#     template_name = "accounts/comments.html"
 
-            elif password != password_confirmation:
-                messages.error(request, "رمز عبور ها یکی نیستند")
-
-            else:
-                user.set_password(password)
-                user.save()
-                # send notification to user
-                messages.success(request, "رمز عبور شما تغییر کرد")
-                return HttpResponseRedirect(
-                    reverse(
-                        "apps.accounts:login_view",
-                    )
-                )
-
-        else:
-            for error in list(form.errors.values()):
-                messages.error(request, error)
-                return HttpResponseRedirect(
-                    reverse(
-                        "apps.accounts:password_change",
-                    )
-                )
-    else:
-        form = ChangePasswordForm()
-    return render(request, "accounts/change_password.html", {"password_form": form})
-
-
-# @method_decorator(vary_on_cookie, name="dispatch")
-# @method_decorator(cache_page(60 * 15), name="dispatch")
-class CommentListView(LoginRequiredMixin, ListView):
-    context_object_name = "comments"
-    paginate_by = 24
-    template_name = "accounts/comments.html"
-
-    def get_queryset(self):
-        return Comment.objects.filter(user=self.request.user)
+#     def get_queryset(self):
+#         return Comment.objects.filter(user=self.request.user)
 
 
 @login_required

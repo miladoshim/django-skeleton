@@ -80,13 +80,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.github",
-    "allauth.socialaccount.providers.gitlab",
-    "allauth.socialaccount.providers.google",
     "corsheaders",
+    "social_django",
     "import_export",
     "drf_spectacular",
     "drf_spectacular_sidecar",
@@ -114,6 +109,7 @@ INSTALLED_APPS = [
     "azbankgateways",
     "debug_toolbar",
     "iranian_cities",
+    "rest_framework.authtoken",
     "cache_cleaner",
     "schema_viewer",
     "star_ratings",
@@ -140,7 +136,6 @@ MIDDLEWARE = [
     "django_minify_html.middleware.MinifyHtmlMiddleware",
     "apps.core.middlewares.RequestIdMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
-    "allauth.account.middleware.AccountMiddleware",
 ]
 
 if DEBUG:
@@ -161,6 +156,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "social_django.context_processors.backends",
+                "social_django.context_processors.login_redirect",
                 "apps.core.context_processors.global_variables",
             ],
             "builtins": [
@@ -182,7 +179,6 @@ TEMPLATES = [
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",
     "apps.accounts.backends.EmailPhoneUsernameBackend",
 ]
 
@@ -224,8 +220,11 @@ USE_I18N = True
 USE_TZ = True
 
 LOGIN_REDIRECT_URL = "apps.pages:home_view"
-LOGIN_URL = "apps.accounts:login_view"
+LOGIN_URL = "apps.accounts:login_classic"
 LOGOUT_REDIRECT_URL = "apps.pages:home_view"
+ACCOUNT_LOGOUT_REDIRECT_URL = "apps.accounts:login_classic"
+ACCOUNT_SIGNUP_REDIRECT_URL = "apps.pages:home_view"
+
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -776,13 +775,23 @@ MATOMO_SITE_ID = config("MATOMO_SITE_ID", cast=int, default=1)
 
 ATOMIC_REQUESTS = True
 
-
-SOCIALACCOUNT_PROVIDERS = {
-    "google": {
-        "APP": {
-            "client_id": "123",
-            "secret": "456",
-            "key": "",
-        }
-    }
+REST_AUTH = {
+    "USE_JWT": True,
+    "JWT_AUTH_COOKIE": "access_token",
+    "JWT_AUTH_REFRESH_COOKIE": "refresh_token",
+    "JWT_AUTH_HTTPONLY": True,
 }
+
+GITHUB_CLIENT_ID = config("GITHUB_CLIENT_ID", "")
+GITHUB_CLIENT_SECRET = config("GITHUB_CLIENT_SECRET")
+GITHUB_REDIRECT_URI = config("GITHUB_REDIRECT_URI", "")
+
+GITLAB_CLIENT_ID = "YOUR_GITLAB_CLIENT_ID"
+GITLAB_CLIENT_SECRET = "YOUR_GITLAB_CLIENT_SECRET"
+GITLAB_REDIRECT_URI = "http://localhost:8000/accounts/callback/gitlab/"
+
+GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET = "YOUR_GOOGLE_CLIENT_SECRET"
+GOOGLE_REDIRECT_URI = "http://localhost:8000/accounts/callback/google/"
+
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = "/"

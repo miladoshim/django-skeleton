@@ -1,9 +1,13 @@
-from rest_framework.views import APIView
+from django.contrib import messages
+import logging
+from django.http import JsonResponse
+from rest_framework.views import APIView, View
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
 from rest_framework import permissions, status
 from apps.accounts.api.serializers import UserEmailRegisterSerializer
 from apps.accounts.models import User
+from apps.accounts.services.social_auth__service import SocialAuthService
 
 
 # Classic Register with email/password
@@ -29,7 +33,7 @@ class UserRegistrationAPIView(CreateAPIView):
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -93,3 +97,89 @@ def logout():
 
 def logout():
     pass
+
+
+class SocialLoginAPIView(APIView):
+    """ورود از طریق API"""
+
+    permission_classes = []
+
+    def post(self, request, provider):
+        code = request.data.get("code")
+
+        try:
+            service = SocialAuthService(provider, code)
+            user, info = service.login()
+
+            # ساخت توکن JWT
+            from rest_framework_simplejwt.tokens import RefreshToken
+
+            refresh = RefreshToken.for_user(user)
+
+            return Response(
+                {
+                    "access": str(refresh.access_token),
+                    "user": {
+                        "id": user.id,
+                        "username": user.username,
+                        "email": user.email,
+                    },
+                }
+            )
+        except ValueError as e:
+            return Response({"error": str(e)}, status=400)
+
+
+# ---------- API Views ----------
+
+
+class SocialLoginAPIView(View):
+    """
+    ورود از طریق API (برای فرانت اند)
+    POST /api/auth/social/{provider}/
+
+    فرمت درخواست:
+    {
+        "code": "...",  # یا access_token
+    }
+    """
+
+    def post(self, request, provider):
+        import json
+
+        try:
+            body = json.loads(request.body)
+            code = body.get("code")
+            token = body.get("access_token")
+
+            if not code and not token:
+                return JsonResponse(
+                    {"error": "code یا access_token الزامی است"}, status=400
+                )
+
+            # ورود با سرویس
+            service = SocialAuthService(provider, code=code, token=token)
+            user, info = service.login()
+
+            # ساخت توکن JWT (اگر نیاز دارید)
+            # from rest_framework_simplejwt.tokens import RefreshToken
+            # refresh = RefreshToken.for_user(user)
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "user": {
+                        "id": str(user.id),
+                        "username": user.username,
+                        "email": user.email,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                    },
+                }
+            )
+
+        except ValueError as e:
+            return JsonResponse({"error": str(e)}, status=400)
+        except Exception as e:
+            logger.error(f"API login error: {str(e)}")
+            return JsonResponse({"error": "خطای غیرمنتظره"}, status=500)
