@@ -7,3 +7,12 @@
   font-family: Vazirmatn;
   font-size: 1rem;
 }
+
+.post-card-text {
+  font-size: 0.8rem;
+}
+
+.post-detail-info {
+  display: flex;
+  justify-content: center;
+}

@@ -389,7 +389,7 @@ class PasswordResetHistory(models.Model):
 
 
 class OtpChannel(models.TextChoices):
-    PHONE = "p", "Phone"
+    MOBILE = "m", "Mobile"
     EMAIL = "e", "Email"
 
 
@@ -405,7 +405,7 @@ class OtpRequest(BaseModel):
         "channel",
         max_length=1,
         choices=OtpChannel.choices,
-        default=OtpChannel.PHONE,
+        default=OtpChannel.MOBILE,
     )
     receiver = models.CharField(max_length=256)  # mobile or email
     password = models.CharField(

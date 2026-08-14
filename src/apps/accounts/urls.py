@@ -35,8 +35,7 @@ urlpatterns = [
         DashboardChangePasswordView.as_view(),
         name="dashboard_setting_password",
     ),
-    # path("accounts/comments", UserLoginView.as_view(), name="account_setting"),
-    # # Authentication
+    # Authentication
     path("auth/register/", UserClassicRegisterView.as_view(), name="register_classic"),
     path(
         "auth/register/otp/request/",

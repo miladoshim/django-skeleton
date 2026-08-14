@@ -34,6 +34,7 @@ from apps.accounts.forms import (
     ClassicLoginForm,
     ForgotPasswordForm,
     ResetPasswordMobileForm,
+    UserEmailRegisterForm,
     UserOtpCompleteForm,
     UserOtpForm,
     UserOtpVerifyForm,
@@ -41,7 +42,7 @@ from apps.accounts.forms import (
 from apps.accounts.services.forgot_password_service import ForgotPasswordService
 from apps.accounts.services.social_auth__service import SocialAuthService
 from apps.accounts.tasks import send_otp_password
-from apps.accounts.models import OtpRequest, SocialAccount, User
+from apps.accounts.models import OtpChannel, OtpRequest, SocialAccount, User
 from utils.decorators import anonymous_required
 from utils.mixins import IsUnAuthenticatedMixin
 from utils.validators import validate_password_strength
@@ -49,8 +50,15 @@ from utils.validators import validate_password_strength
 logger = logging.getLogger(__name__)
 
 
-class UserClassicRegisterView(TemplateView):
+class UserClassicRegisterView(IsUnAuthenticatedMixin, FormView):
     template_name = "registration/register.html"
+    form_class = UserEmailRegisterForm
+
+    def form_valid(self, form):
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        return super().form_invalid(form)
 
 
 class UserOTPRegisterRequestView(TemplateView):
@@ -61,127 +69,147 @@ class UserOTPRegisterVerifyView(TemplateView):
     template_name = "registration/otp_verify.html"
 
 
-@anonymous_required("apps.pages:home_view")
-def user_register_otp(request):
-    if request.method == "POST":
-        form = UserOtpForm(data=request.POST)
-        if form.is_valid():
-            mobile = form.cleaned_data["mobile"]
-            user = User.objects.filter(mobile=mobile, is_active=True).exists()
-            if user:
+@method_decorator(anonymous_required("apps.pages:home_view"), name="dispatch")
+class UserRegisterOtpView(View):
+    template_name = "registration/register_otp.html"
+    form_class = UserOtpForm
+
+    def get(self, request):
+        form = self.form_class()
+        return render(request, self.template_name, {"form": form})
+
+    @transaction.atomic
+    def post(self, request):
+        form = self.form_class(request.POST)
+
+        if not form.is_valid():
+            for error in form.errors.values():
+                messages.error(request, error)
+            return render(request, self.template_name, {"form": form})
+
+        mobile = form.cleaned_data["mobile"]
+
+        if User.objects.filter(mobile=mobile).exists():
+            messages.error(request, "این شماره قبلاً ثبت‌نام کرده است. لطفا وارد شوید.")
+            return redirect("apps.accounts:login_classic")
+
+        user, _ = User.objects.update_or_create(mobile=mobile)
+
+        otp = OtpRequest.objects.generate_otp(
+            {
+                "channel": OtpChannel.MOBILE,
+                "receiver": mobile,
+            }
+        )
+
+        try:
+            task = send_otp_password.apply_async(
+                kwargs={"receiver": mobile, "otp": otp.password}
+            )
+
+            if task.status in ["PENDING", "SUCCESS"]:
+                messages.success(request, "کد یکبار مصرف برای شما ارسال شد.")
+                return redirect(
+                    "apps.accounts:register_otp_verify_view",
+                    mobile=mobile,
+                    reqid=otp.request_id,
+                    # kwargs={"mobile": mobile, "reqid": otp.request_id},
+                )
+            else:
                 messages.error(
-                    request, "همچین شماره ای ثبت نام کرده است لطفا وارد شوید"
+                    request, "خطا در ارسال کد یکبار مصرف. لطفا دوباره تلاش کنید."
                 )
-            else:
-                with transaction.atomic():
-                    user = User.objects.update_or_create(mobile=mobile)
 
-                    otp_data = {
-                        "channel": "p",
-                        "receiver": mobile,
-                    }
-                    otp = OtpRequest.objects.generate_otp(otp_data)
+        except Exception as e:
+            messages.error(request, f"خطا در ارسال کد: {str(e)}")
 
-                    task_id = send_otp_password.apply_async(
-                        kwargs={"receiver": mobile, "otp": otp.password}
-                    )
-                    result = AsyncResult(task_id)
-
-                    if result.status == "PENDING" or result.status == "SUCCESS":
-
-                        messages.success(request, "کد یک بار مصرف برای شما ارسال شد")
-                        return HttpResponseRedirect(
-                            reverse(
-                                "apps.accounts:register_otp_verify_view",
-                                kwargs={"mobile": mobile, "reqid": otp.request_id},
-                            )
-                        )
-                    else:
-                        messages.error(
-                            request, f"خطا در ارسال کدیک بار مصرف {str(result)}"
-                        )
-
-        else:
-            for key, error in list(form.errors.items()):
-                messages.error(request, error)
-    else:
-        form = UserOtpForm
-    return render(request, "registration/register_otp.html", {"form": form})
+        return render(request, self.template_name, {"form": form})
 
 
-@anonymous_required("apps.pages:home_view")
-def user_register_otp_verify(request, *args, **kwargs):
-    mobile = kwargs.get("mobile")
-    request_id = kwargs.get("reqid")
-    if request.method == "POST":
-        form = UserOtpVerifyForm(data=request.POST)
-        if form.is_valid():
-            code = form.data.get("code")
+class UserRegisterOtpVerifyView(View):
+    template_name = "registration/register_otp_verify.html"
+    form_class = UserOtpVerifyForm
 
-            if OtpRequest.objects.is_valid(
-                receiver=mobile,
-                request_id=request_id,
-                password=code,
-            ):
-                messages.success(request, "ثبت نام خود را تکمیل کنید")
-                return HttpResponseRedirect(
-                    reverse(
-                        "apps.accounts:register_otp_complete_view",
-                        kwargs={"mobile": mobile, "reqid": request_id},
-                    )
-                )
-            else:
-                messages.error(request, "کد تایید وارد شده صحیح نمی باشد.")
-        else:
-            for key, error in list(form.errors.items()):
-                messages.error(request, error)
-    else:
+    def get(self, request, mobile, reqid):
         if not OtpRequest.objects.filter(receiver=mobile).exists():
-            messages.error(request, "همچین شماره ای ثبت نام نکرده است")
-        form = UserOtpVerifyForm
+            messages.error(request, "شماره پیدا نشد.")
+            return redirect("apps.accounts:register_otp_view")
 
-    context = {"form": form, "mobile": mobile, "request_id": request_id}
-    return render(request, "registration/register_otp_verify.html", context=context)
+        return self._render(request, mobile, reqid, self.form_class())
+
+    def post(self, request, mobile, reqid):
+        form = self.form_class(request.POST)
+
+        if form.is_valid() and OtpRequest.objects.is_valid(
+            receiver=mobile,
+            request_id=reqid,
+            password=form.cleaned_data["code"],
+        ):
+            messages.success(request, "کد تایید شد.")
+            return redirect(
+                "apps.accounts:register_otp_complete_view",
+                mobile=mobile,
+                reqid=reqid,
+            )
+
+        messages.error(request, "کد صحیح نیست.")
+        return self._render(request, mobile, reqid, form)
+
+    def _render(self, request, mobile, reqid, form):
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": form,
+                "mobile": mobile,
+                "request_id": reqid,
+            },
+        )
 
 
-def user_register_otp_complete(request, *args, **kwargs):
-    if request.method == "POST":
-        form = UserOtpCompleteForm(request.POST)
-        if form.is_valid():
-            receiver = form.data.get("receiver")
-            reqid = form.data.get("request_id")
-            first_name = form.data.get("first_name")
-            last_name = form.data.get("last_name")
-            password = form.data.get("password")
+class UserRegisterOtpCompleteView(View):
+    template_name = "registration/register_otp_complete.html"
+    form_class = UserOtpCompleteForm
 
-            with transaction.atomic():
-                user = User.objects.filter(mobile=receiver).first()
-                if not user:
-                    messages.error(request, "همچین شماره موبایلی ثبت نام نکرده است")
-                else:
-                    user.first_name = first_name
-                    user.last_name = last_name
-                    user.is_active = True
-                    user.set_password(password)
-                    user.save()
-                    user.meta.mobile_verified_at = datetime.datetime.now()
-                    user.meta.save()
+    def get(self, request, mobile, reqid):
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": self.form_class(),
+                "mobile": mobile,
+                "request_id": reqid,
+            },
+        )
 
-                    OtpRequest.objects.filter(request_id=reqid).delete()
+    @transaction.atomic
+    def post(self, request):
+        form = self.form_class(request.POST)
 
-                    messages.success(request, "با موفقیت در کوکوند ثبت نام کردید")
-
-                    return HttpResponseRedirect(reverse("apps.accounts:login_classic"))
-        else:
-            for key, error in list(form.errors.items()):
+        if not form.is_valid():
+            for error in form.errors.values():
                 messages.error(request, error)
-    else:
-        mobile = kwargs.get("mobile")
-        request_id = kwargs.get("reqid")
-        form = UserOtpCompleteForm
-        context = {"form": form, "mobile": mobile, "request_id": request_id}
+            return render(request, self.template_name, {"form": form})
 
-    return render(request, "registration/register_otp_complete.html", context=context)
+        user = User.objects.filter(mobile=form.cleaned_data["receiver"]).first()
+
+        if not user:
+            messages.error(request, "شماره موبایل پیدا نشد.")
+            return redirect("apps.accounts:register_otp_view")
+
+        user.first_name = form.cleaned_data["first_name"]
+        user.last_name = form.cleaned_data["last_name"]
+        user.is_active = True
+        user.set_password(form.cleaned_data["password"])
+        user.save()
+        user.meta.mobile_verified_at = datetime.datetime.now()
+        user.meta.save()
+
+        OtpRequest.objects.filter(request_id=form.cleaned_data["request_id"]).delete()
+
+        messages.success(request, "ثبت‌نام موفق بود.")
+
+        return redirect("apps.accounts:login_classic")
 
 
 class UserLoginView(IsUnAuthenticatedMixin, FormView):
@@ -253,6 +281,8 @@ class ForgotPasswordView(IsUnAuthenticatedMixin, View):
         else:
             return self._handle_mobile(request, identifier)
 
+    transaction.atomic
+
     def _handle_email(self, request, email):
         user = User.objects.filter(email__iexact=email).first()
 
@@ -287,34 +317,45 @@ class ForgotPasswordView(IsUnAuthenticatedMixin, View):
             messages.error(request, "خطا در ارسال ایمیل. لطفا بعدا تلاش کنید")
             return redirect("apps.accounts:password_forgot_view")
 
+    @transaction.atomic
     def _handle_mobile(self, request, mobile):
         mobile = self._normalize_mobile(mobile)
 
-        user = User.objects.filter(mobile=mobile).first()
+        user = User.objects.filter(mobile=mobile, is_active=True).first()
 
         if not user:
             messages.error(request, "کاربری با این شماره یافت نشد")
             return redirect("apps.accounts:password_forgot_view")
 
-        otp_data = {
-            "channel": "p",
-            "receiver": mobile,
-        }
-        otp = OtpRequest.objects.generate_otp(otp_data)
+        otp = OtpRequest.objects.generate_otp(
+            {
+                "channel": OtpChannel.MOBILE,
+                "receiver": mobile,
+            }
+        )
 
         cache.set(f"otp_{mobile}", otp.password, timeout=300)
 
         try:
-            # Kavenegar.send_otp(receptor=mobile, otp=otp)
-            print(f"OTP : {otp.password}")
+            task = send_otp_password.apply_async(
+                kwargs={"receiver": mobile, "otp": otp.password}
+            )
 
-            request.session["reset_mobile"] = mobile
+            if task.status in ["PENDING", "SUCCESS"]:
+                messages.success(request, "کد یکبار مصرف برای شما ارسال شد.")
+                return redirect(
+                    "apps.accounts:forgot_mobile_verify",
+                    mobile=mobile,
+                    reqid=otp.request_id,
+                )
+            else:
+                messages.error(
+                    request, "خطا در ارسال کد یکبار مصرف. لطفا دوباره تلاش کنید."
+                )
 
-            messages.success(request, "کد یکبار مصرف به موبایل شما ارسال شد")
-            return redirect("apps.accounts:password_forgot_mobile_verify_view")
+        except Exception as e:
+            messages.error(request, f"خطا در ارسال کد: {str(e)}")
 
-        except Exception:
-            messages.error(request, "خطا در ارسال کد. لطفا بعدا تلاش کنید")
             return redirect("apps.accounts:password_forgot_view")
 
     def _normalize_mobile(self, mobile):
@@ -324,8 +365,6 @@ class ForgotPasswordView(IsUnAuthenticatedMixin, View):
 
 
 class ForgotPasswordDoneView(View):
-    """صفحه بعد از ارسال"""
-
     template_name = "registration/forgot_password_done.html"
 
     def get(self, request):
@@ -333,7 +372,6 @@ class ForgotPasswordDoneView(View):
 
 
 class ForgotPasswordMobileVerifyView(View):
-    """تایید کد یکبار مصرف موبایل"""
 
     template_name = "registration/forgot_mobile_verify.html"
 
@@ -504,51 +542,6 @@ class ResendOtpView(View):
 
         messages.success(request, "کد جدید ارسال شد")
         return redirect("apps.accounts:password_forgot_mobile_verify_view")
-
-
-@anonymous_required("apps.pages:home_view")
-def forgot_password_mobile(request):
-    if request.method == "POST":
-        form = UserOtpForm(data=request.POST)
-        if form.is_valid():
-            mobile = form.data.get("mobile")
-            user = User.objects.filter(mobile=mobile, is_active=True).first()
-            if not user:
-                messages.error(request, "همچین کاربری یافت نشد")
-                return HttpResponseRedirect(
-                    reverse("apps.accounts:password_forgot_mobile_view")
-                )
-            else:
-
-                with transaction.atomic():
-
-                    otp_data = {
-                        "channel": "p",
-                        "receiver": mobile,
-                    }
-                    otp = OtpRequest.objects.generate_otp(otp_data)
-
-                    result = (
-                        True  # Kavenegar.send_otp(receptor=mobile, otp=otp.password)
-                    )
-                    if result:
-                        messages.success(request, "کد یک بار مصرف برای شما ارسال شد")
-
-                        return HttpResponseRedirect(
-                            reverse(
-                                "apps.accounts:password_forgot_mobile_reset_view",
-                                kwargs={"mobile": mobile, "reqid": otp.request_id},
-                            )
-                        )
-                    else:
-                        messages.error(request, "خطا در ارسال کدیک بار مصرف")
-                        raise
-        else:
-            for key, error in list(form.errors.items()):
-                messages.error(request, error)
-    else:
-        form = UserOtpForm
-    return render(request, "registration/forgot_mobile.html", {"form": form})
 
 
 @transaction.atomic

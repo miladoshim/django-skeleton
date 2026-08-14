@@ -1,103 +1,109 @@
 {% extends 'base.html' %}
 
 {% block title %}
-  وبلاگ
+  {{ post.title }}
 {% endblock %}
 
 {% block content %}
-  <div class="page-header">
-    <div class="container">
-      <div class="row align-items-center">
-        <div class="col">
-          <div class="d-flex align-items-center align-content-center">
-            <h1 class="fw-bold">{{ post.title }}</h1>
-          </div>
-          <div class="my-2">{{ post.short_description }}</div>
-          <div class="list-inline list-inline-dots text-secondary">
-            <div class="list-inline-item">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-inline icon-2">
-                <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z" />
-                <path d="M3 7l9 6l9 -6" />
-              </svg>
-              <a href="#" class="text-reset">{{ post.category.name }}</a>
-            </div>
-            <div class="list-inline-item">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-inline icon-2">
-                <path d="M3 20h18v-8a3 3 0 0 0 -3 -3h-12a3 3 0 0 0 -3 3v8z" />
-                <path d="M3 14.803c.312 .135 .654 .204 1 .197a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1c.35 .007 .692 -.062 1 -.197" />
-                <path d="M12 4l1.465 1.638a2 2 0 1 1 -3.015 .099l1.55 -1.737z" />
-              </svg>{{ post.created_at }}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
   <div class="page-body">
     <div class="container-xl">
       <div class="row row-cards">
-        <div class="col-lg-8">
+        <div class="col-lg-9">
           <div class="card card-lg">
+            <div>
+              <img src="{{ post.thumbnail.url }}" alt="{{ post.title }}" class="img img-thumbnail mb-2 w-100" />
+            </div>
+
             <div class="card-body">
+              <div class="row align-items-center mb-3">
+                <div class="col">
+                  <div class="d-flex align-items-center align-content-center">
+                    <h1 class="fw-bold">{{ post.title }}</h1>
+                  </div>
+                  <div class="my-2">{{ post.short_description }}</div>
+                  <div class="list-inline list-inline-dots text-secondary">
+                    <div class="list-inline-item">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-inline icon-2">
+                        <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z" />
+                        <path d="M3 7l9 6l9 -6" />
+                      </svg>
+                      <a href="#" class="text-reset">{{ post.category.name }}</a>
+                    </div>
+                    <div class="list-inline-item">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-inline icon-2">
+                        <path d="M3 20h18v-8a3 3 0 0 0 -3 -3h-12a3 3 0 0 0 -3 3v8z" />
+                        <path d="M3 14.803c.312 .135 .654 .204 1 .197a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1c.35 .007 .692 -.062 1 -.197" />
+                        <path d="M12 4l1.465 1.638a2 2 0 1 1 -3.015 .099l1.55 -1.737z" />
+                      </svg>{{ post.created_at }}
+                    </div>
+                    <div class="list-inline-item">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-inline icon-2">
+                        <path d="M3 20h18v-8a3 3 0 0 0 -3 -3h-12a3 3 0 0 0 -3 3v8z" />
+                        <path d="M3 14.803c.312 .135 .654 .204 1 .197a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1c.35 .007 .692 -.062 1 -.197" />
+                        <path d="M12 4l1.465 1.638a2 2 0 1 1 -3.015 .099l1.55 -1.737z" />
+                      </svg>زمان مطالعه : ۳ دقیقه
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div class="markdown">
                 <p>{{ post.body|safe }}</p>
               </div>
+              <hr />
+              <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-heart">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" />
+                    </svg>10
+                  </span>
+                  <span class="mx-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-message-circle">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path d="M3 20l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c3.255 2.777 3.695 7.266 1.029 10.501c-2.666 3.235 -7.615 4.215 -11.574 2.293l-4.7 1" />
+                    </svg>20
+                  </span>
+                  <span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-bookmark">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path d="M18 7v14l-6 -4l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4" />
+                    </svg>
+                  </span>
+                </div>
+                <div>
+                  <p>link</p>
+                </div>
+              </div>
             </div>
           </div>
+          <div class="card card-lg mt-4">
+            <div class="card-body">comments</div>
+          </div>
         </div>
-        <div class="col-lg-4">
+        <div class="col-lg-3">
           <div class="card">
             <div class="card-body">
               <div class="d-flex align-items-center mb-3">
                 <div class="me-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-md">
-                    <path d="M7 20l10 0" />
-                    <path d="M6 6l6 -1l6 1" />
-                    <path d="M12 3l0 17" />
-                    <path d="M9 12l-3 -6l-3 6a3 3 0 0 0 6 0" />
-                    <path d="M21 12l-3 -6l-3 6a3 3 0 0 0 6 0" />
-                  </svg>
+                  <a href="{{ post.author.get_profile_url }}"><img src="{{ post.author.get_avatar_url }}" alt="{{ post.author.get_full_name }}" class="avatar avatar-xl rounded" /></a>
                 </div>
                 <div>
-                  <small class="text-secondary">tabler/tabler is licensed under the</small>
-                  <h3 class="lh-1">MIT License</h3>
+                  <small class="text-secondary">{{ post.author.username }}@</small>
+                  <h3 class="lh-1"><a href="{{ post.author.get_profile_url }}">{{ post.author.get_full_name }}</a></h3>
+                  <small class="text-secondary">برنامه نویس و توسعه دهنده بک اند و جنگو</small>
                 </div>
               </div>
-              <div class="text-secondary mb-3">A short and simple permissive license with conditions only requiring preservation of copyright and license notices. Licensed works, modifications, and larger works may be distributed under different terms and without source code.</div>
-              <h4>Permissions</h4>
-              <ul class="list-unstyled space-y-1">
-                <li>
-                  <!-- Download SVG icon from http://tabler.io/icons/icon/check -->
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-green icon-2">
-                    <path d="M5 12l5 5l10 -10" />
-                  </svg>Private use
-                </li>
-              </ul>
-              <h4>Limitations</h4>
-              <ul class="list-unstyled space-y-1">
-                <li>
-                  <!-- Download SVG icon from http://tabler.io/icons/icon/x -->
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-red icon-2">
-                    <path d="M18 6l-12 12" />
-                    <path d="M6 6l12 12" />
-                  </svg>Liability
-                </li>
-              </ul>
-              <h4>Conditions</h4>
-              <ul class="list-unstyled space-y-1">
-                <li>
-                  <!-- Download SVG icon from http://tabler.io/icons/icon/info-circle -->
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-blue icon-2">
-                    <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
-                    <path d="M12 9h.01" />
-                    <path d="M11 12h1v4h1" />
-                  </svg>License and copyright notice
-                </li>
-              </ul>
             </div>
-            <div class="card-footer">
-              This is not legal advice.
-              <a href="#" target="_blank">Learn more about repository licenses.</a>
+          </div>
+          <div class="card mt-3">
+            <div class="card-body">
+              <h3>برچسب ها</h3>
+              <div class="d-flex align-items-center">
+                {% for tag in post.tags.all %}
+                  <a href="." class="badge bg-blue text-white mx-1 p-2 text-light">{{ tag.name }}</a>
+                {% endfor %}
+              </div>
             </div>
           </div>
         </div>
