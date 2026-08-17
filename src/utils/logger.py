@@ -1,10 +1,10 @@
+import json
 from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
 formatter = "%(asctime)s %(levelname)s %(message)s"
-
 handler.setFormatter(logging.Formatter(formatter))
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
@@ -15,8 +15,6 @@ critical_handler.setLevel(logging.CRITICAL)
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
-        import json
-
         log_record = {
             "timestamp": datetime.fromtimestamp(record.created).isoformat(),
             "level": record.levelname,
@@ -25,12 +23,10 @@ class JsonFormatter(logging.Formatter):
             "function": record.funcName,
             "line": record.lineno,
             "thread": record.threadName,
-            # متغیرهای extra
             "context": {
                 "request_id": getattr(record, "request_id", None),
             },
         }
-        # اضافه کردن خطاها در صورت وجود
         if hasattr(record, "exc_info") and record.exc_info:
             import traceback
 

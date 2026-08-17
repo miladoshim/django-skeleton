@@ -6,6 +6,8 @@ from django.core import validators
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.forms import Form, ModelForm
+
+from utils.validators import validate_phone_number
 from .models import User, UserProfile
 
 
@@ -36,7 +38,7 @@ class UserEmailRegisterForm(Form):
         required=True,
         widget=forms.TextInput(
             attrs={
-                "placeholder": "مثال : youremail@gmail.com",
+                "placeholder": "مثال : youremail@email.com",
                 "class": "form-control",
             },
         ),
@@ -50,6 +52,19 @@ class UserEmailRegisterForm(Form):
         ],
         label="رمز عبور",
     )
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email", "").strip().lower()
+
+        if not email:
+            raise ValidationError("ایمیل الزامی است")
+
+        user = User.objects.filter(email=email).exists()
+
+        if user:
+            raise ValidationError("کاربری با این ایمیل ثبت نام کرده است.")
+
+        return email
 
 
 class UserLoginForm(Form):
@@ -67,6 +82,16 @@ class UserLoginForm(Form):
         min_length=8,
         max_length=30,
     )
+
+    def clean_mobile(self):
+        mobile = self.cleaned_data.get("mobile", "").strip().lower()
+
+        if not mobile:
+            raise ValidationError("موبایل الزامی است")
+
+        validate_phone_number(mobile)
+
+        return mobile
 
 
 class ClassicLoginForm(forms.Form):
@@ -190,6 +215,16 @@ class UserOtpForm(Form):
             },
         ),
     )
+
+    def clean_mobile(self):
+        mobile = self.cleaned_data.get("mobile", "").strip().lower()
+
+        if not mobile:
+            raise ValidationError("موبایل الزامی است")
+
+        validate_phone_number(mobile)
+
+        return mobile
 
 
 class UserOtpVerifyForm(Form):
@@ -445,12 +480,14 @@ class UserAccountEditForm(Form):
         return bio
 
     def clean_mobile(self):
-        mobile = self.cleaned_data.get("mobile", "").strip()
+        mobile = self.cleaned_data.get("mobile", "").strip().lower()
 
-        # if not User.objects.filter(mobile=mobile).first():
+        if not mobile:
+            raise ValidationError("موبایل الزامی است")
+
+        validate_phone_number(mobile)
+
         return mobile
-        # else:
-        #     raise ValidationError(f"کابری با شماره {mobile} وجود دارد")
 
     def _get_avatar(self):
         """دریافت آواتار از پروفایل یا مدل کاربر"""
@@ -521,6 +558,8 @@ class ForgotPasswordForm(forms.Form):
     def _normalize_mobile(self, mobile):
         """نرمال‌سازی شماره موبایل"""
         mobile = re.sub(r"[^\d]", "", mobile)
+
+        validate_phone_number(mobile)
 
         return mobile
 

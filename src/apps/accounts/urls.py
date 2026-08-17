@@ -24,6 +24,7 @@ from apps.accounts.views.auth_views import (
     UserOTPRegisterVerifyView,
     ForgotPasswordView,
     UserLogoutView,
+    EmailVerificationView,
 )
 
 app_name = "apps.accounts"
@@ -68,6 +69,11 @@ urlpatterns = [
     ),
     # Authentication
     path("auth/register/", UserClassicRegisterView.as_view(), name="register_classic"),
+    path(
+        "auth/email/verify/<str:uid>/<str:token>/",
+        EmailVerificationView.as_view(),
+        name="email_activation",
+    ),
     path(
         "auth/register/otp/request/",
         UserOTPRegisterRequestView.as_view(),

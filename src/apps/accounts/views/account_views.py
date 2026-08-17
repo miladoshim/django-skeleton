@@ -177,8 +177,6 @@ class ToggleFollowView(LoginRequiredMixin, View):
 
 
 class FollowersListView(View):
-    """لیست دنبال‌کننده‌ها - وب"""
-
     template_name = "accounts/followers_list.html"
 
     def get(self, request, user_id):
@@ -196,8 +194,6 @@ class FollowersListView(View):
 
 
 class FollowingListView(View):
-    """لیست دنبال‌شونده‌ها - وب"""
-
     template_name = "accounts/following_list.html"
 
     def get(self, request, user_id):
@@ -210,48 +206,6 @@ class FollowingListView(View):
             {
                 "following": result["items"],
                 "pagination": result,
-            },
-        )
-
-
-@login_required
-def edit_profile(request):
-    user = request.user
-    if request.method == "POST":
-        form = UserAccountEditForm(
-            data=request.POST or None,
-            files=request.FILES or None,
-        )
-
-        if form.is_valid():
-            with transaction.atomic():
-                user.first_name = form.data.get("first_name")
-                user.last_name = form.data.get("last_name")
-                user.save()
-                user.profile.bio = form.data.get("bio")
-                user.profile.save()
-                messages.success(request, "حساب کاربری ویرایش شد.")
-                return HttpResponseRedirect(
-                    reverse(
-                        "apps.accounts:dashboard_setting",
-                    )
-                )
-        else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{field} {error}")
-
-            return HttpResponseRedirect(
-                reverse(
-                    "apps.accounts:dashboard_setting",
-                )
-            )
-    else:
-        return render(
-            request,
-            "accounts/setting.html",
-            {
-                "user": user,
             },
         )
 

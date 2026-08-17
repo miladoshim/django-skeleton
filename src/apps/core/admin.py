@@ -3,6 +3,7 @@ from django import forms
 from django.db import models
 from django.utils import timezone
 from import_export.admin import ImportExportModelAdmin
+from jalali_date import datetime2jalali
 
 
 class BaseAdminMixin(admin.ModelAdmin):
@@ -16,6 +17,14 @@ class BaseAdminMixin(admin.ModelAdmin):
         if hasattr("obj", "author"):
             obj.author = request.user
         return super().save_model(request, obj, form, change)
+
+    @admin.display(description="تاریخ ایجاد", ordering="created_at")
+    def get_created_at(self, obj):
+        return datetime2jalali(obj.created_at).strftime("%Y/%m/%d _ %H:%M:%S")
+
+    @admin.display(description="تاریخ بروزرسانی", ordering="updated_at")
+    def get_updated_at(self, obj):
+        return datetime2jalali(obj.updated_at).strftime("%Y/%m/%d _ %H:%M:%S")
 
 
 class SoftDeleteAdmin(admin.ModelAdmin):

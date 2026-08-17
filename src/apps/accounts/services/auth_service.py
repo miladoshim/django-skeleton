@@ -8,7 +8,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail.message import EmailMessage
 from django.shortcuts import reverse
 from django.template.loader import render_to_string
-from django.utils.encoding import force_bytes, force_str, force_text
+from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from apps.accounts.admin import User
 from django.contrib.auth import get_user_model, authenticate
@@ -17,23 +17,9 @@ from django.conf import settings
 from django.db import transaction
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.core.services.base_service import BaseService
+from utils.helpers import full_url
 
 User = get_user_model()
-
-
-def verify_activation_email(request, uidb64, token):
-    try:
-        uid = force_text(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
-
-    if user is not None and default_token_generator.check_token(user, token):
-        user.is_active = True
-        user.save()
-        user.meta.update({"email_verified_at": datetime.now()})
-        return True
-    return False
 
 
 class TokenGenerator(PasswordResetTokenGenerator):
@@ -46,35 +32,49 @@ token_generator = TokenGenerator()
 class AuthService(BaseService):
     model = User
 
-    def register(self, email: str, password: str, **extra_data) -> Dict[str, Any]:
-        """
-        ثبت‌نام کاربر جدید و برگرداندن توکن‌ها
-        استفاده در: Web ثبت‌نام، API Register، GraphQL register
-        """
+    def register_email(
+        self,
+        first_name: str,
+        last_name: str,
+        email: str,
+        password: str,
+        need_token=False,
+        **extra_data,
+    ) -> Dict[str, Any]:
         with transaction.atomic():
-            # بررسی وجود کاربر
             if User.objects.filter(email=email).exists():
                 raise ValueError("این ایمیل قبلاً ثبت شده است")
 
-            # ایجاد کاربر
-            user = User.objects.create_user(
-                email=email, password=password, **extra_data
+            user = User.objects.create(
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
             )
+            user.set_password(password)
+            user.save()
 
-            # ارسال ایمیل فعال‌سازی
             self._send_activation_email(user)
 
-            # ساخت توکن‌ها
-            tokens = self._get_tokens_for_user(user)
-
-            return {
+            response = {
                 "user": user,
-                "tokens": tokens,
-                "message": "ثبت‌نام با موفقیت انجام شد",
+                "message": "لینک فعال سازی به ایمیل شما ارسال شد.",
             }
 
+            if need_token:
+                tokens = self._get_tokens_for_user(user)
+                response = {
+                    "user": user,
+                    "tokens": tokens,
+                    "message": "ثبت‌نام با موفقیت انجام شد",
+                }
+
+            return response
+
     def login(
-        self, username: str, password: str, need_token=False
+        self,
+        username: str,
+        password: str,
+        need_token=False,
     ) -> Optional[Dict[str, Any]]:
         user = authenticate(username=username, password=password)
 
@@ -241,6 +241,7 @@ class AuthService(BaseService):
 
     #     return mobile
 
+    @transaction.atomic
     def reset_password(self, uid: str, token: str, new_password: str) -> bool:
 
         try:
@@ -257,21 +258,6 @@ class AuthService(BaseService):
 
         return True
 
-    def verify_email(self, uid: str, token: str) -> bool:
-        try:
-            user_id = force_str(urlsafe_base64_decode(uid))
-            user = User.objects.get(pk=user_id)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            raise ValueError("لینک تایید نامعتبر است")
-
-        if not default_token_generator.check_token(user, token):
-            raise ValueError("لینک تایید منقضی شده است")
-
-        user.email_verified = True
-        user.save(update_fields=["email_verified"])
-
-        return True
-
     def get_user_by_token(self, token: str) -> Optional[User]:
         try:
             from rest_framework_simplejwt.tokens import AccessToken
@@ -285,46 +271,48 @@ class AuthService(BaseService):
     def social_login(self, provider: str, token: str) -> Dict[str, Any]:
         pass
 
-    def _get_tokens_for_user(self, user: User) -> Dict[str, str]:
+    def _get_tokens_for_user(self, user) -> Dict[str, str]:
         refresh = RefreshToken.for_user(user)
         return {
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         }
 
-    def send_activation_email(request, user):
-        current_site = get_current_site(request)
-        token = default_token_generator.make_token(user)
-        encoded_uid = urlsafe_base64_encode(force_bytes(user.pk))
-        activation_path = reverse("apps:accounts:activation", args=[encoded_uid, token])
-        activation_url = f"{request.scheme}://{current_site}{activation_path}"
-        print("----------------------Email Activation Url---------------------------")
-        print(activation_url)
-        message = render_to_string(
-            "activation_email.html", {"user": user, "activation_url": activation_url}
-        )
-        email = EmailMessage("ایمیل خود را تایید کنید", message, to=[user.email])
-        email.send()
-
-    def _send_activation_email(self, user: User):
+    @transaction.atomic
+    def _send_activation_email(self, user):
 
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
-        activation_path = reverse("apps:accounts:activation", args=[encoded_uid, token])
-        activation_url = f"{request.scheme}://{current_site}{activation_path}"
-
-        activation_url = f"{settings.FRONTEND_URL}/verify-email/{uid}/{token}"
+        activation_url = full_url("apps.accounts:email_activation", uid, token)
 
         send_mail(
-            subject="فعال‌سازی حساب کاربری",
+            subject="فعال‌سازی ایمیل حساب کاربری",
             message=f"""
             به سایت ما خوش آمدید!
-            برای فعال‌سازی حساب خود روی لینک زیر کلیک کنید:
+            برای فعال‌سازی ایمیل حساب خود روی لینک زیر کلیک کنید:
             {activation_url}
             """,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
         )
+
+    @transaction.atomic
+    def verify_email(self, uid: str, token: str) -> bool:
+        try:
+            user_id = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=user_id)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+            raise ValueError("لینک تایید نامعتبر است")
+
+        if user is not None and default_token_generator.check_token(user, token):
+            user.is_acitve = True
+            user.save()
+            user.meta.email_verified_at = datetime.now()
+            user.meta.save()
+            return True
+
+        return False
 
     def _send_password_change_notification(self, user: User):
         send_mail(

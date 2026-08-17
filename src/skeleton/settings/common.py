@@ -795,3 +795,8 @@ GOOGLE_CLIENT_SECRET = "YOUR_GOOGLE_CLIENT_SECRET"
 GOOGLE_REDIRECT_URI = "http://localhost:8000/accounts/callback/google/"
 
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = "/"
+
+
+ARCAPTCHA_SECRET_KEY = config("ARCAPTCHA_SECRET_KEY", "")
+ARCAPTCHA_SITE_KEY = config("ARCAPTCHA_SITE_KEY", "")
+ARCAPTCHA_VERIFY_URL = "https://api.arcaptcha.co/arcaptcha/api/verify"

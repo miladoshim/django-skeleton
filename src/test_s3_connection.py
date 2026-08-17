@@ -1,12 +1,12 @@
 import os
 import django
+import boto3
+from botocore.config import Config
+from django.conf import settings
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "skeleton.settings")
 django.setup()
 
-from django.conf import settings
-import boto3
-from botocore.config import Config
 
 print(
     "AWS_ACCESS_KEY_ID:",
@@ -37,7 +37,6 @@ client = boto3.client(
 )
 
 
-# مستقیم آپلود کن (بدون HeadBucket)
 try:
     #     client.head_bucket(Bucket=settings.AWS_STORAGE_BUCKET_NAME)
     #     print("✅ اتصال موفق - bucket وجود دارد")
@@ -48,13 +47,11 @@ try:
     )
     print("✅ آپلود موفق!")
 
-    # دانلود کن
     response = client.get_object(
         Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key="test.txt"
     )
     print(f"✅ دانلود موفق: {response['Body'].read()}")
 
-    # پاک کن
     client.delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key="test.txt")
     print("✅ پاک کردن موفق")
 

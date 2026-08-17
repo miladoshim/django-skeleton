@@ -8,6 +8,7 @@ from apps.accounts.mixins import FollowMixin
 from apps.core.models import BaseModel
 from utils.enums import GenderChoices, UserRole
 from utils.helpers import generate_unique_uuid
+from utils.storage_paths import user_avatar_path, user_banner_path
 from .managers import OTPManager, UserManager
 
 
@@ -171,13 +172,13 @@ class UserProfile(BaseModel):
         related_name="profile",
     )
     avatar = models.ImageField(
-        upload_to="users/avatars/%Y/%m/%d/",
+        upload_to=user_avatar_path,
         blank=True,
         null=True,
         verbose_name="تصویر پروفایل",
     )
     banner = models.ImageField(
-        upload_to="users/banners/%Y/%m/%d/",
+        upload_to=user_banner_path,
         blank=True,
         null=True,
         verbose_name="بنر پروفایل",
@@ -193,6 +194,24 @@ class UserProfile(BaseModel):
         null=True,
         blank=True,
         verbose_name="بیوگرافی",
+    )
+    birthday_day = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="روز تولد",
+        help_text="00",
+    )
+    birthday_month = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="ماه تولد",
+        help_text="00",
+    )
+    birthday_year = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="سال تولد",
+        help_text="0000",
     )
 
     def __str__(self):

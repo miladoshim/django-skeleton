@@ -1,5 +1,8 @@
 import magic
 import re
+import os
+import re
+from PIL import Image
 from django.core.exceptions import ValidationError
 from persian_tools import national_id, phone_number
 from persian_tools.bank import card_number, sheba
@@ -26,26 +29,26 @@ ALLOWED_IMAGE_TYPES = {
 
 def validate_shaba(value):
     if not sheba.validate(value):
-        raise ValidationError("شماره شبا نامعتبر است")
+        raise ValidationError("فرمت شماره شبا نامعتبر است")
 
 
 def validate_card_number(value):
     if not card_number.validate(value):
-        raise ValidationError("شماره کارت نامعتبر است")
+        raise ValidationError("فرمت شماره کارت نامعتبر است")
 
 
 def validate_national_id(value):
     if not national_id.validate(value):
-        raise ValidationError("شماره ملی نامعتبر است")
+        raise ValidationError("فرمت شماره ملی نامعتبر است")
 
 
 def validate_phone_number(value):
     if not phone_number.validate(value):
-        raise ValidationError("شماره تلفن نامعتبر است")
+        raise ValidationError("فرمت شماره تلفن نامعتبر است")
 
 
 def validate_file_size(file, max_size_mb):
-    max_size = max_size_mb * 1024 * 1024  # Convert to bytes
+    max_size = max_size_mb * 1024 * 1024
 
     if file.size > max_size:
         raise ValidationError(
@@ -72,7 +75,6 @@ def validate_file_type(file, allowed_types):
             f'Allowed extensions: {", ".join(allowed_extensions)}'
         )
 
-    # Verify extension matches content type
     import os
 
     ext = os.path.splitext(file.name)[1].lower()
@@ -91,7 +93,6 @@ def validate_image_dimensions(
     min_width=100,
     min_height=100,
 ):
-    from PIL import Image
 
     try:
         img = Image.open(file)
@@ -115,10 +116,6 @@ def validate_image_dimensions(
 
 
 def sanitize_filename(filename):
-
-    import re
-    import os
-
     filename = os.path.basename(filename)
 
     filename = filename.replace("\x00", "").replace("/", "").replace("\\", "")
@@ -135,8 +132,6 @@ def sanitize_filename(filename):
 
 
 def validate_password_strength(password):
-    """بررسی قدرت رمز عبور"""
-
     errors = []
 
     if len(password) < 8:
@@ -156,34 +151,3 @@ def validate_password_strength(password):
 
     if errors:
         raise ValidationError(errors)
-
-
-# def scan_for_malware(file):
-#     """
-#     Scan uploaded file for malware using ClamAV.
-#     Requires clamd to be installed and running.
-#     """
-#     try:
-#         import clamd
-
-#         cd = clamd.ClamdUnixSocket()
-
-#         # Reset file position and scan
-#         file.seek(0)
-#         result = cd.instream(file)
-#         file.seek(0)
-
-#         # Check scan result
-#         status, reason = result["stream"]
-#         if status != "OK":
-#             raise ValidationError(f"Malware detected: {reason}")
-
-#     except ImportError:
-#         # ClamAV not installed - log warning but continue
-#         import logging
-
-#         logging.warning("ClamAV not available for malware scanning")
-#     except clamd.ConnectionError:
-#         import logging
-
-#         logging.warning("Could not connect to ClamAV daemon")

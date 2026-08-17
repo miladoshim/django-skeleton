@@ -6,3 +6,12 @@ find . -path "./src/*/migrations/*.py" ! -name "__init__.py" -delete
 
 
 https://django-components.github.io/django-components/docs/
+
+
+archaptcha:
+
+sitekey:
+1u5keqdqej
+
+secret:
+uyu1dv7ruhfinx85j60s

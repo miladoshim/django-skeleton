@@ -1,5 +1,7 @@
 from django import forms
 
+from apps.core.services.arcaptcha_service import ARCaptchaService
+
 # class NewsletterSubscriberForm(forms.ModelForm):
 #     email = forms.EmailField(
 #         widget=forms.EmailInput(
@@ -12,6 +14,18 @@ from django import forms
 #     class Meta:
 #         model = NewsletterSubscriber
 #         fields = ["email"]
+
+
+class CaptchaForm(forms.Form):
+    captcha_token = forms.CharField(widget=forms.HiddenInput(), required=False)
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if not ARCaptchaService.verify(cleaned_data.get("captcha_token", "")):
+            raise forms.ValidationError("کد امنیتی را تایید کنید")
+
+        return cleaned_data
 
 
 class ContactForm(forms.Form):

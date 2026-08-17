@@ -21,6 +21,7 @@ everting you need to start a project.
 - [ ] Dashboard
 - [ ] User Setting
 - [ ] Change Password
+- [ ] Active sessions
 
 ### Blog
 
@@ -36,6 +37,8 @@ everting you need to start a project.
 - [ ] ContactUs
 - [ ] Iranian Payment (Zarinpal)
 - [ ] Iranian SMS Provider (Kavenegar)
+- [ ] ARCaptcha
+- [ ] hCaptcha
 
 ### ScreenShots
 

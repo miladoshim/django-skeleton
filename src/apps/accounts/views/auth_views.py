@@ -4,7 +4,6 @@ import time
 import uuid
 import logging
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponseRedirect
 from django.core.cache import cache
 from django.shortcuts import redirect, render
 from django.conf import settings
@@ -39,7 +38,7 @@ from apps.accounts.forms import (
     UserOtpForm,
     UserOtpVerifyForm,
 )
-from apps.accounts.services.forgot_password_service import ForgotPasswordService
+from apps.accounts.services.auth_service import AuthService
 from apps.accounts.services.social_auth__service import SocialAuthService
 from apps.accounts.tasks import send_otp_password
 from apps.accounts.models import OtpChannel, OtpRequest, SocialAccount, User
@@ -53,12 +52,48 @@ logger = logging.getLogger(__name__)
 class UserClassicRegisterView(IsUnAuthenticatedMixin, FormView):
     template_name = "registration/register.html"
     form_class = UserEmailRegisterForm
+    success_url = reverse_lazy("apps.accounts:login_classic")
 
     def form_valid(self, form):
-        return super().form_valid(form)
+        first_name = form.cleaned_data.get("first_name")
+        last_name = form.cleaned_data.get("last_name")
+        email = form.cleaned_data.get("email")
+        password = form.cleaned_data.get("password")
+
+        result = AuthService().register_email(first_name, last_name, email, password)
+
+        messages.success(self.request, result["message"])
+        return redirect(self.success_url)
 
     def form_invalid(self, form):
+
+        if form.non_field_errors():
+            for error in form.non_field_errors():
+                messages.error(self.request, error)
+
+        for field_name, errors in form.errors.items():
+            for error in errors:
+                field_label = (
+                    form.fields[field_name].label
+                    if field_name in form.fields
+                    else field_name
+                )
+                messages.error(self.request, f"{field_label}: {error}")
+
         return super().form_invalid(form)
+
+
+class EmailVerificationView(View):
+    success_url = reverse_lazy("apps.accounts:login_classic")
+
+    def get(self, request, uid, token):
+        result = AuthService().verify_email(uid, token)
+        if result:
+            messages.success(request, "ایمیل شما تایید شد, لطفا وارد شوید.")
+            return redirect(self.success_url)
+
+        messages.error(request, "خطا در تایید ایمیل")
+        return redirect(self.success_url)
 
 
 class UserOTPRegisterRequestView(TemplateView):
@@ -220,16 +255,17 @@ class UserLoginView(IsUnAuthenticatedMixin, FormView):
     def form_valid(self, form):
         username = form.cleaned_data.get("username")
         password = form.cleaned_data.get("password")
+        # arcaptcha_token = form.cleaned_data.get("arcaptcha-token")
 
         user = authenticate(request=self.request, username=username, password=password)
 
         if user is not None:
             login(self.request, user)
             messages.success(self.request, "خوش آمدید.")
-            return HttpResponseRedirect(self.success_url)
+            return redirect(self.success_url)
         else:
             messages.error(self.request, "نام کاربری یا رمز عبور اشتباه است")
-            return HttpResponseRedirect(reverse("apps.accounts:login_classic"))
+            return redirect(reverse("apps.accounts:login_classic"))
 
     def form_invalid(self, form):
 
@@ -557,9 +593,7 @@ def forgot_password_mobile_reset(request, *args, **kwargs):
             user = User.objects.filter(mobile=receiver, is_active=True).first()
             if not user:
                 messages.error(request, "همچین کاربری یافت نشد")
-                return HttpResponseRedirect(
-                    reverse("apps.accounts:password_forgot_mobile_view")
-                )
+                return redirect(reverse("apps.accounts:password_forgot_mobile_view"))
 
             if OtpRequest.objects.is_valid(
                 receiver=receiver, request_id=reqid, password=code
@@ -573,7 +607,7 @@ def forgot_password_mobile_reset(request, *args, **kwargs):
 
                 messages.success(request, "رمز عبور شما با موفقیت تغییر کرد")
 
-                return HttpResponseRedirect(reverse("apps.accounts:login_classic"))
+                return redirect(reverse("apps.accounts:login_classic"))
             else:
                 messages.error(request, "کد تایید وارد شده صحیح نمی باشد.")
 

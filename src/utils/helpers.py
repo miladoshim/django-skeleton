@@ -6,6 +6,9 @@ from uuid import uuid4
 import functools
 from django.core.cache import cache
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.urls import reverse
+from django.contrib.sites.models import Site
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django_redis import get_redis_connection
 from django.core.validators import FileExtensionValidator
@@ -246,3 +249,11 @@ class TokenGenerator(PasswordResetTokenGenerator):
 
 
 token_generator = TokenGenerator()
+
+
+def full_url(view_name, *args, **kwargs):
+
+    protocol = "https" if not settings.DEBUG else "http"
+    domain = Site.objects.get_current().domain
+
+    return f"{protocol}://{domain}{reverse(view_name, args=args, kwargs=kwargs)}"
