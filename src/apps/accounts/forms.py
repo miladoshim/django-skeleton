@@ -72,7 +72,6 @@ class UserLoginForm(Form):
 class ClassicLoginForm(forms.Form):
     username = forms.CharField(
         label="ایمیل، موبایل یا نام کاربری",
-        max_length=150,
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
@@ -90,8 +89,9 @@ class ClassicLoginForm(forms.Form):
         widget=forms.PasswordInput(
             attrs={"class": "form-control", "placeholder": "رمز عبور"},
         ),
-        min_length=8,
-        max_length=30,
+        validators=[
+            validators.MinLengthValidator(8),
+        ],
     )
 
     def clean_username(self):
@@ -99,10 +99,7 @@ class ClassicLoginForm(forms.Form):
         username = self.cleaned_data.get("username", "").strip().lower()
 
         if not username:
-            raise ValidationError(_("نام کاربری یا ایمیل یا موبایل الزامی است"))
-
-        if len(username) < 3:
-            raise ValidationError(_("نام کاربری یا ایمیل حداقل ۳ کاراکتر باید باشد"))
+            raise ValidationError("نام کاربری یا ایمیل یا موبایل الزامی است")
 
         user = User.objects.filter(
             Q(username__iexact=username)

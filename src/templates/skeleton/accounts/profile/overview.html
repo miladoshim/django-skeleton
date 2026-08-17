@@ -1,0 +1,20 @@
+{% extends 'accounts/profile/base.html' %}
+
+{% block title %}
+  پروفایل
+{% endblock %}
+
+{% block inner_profile %}
+  <div class="card card-body">
+    <div class="mb-3">
+      <h3 class="fw-bold">درباره من</h3>
+      <p>{{ profile.profile.bio|safe }}</p>
+    </div>
+    <div class="mb-3">
+      <h3 class="fw-bold">لینک ها</h3>
+    </div>
+    <div>
+      <h3 class="fw-bold">نشان ها</h3>
+    </div>
+  </div>
+{% endblock %}

@@ -4,13 +4,14 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils import timezone
 from jalali_date import date2jalali
 from django.core.exceptions import PermissionDenied
+from apps.accounts.mixins import FollowMixin
 from apps.core.models import BaseModel
 from utils.enums import GenderChoices, UserRole
 from utils.helpers import generate_unique_uuid
 from .managers import OTPManager, UserManager
 
 
-class User(AbstractBaseUser, PermissionsMixin):
+class User(AbstractBaseUser, FollowMixin, PermissionsMixin):
     """
     Custom User model that have extra fields
     """
@@ -439,3 +440,24 @@ class OtpRequest(BaseModel):
     # @property
     # def is_valid(self):
     #     return not self.is_used and self.expires_at > timezone.now()
+
+
+class Follow(models.Model):
+    follower = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="following",  # افرادی که من دنبال می‌کنم
+    )
+    following = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="followers",  # افرادی که من را دنبال می‌کنند
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ["follower", "following"]  # جلوگیری از تکرار
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.follower} → {self.following}"

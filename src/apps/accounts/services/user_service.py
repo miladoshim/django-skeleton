@@ -10,7 +10,6 @@ User = get_user_model()
 
 
 class UserService(BaseService):
-    """سرویس مدیریت کاربران"""
 
     model = User
 

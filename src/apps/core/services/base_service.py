@@ -7,8 +7,9 @@ class BaseService:
     model = None
     queryset = None
 
-    def __init__(self, user=None):
+    def __init__(self, user=None, request=None):
         self.user = user
+        self.request = request
 
     def get_queryset(self) -> QuerySet:
         if self.queryset is None:

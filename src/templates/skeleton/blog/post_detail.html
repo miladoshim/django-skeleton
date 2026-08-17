@@ -91,7 +91,7 @@
                 <div>
                   <small class="text-secondary">{{ post.author.username }}@</small>
                   <h3 class="lh-1"><a href="{{ post.author.get_profile_url }}">{{ post.author.get_full_name }}</a></h3>
-                  <small class="text-secondary">برنامه نویس و توسعه دهنده بک اند و جنگو</small>
+                  <small class="text-secondary">{{ post.author.profile.bio }}</small>
                 </div>
               </div>
             </div>

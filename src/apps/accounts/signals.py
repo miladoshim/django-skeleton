@@ -11,7 +11,7 @@ from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from apps.financial.models import Wallet
 from utils.helpers import get_user_ip_address
-from .models import User, UserMeta, UserProfile
+from .models import Follow, User, UserMeta, UserProfile
 
 
 @receiver(post_save, sender=User)
@@ -86,6 +86,17 @@ def user_deleted_signal(sender, instance, *args, **kwargs):
             return
 
     delete_user_avatar_and_banner(old_instance, instance)
+
+
+@receiver(post_save, sender=Follow)
+def notify_follow(sender, instance, created, **kwargs):
+    if created:
+        # اینجا می‌توانید اعلان بسازید
+        # Notification.objects.create(
+        #     user=instance.following,
+        #     message=f"{instance.follower.username} شما را دنبال کرد"
+        # )
+        pass
 
 
 # @receiver(post_save, sender=User)

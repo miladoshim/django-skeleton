@@ -26,15 +26,11 @@ class PostListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["post_count"] = Post.published.aggregate(count=Count("id"))
-        context["categories"] = (
-            Category.objects.annotate(
-                post_count=Count(
-                    "posts",
-                )
+        context["categories"] = Category.objects.annotate(
+            post_count=Count(
+                "posts",
             )
-            .filter(post_count__gt=0)
-            .order_by("-post_count", "name")
-        )
+        ).order_by("-post_count", "name")
         # context['popular_tags'] = Post.objects.values("tags__name").annotate(total_view=Sum("viewCount")).order_by("-total_views")[:8]
         return context
 

@@ -5,6 +5,7 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.generics import (
     GenericAPIView,
     ListAPIView,
+    RetrieveAPIView,
 )
 from rest_framework.permissions import (
     IsAuthenticated,
@@ -18,22 +19,85 @@ from apps.accounts.api.serializers import (
     UserProfileSerializer,
     UserSerializer,
 )
+from apps.accounts.services.follow_service import FollowService
 
 ######## Start Dashboard Api ############
 
 
-class UserProfileAPIView(generics.RetrieveAPIView):
-    """
-    Endpoint to retrieve user profile.
-
-    """
-
+class UserProfileAPIView(RetrieveAPIView):
     permission_classes = (IsAuthenticated,)
     # authentication_classes = (TokenAuthentication,)
-    # serializer_class = serializers.UserProfileSerializer
+    serializer_class = UserProfileSerializer
 
     def get_object(self):
         return self.request.user.userprofile
+
+
+class ToggleFollowAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        service = FollowService(request.user)
+        result = service.toggle_follow(user_id)
+
+        return Response(result, status=status.HTTP_200_OK)
+
+
+class FollowStatsAPIView(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request, user_id):
+        service = FollowService(request.user)
+        result = service.get_stats(user_id)
+
+        return Response(result)
+
+
+class FollowStatusAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        service = FollowService(request.user)
+        result = service.get_follow_status(user_id)
+
+        return Response(result)
+
+
+class FollowersListAPIView(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request, user_id):
+        service = FollowService(request.user)
+        page = int(request.query_params.get("page", 1))
+        limit = int(request.query_params.get("limit", 20))
+        result = service.get_followers(user_id, page, limit)
+
+        return Response(result)
+
+
+class FollowingListAPIView(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request, user_id):
+        service = FollowService(request.user)
+        page = int(request.query_params.get("page", 1))
+        limit = int(request.query_params.get("limit", 20))
+        result = service.get_following(user_id, page, limit)
+
+        return Response(result)
+
+
+class SuggestionsAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        service = FollowService(request.user)
+        limit = int(request.query_params.get("limit", 10))
+        result = service.get_suggestions(limit)
+
+        return Response(result)
 
 
 ######## End Dashboard Api ############
@@ -44,10 +108,11 @@ class WalletCharge(APIView):
 
     def post(self, request):
         amount = request.POST.get("amount")
+        # service = WalletService(request.user ,amount)
 
 
-@permission_classes([IsAuthenticatedOrReadOnly])
 @api_view(["GET"])
+@permission_classes([IsAuthenticatedOrReadOnly])
 def get_user_profile(request, username):
     try:
         user = User.objects.get(username=username)

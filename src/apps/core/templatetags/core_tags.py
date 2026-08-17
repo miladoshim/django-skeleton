@@ -12,9 +12,9 @@ register = template.Library()
 
 
 @register.simple_tag(takes_context=True)
-def active(context, pattern_or_urlname):
+def active(context, pattern_or_urlname, *args):
     try:
-        pattern = reverse(pattern_or_urlname)
+        pattern = reverse(pattern_or_urlname, args=args)
     except NoReverseMatch:
         pattern = pattern_or_urlname
     path = context["request"].path

@@ -6,7 +6,7 @@ from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import (
@@ -20,6 +20,7 @@ from azbankgateways import (
 from azbankgateways import (
     models as bank_models,
 )
+from apps.accounts.services.follow_service import FollowService
 from apps.financial.services.payment_service import Payment as PaymentService
 from apps.financial.models import (
     Payment,
@@ -152,13 +153,65 @@ class DashboardChangePasswordView(LoginRequiredMixin, FormView):
 
 class UserProfileView(DetailView):
     model = User
-    template_name = "accounts/profile.html"
-    context_object_name = "user"
+    template_name = "accounts/profile/overview.html"
+    context_object_name = "profile"
     slug_field = "username"
     slug_url_kwarg = "username"
 
     def get_queryset(self):
         return User.objects.filter(is_active=True)
+
+
+class ToggleFollowView(LoginRequiredMixin, View):
+
+    def post(self, request, uuid):
+        service = FollowService(request.user)
+        result = service.toggle_follow(uuid)
+
+        if result["success"]:
+            messages.success(request, result["message"])
+        else:
+            messages.error(request, result["message"])
+
+        return redirect(request.META.get("HTTP_REFERER", "/"))
+
+
+class FollowersListView(View):
+    """لیست دنبال‌کننده‌ها - وب"""
+
+    template_name = "accounts/followers_list.html"
+
+    def get(self, request, user_id):
+        service = FollowService(request.user)
+        result = service.get_followers(user_id, page=int(request.GET.get("page", 1)))
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "followers": result["items"],
+                "pagination": result,
+            },
+        )
+
+
+class FollowingListView(View):
+    """لیست دنبال‌شونده‌ها - وب"""
+
+    template_name = "accounts/following_list.html"
+
+    def get(self, request, user_id):
+        service = FollowService(request.user)
+        result = service.get_following(user_id, page=int(request.GET.get("page", 1)))
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "following": result["items"],
+                "pagination": result,
+            },
+        )
 
 
 @login_required

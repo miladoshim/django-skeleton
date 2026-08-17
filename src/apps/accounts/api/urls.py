@@ -1,5 +1,14 @@
 from django.urls import include, path
 
+from apps.accounts.api.accounts_views import (
+    FollowStatsAPIView,
+    FollowStatusAPIView,
+    FollowersListAPIView,
+    FollowingListAPIView,
+    SuggestionsAPIView,
+    ToggleFollowAPIView,
+)
+
 from .auth_views import (
     SocialLoginAPIView,
     UserEmailRegisterView,
@@ -16,6 +25,32 @@ urlpatterns = [
     #     name="account_setting",
     # ),
     # path("accounts/comments", UserLoginView.as_view(), name="account_setting"),
+    path(
+        "api/follow/<uuid:user_id>/",
+        ToggleFollowAPIView.as_view(),
+        name="api_toggle_follow",
+    ),
+    path(
+        "api/follow/stats/<uuid:user_id>/",
+        FollowStatsAPIView.as_view(),
+        name="api_follow_stats",
+    ),
+    path(
+        "api/follow/status/<uuid:user_id>/",
+        FollowStatusAPIView.as_view(),
+        name="api_follow_status",
+    ),
+    path(
+        "api/followers/<uuid:user_id>/",
+        FollowersListAPIView.as_view(),
+        name="api_followers",
+    ),
+    path(
+        "api/following/<uuid:user_id>/",
+        FollowingListAPIView.as_view(),
+        name="api_following",
+    ),
+    path("api/suggestions/", SuggestionsAPIView.as_view(), name="api_suggestions"),
     # Authentication
     path(
         "auth/email/register/",

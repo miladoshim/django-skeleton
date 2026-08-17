@@ -1,15 +1,26 @@
 # Django skeleton project
 
-in rest api and graphql
+everting you need to start a project.
 
 ## Features
 
 ### Authentication
 
-- [ ] OTP/Mobile
-- [ ] EMAIL/Activation
-- [ ] Forgot Password/Email
-- [ ] Forgot Password/Mobile
+- [ ] Register with Mobile OTP
+- [ ] Register with Email
+- [ ] Login with mobile/email/username
+- [ ] Login with OTP Password
+- [ ] Forgot Password with Email
+- [ ] Forgot Password with Mobile
+- [ ] Social Login with Github
+
+### User Account
+
+- [ ] Public Profile
+- [ ] Follow/UnFollow
+- [ ] Dashboard
+- [ ] User Setting
+- [ ] Change Password
 
 ### Blog
 
@@ -17,6 +28,7 @@ in rest api and graphql
 - [ ] Tags
 - [ ] Posts
 - [ ] Hierarchy Comment System
+- [ ] Bookmark
 
 ### Core
 
@@ -24,5 +36,7 @@ in rest api and graphql
 - [ ] ContactUs
 - [ ] Iranian Payment (Zarinpal)
 - [ ] Iranian SMS Provider (Kavenegar)
-- [ ] Caching
-- [ ] S3 Compatible Storage
+
+### ScreenShots
+
+![Home Page](/screenshots/home_1.png)
