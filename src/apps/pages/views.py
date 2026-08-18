@@ -15,8 +15,9 @@ from django.views.decorators.http import require_safe
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, TemplateView
 from apps.blog.models import Post
+from apps.core.forms import SearchForm
 from apps.pages.models import ContactUsSubject
-from .forms import ContactForm, SearchForm
+from .forms import ContactForm
 
 
 class HomePageView(TemplateView):

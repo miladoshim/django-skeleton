@@ -1,4 +1,3 @@
-from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -6,23 +5,6 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from apps.blog.models import Post
 from apps.pages.models import ContactUsSubject, FaqGroup
-
-
-def search(request):
-    if request.method == "POST":
-        query = request.POST.get("q")
-        if query:
-            query_for_search = SearchQuery(query)
-            search_vector = SearchVector("title", weight="A") + SearchVector(
-                "body", weight="B"
-            )
-            search_rank = SearchRank(search_vector, query_for_search)
-            posts = (
-                Post.objects.published.annotate(search=search_vector, rank=search_rank)
-                .filter(search=query_for_search)
-                .order_by("-rank")
-            )
-            return Response({"posts": posts})
 
 
 class FaqGroupViewSet(ReadOnlyModelViewSet):

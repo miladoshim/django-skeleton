@@ -61,6 +61,10 @@
                   </div>
                 </div>
               </div>
+
+              <div class="d-flex mx-auto text-center justify-content-center mt-5">
+                {% include 'partials/_pagination.html' %}
+              </div>
             {% empty %}
               <div class="page-center">
                 <div class="empty">
@@ -78,9 +82,6 @@
                 </div>
               </div>
             {% endfor %}
-          </div>
-          <div class="d-flex mx-auto text-center justify-content-center mt-5">
-            {% include 'partials/_pagination.html' %}
           </div>
         </div>
       </div>

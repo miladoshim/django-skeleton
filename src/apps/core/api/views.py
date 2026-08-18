@@ -1,16 +1,17 @@
-import json
-
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.views import APIView
 from django.core.exceptions import PermissionDenied
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from apps.api.renderers import CommonRenderer
+from apps.blog.models import Post
 from apps.core.api.serializers import TagSerializer
 from apps.core.services.tag_service import TagService
 
 
 class TagViewSet(viewsets.ViewSet):
-    # permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     renderer_classes = [CommonRenderer]
 
     service = TagService()
@@ -120,3 +121,21 @@ class TagViewSet(viewsets.ViewSet):
 
         self.service.delete(tag)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+def GlobalSearch(APIView):
+
+    def get(self, request, *args, **kwargs):
+        query = request.POST.get("q")
+        if query:
+            query_for_search = SearchQuery(query)
+            search_vector = SearchVector("title", weight="A") + SearchVector(
+                "body", weight="B"
+            )
+            search_rank = SearchRank(search_vector, query_for_search)
+            posts = (
+                Post.objects.published.annotate(search=search_vector, rank=search_rank)
+                .filter(search=query_for_search)
+                .order_by("-rank")
+            )
+            return Response({"posts": posts})

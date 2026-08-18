@@ -15,6 +15,7 @@ from treebeard.mp_tree import MP_Node
 from apps.core.managers import PublishedManager
 from apps.core.models import BaseModel
 from utils.enums import PublishStatusChoice
+from utils.storage_paths import thumbnail_path
 
 User = get_user_model()
 
@@ -104,7 +105,7 @@ class Post(BaseModel, HitCountMixin):
     )
     body = models.TextField("متن مقاله")
     thumbnail = models.ImageField(
-        upload_to="posts/thumbnails/%Y/%m/%d",
+        upload_to=thumbnail_path,
         verbose_name="تصویر شاخص",
     )
     published_status = models.PositiveSmallIntegerField(

@@ -28,6 +28,10 @@ class CaptchaForm(forms.Form):
         return cleaned_data
 
 
+class SearchForm(forms.Form):
+    query = forms.CharField(min_length=3, max_length=150, required=True, label="جستجو")
+
+
 class ContactForm(forms.Form):
     name = forms.CharField(
         min_length=3,
