@@ -87,6 +87,8 @@ INSTALLED_APPS = [
     "drf_spectacular_sidecar",
     "drf_api_logger",
     "robots",
+    "markdownx",
+    "martor",
     "hitcount",
     "treebeard",
     "meta",

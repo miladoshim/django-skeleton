@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% load static %}
+
 {% block title %}
   وبلاگ
 {% endblock %}
@@ -52,7 +54,11 @@
                       </div>
                       <div class="d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
-                          <img class="avatar avatar-2 rounded" src="{{ post.author.get_avatar_url }}" alt="{{ post.author.get_full_name }}" />
+                          {% if post.author.profile.avatar %}
+                            <img class="avatar avatar-2" style="background-image: url({{ post.author.profile.get_avatar_url }})" />
+                          {% else %}
+                            <img class="avatar avatar-2" style="background-image: url({% static 'images/default_man_avatar.jpg' %})" />
+                          {% endif %}
                           <a href="{{ post.author.get_profile_url }}" class="post-card-text mx-2">{{ post.author.get_full_name }}</a>
                         </div>
                         <div class="badge bg-blue text-blue-fg post-card-text">{{ post.category.name }}</div>

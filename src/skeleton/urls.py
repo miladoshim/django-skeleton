@@ -18,6 +18,8 @@ urlpatterns = [
     path("bankgateways/", az_bank_gateways_urls()),
     path("taggit/", include("taggit_selectize.urls")),
     path("schema-viewer/", include("schema_viewer.urls")),
+    path("martor/", include("martor.urls")),
+    path("markdownx/", include("markdownx.urls")),
 ]
 
 

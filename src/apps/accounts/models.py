@@ -126,8 +126,10 @@ class User(AbstractBaseUser, FollowMixin, PermissionsMixin):
         return self.profile.avatar
 
     def get_avatar_url(self):
-        if self.profile.avatar.url:
+        if self.profile.avatar != '"images/default_man_avatar.jpg"':
             return self.profile.avatar.url
+        else:
+            return self.profile.get_default_avatar_image()
 
     def has_delete_permission(self, request, obj=None):
         if not request.user.is_superuser:

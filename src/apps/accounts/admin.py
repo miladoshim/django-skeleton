@@ -190,3 +190,12 @@ class SocialAccountAdmin(admin.ModelAdmin):
         ("اطلاعات اضافی", {"fields": ("extra_data",)}),
         ("زمان‌بندی", {"fields": ("created_at", "updated_at")}),
     )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=...):
+        return False
+
+    def has_delete_permission(self, request, obj=...):
+        return False

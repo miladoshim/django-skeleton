@@ -20,8 +20,8 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         # "apps.file_manager.services.storage_service.StaticStorage"
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "import_export": {
         "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
