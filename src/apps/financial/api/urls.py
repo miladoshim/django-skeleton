@@ -1,1 +1,7 @@
-urlpatterns = []
+from django.urls import path
+
+urlpatterns = [
+    # path(
+    #     "request/",
+    # ),
+]
