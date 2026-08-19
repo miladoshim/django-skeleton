@@ -5,7 +5,7 @@ from apps.accounts.api.accounts_views import (
     FollowStatusAPIView,
     FollowersListAPIView,
     FollowingListAPIView,
-    SuggestionsAPIView,
+    FollowSuggestionsAPIView,
     ToggleFollowAPIView,
     UserProfileAPIView,
 )
@@ -51,7 +51,9 @@ urlpatterns = [
         FollowingListAPIView.as_view(),
         name="api_following",
     ),
-    path("api/suggestions/", SuggestionsAPIView.as_view(), name="api_suggestions"),
+    path(
+        "api/suggestions/", FollowSuggestionsAPIView.as_view(), name="api_suggestions"
+    ),
     # Authentication
     path(
         "auth/email/register/",

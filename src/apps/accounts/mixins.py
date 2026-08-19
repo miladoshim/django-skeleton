@@ -1,6 +1,5 @@
 from django.db import models
 from django.db.models import Q
-from .models import Follow
 
 
 class FollowMixin(models.Model):
@@ -41,16 +40,14 @@ class FollowMixin(models.Model):
         if self.is_following(user):
             return False, "در حال حاضر دنبال می‌کنید"
 
-        Follow.objects.create(follower=self, following=user)
+        self.followers.create(follower=self, following=user)
         return True, "با موفقیت دنبال کردید"
 
     def unfollow(self, user):
         if self == user:
             return False, "نمی‌توانید خودتان را لغو کنید"
 
-        from .models import Follow
-
-        deleted, _ = Follow.objects.filter(follower=self, following=user).delete()
+        deleted, _ = self.following.filter(follower=self, following=user).delete()
 
         if deleted:
             return True, "لغو دنبال کردید"
@@ -69,7 +66,6 @@ class FollowMixin(models.Model):
         return self.__class__.objects.filter(id__in=mutual_ids)
 
     def get_follow_suggestions(self, limit=10):
-        """پیشنهاد کاربران برای دنبال کردن"""
 
         # افرادی که من دنبال می‌کنم
         following_ids = self.following.values_list("following_id", flat=True)

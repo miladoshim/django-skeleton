@@ -1,4 +1,5 @@
-import logging
+from apps.financial.services.wallet_service import WalletService
+from utils.logger import logger
 import os
 from django.contrib import messages
 from django.utils import timezone
@@ -6,7 +7,7 @@ from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import (
@@ -21,7 +22,7 @@ from azbankgateways import (
     models as bank_models,
 )
 from apps.accounts.services.follow_service import FollowService
-from apps.financial.services.payment_service import Payment as PaymentService
+from apps.financial.services.payment_service import PaymentService
 from apps.financial.models import (
     Payment,
     PaymentFor,
@@ -181,7 +182,10 @@ class FollowersListView(View):
 
     def get(self, request, user_id):
         service = FollowService(request.user)
-        result = service.get_followers(user_id, page=int(request.GET.get("page", 1)))
+        result = service.get_followers(
+            user_id,
+            page=int(request.GET.get("page", 1)),
+        )
 
         return render(
             request,
@@ -198,7 +202,10 @@ class FollowingListView(View):
 
     def get(self, request, user_id):
         service = FollowService(request.user)
-        result = service.get_following(user_id, page=int(request.GET.get("page", 1)))
+        result = service.get_following(
+            user_id,
+            page=int(request.GET.get("page", 1)),
+        )
 
         return render(
             request,
@@ -210,8 +217,64 @@ class FollowingListView(View):
         )
 
 
-# # @method_decorator(vary_on_cookie, name="dispatch")
-# # @method_decorator(cache_page(60 * 15), name="dispatch")
+class WalletChargeView(LoginRequiredMixin, View):
+    login_url = "apps.accounts:login_classic"
+
+    def post(self, request):
+        amount = int(request.POST.get("amount"))
+        service = WalletService(request.user)
+        result = service.validate_for_charge(amount)
+
+        if result["success"]:
+            callback_url = "apps.accounts:dashboard_financial_wallet_charge_callback"
+
+            return PaymentService(
+                request=request,
+                amount=amount,
+                payment_for=PaymentFor.WALLET_CHARGE,
+                callback_url=callback_url,
+            ).go_to_gateway()
+        else:
+            messages.error(request, result["message"])
+            return redirect("apps.accounts:dashboard_financial")
+
+
+class WalletChargeCallbackView(LoginRequiredMixin, View):
+    login_url = "apps.accounts:login_classic"
+    template_name = "financial/payment_result.html"
+
+    def get(self, request):
+        tracking_code = request.GET.get(settings.TRACKING_CODE_QUERY_PARAM)
+
+        service = WalletService(request.user)
+        result = service.process_callback(tracking_code)
+
+        if result["success"]:
+            return render(
+                request,
+                "financial/payment_result.html",
+                {
+                    "success": result["success"],
+                    "message": result["message"],
+                    "tc": result.get("tracking_code", tracking_code),
+                    "btn_url": "apps.accounts:dashboard_financial",
+                    "btn_title": "رفتن به کیف پول",
+                },
+            )
+        else:
+            return render(
+                request,
+                "financial/payment_result.html",
+                {
+                    "success": False,
+                    "message": result["message"],
+                    "tc": result.get("tracking_code", tracking_code),
+                    "btn_url": "apps.accounts:dashboard_financial",
+                    "btn_title": "رفتن به کیف پول",
+                },
+            )
+
+
 # class CommentListView(LoginRequiredMixin, ListView):
 #     context_object_name = "comments"
 #     paginate_by = 24
@@ -219,87 +282,3 @@ class FollowingListView(View):
 
 #     def get_queryset(self):
 #         return Comment.objects.filter(user=self.request.user)
-
-
-@login_required
-def wallet_charge(request):
-    if request.method == "POST":
-        amount = int(request.POST.get("amount"))
-        if amount < 100000:
-            messages.error(request, "مبلغ کم تر از صد هزار تومان می باشد.")
-            return HttpResponseRedirect(reverse("apps.accounts:dashboard_financial"))
-
-        callback_url = "apps.accounts:dashboard_financial_wallet_charge_callback"
-        pay = PaymentService(
-            request=request,
-            amount=amount,
-            payment_for=PaymentFor.WALLET_CHARGE,
-            callback_url=callback_url,
-        )
-        return pay.go_to_gateway()
-
-
-@login_required
-def wallet_charge_callback(request):
-    tracking_code = request.GET.get(settings.TRACKING_CODE_QUERY_PARAM, None)
-    if not tracking_code:
-        logging.debug("این لینک معتبر نیست.")
-        raise Http404
-
-    try:
-        bank_record = bank_models.Bank.objects.get(tracking_code=tracking_code)
-    except bank_models.Bank.DoesNotExist:
-        logging.debug("این لینک معتبر نیست.")
-        raise Http404
-
-    with transaction.atomic():
-
-        (
-            wallet_transaction,
-            created,
-        ) = WalletTransaction.objects.select_for_update().get_or_create(
-            tracking_code=tracking_code,
-            defaults={
-                "user": request.user,
-                "amount": bank_record.amount,
-                "is_processed": False,
-            },
-        )
-
-        if wallet_transaction.is_processed:
-            context = {
-                "success": False,
-                "message": "این تراکنش قبلا پردازش شده است.",
-                "tc": tracking_code,
-                "btn_url": "apps.accounts:dashboard_financial",
-                "btn_title": "رفتن به کیف پول",
-            }
-            return render(request, "financial/payment_result.html", context=context)
-
-        if bank_record.is_success:
-            request.user.wallet.charge(bank_record.amount)
-
-            wallet_transaction.is_processed = True
-            wallet_transaction.processed_at = timezone.now()
-            wallet_transaction.save()
-
-            context = {
-                "success": True,
-                "message": f"کیف شما به مبلغ {bank_record.amount} شارژ شد",
-                "tc": tracking_code,
-                "btn_url": "apps.accounts:dashboard_financial",
-                "btn_title": "رفتن به کیف پول",
-            }
-            return render(request, "financial/payment_result.html", context=context)
-
-    context = {
-        "success": False,
-        "message": "پرداخت با شکست مواجه شده است. اگر پول کم شده است ظرف مدت ۴۸ ساعت پول به حساب شما بازخواهد گشت.",
-        "tc": tracking_code,
-        "btn_url": "apps.accounts:dashboard_financial",
-        "btn_title": "رفتن به کیف پول",
-    }
-    return render(request, "financial/payment_result.html", context=context)
-
-
-####### End Dashboard #############

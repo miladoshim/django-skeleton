@@ -455,12 +455,10 @@ class OtpRequest(BaseModel):
 
     @property
     def is_expired(self):
-        """آیا منقضی شده؟"""
         return timezone.now() > self.expired_at
 
     @classmethod
     def delete_expired(cls):
-        """حذف همه رکوردهای منقضی شده"""
         expired_count = cls.objects.filter(expires_at__lt=timezone.now()).delete()[0]
         return expired_count
 

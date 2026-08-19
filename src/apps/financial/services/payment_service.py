@@ -9,7 +9,7 @@ from azbankgateways.exceptions import AZBankGatewaysException
 from apps.financial.models import Payment as PaymentModel
 
 
-class Payment:
+class PaymentService:
     request = None
     amount = None
     payment_for = None
@@ -17,7 +17,12 @@ class Payment:
     callback_url = None
 
     def __init__(
-        self, request, amount, callback_url, payment_for=None, object_id_for=None
+        self,
+        request,
+        amount,
+        callback_url,
+        payment_for=None,
+        object_id_for=None,
     ):
         self.request = request
         self.amount = amount

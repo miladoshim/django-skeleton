@@ -17,11 +17,14 @@ from apps.accounts.api.serializers import (
     UserSerializer,
 )
 from apps.accounts.services.follow_service import FollowService
+from apps.api.renderers import CommonRenderer
+from apps.financial.services.wallet_service import WalletService
 
 
 class UserProfileAPIView(RetrieveAPIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = UserSerializer
+    renderer_classes = (CommonRenderer,)
 
     def get_object(self):
         return get_object_or_404(User, username=self.request.POST.get("username"))
@@ -29,6 +32,7 @@ class UserProfileAPIView(RetrieveAPIView):
 
 class ToggleFollowAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    renderer_classes = (CommonRenderer,)
 
     def post(self, request, user_id):
         service = FollowService(request.user)
@@ -39,6 +43,7 @@ class ToggleFollowAPIView(APIView):
 
 class FollowStatsAPIView(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
+    renderer_classes = (CommonRenderer,)
 
     def get(self, request, user_id):
         service = FollowService(request.user)
@@ -48,7 +53,7 @@ class FollowStatsAPIView(APIView):
 
 
 class FollowStatusAPIView(APIView):
-
+    renderer_classes = (CommonRenderer,)
     permission_classes = [IsAuthenticated]
 
     def get(self, request, user_id):
@@ -60,6 +65,7 @@ class FollowStatusAPIView(APIView):
 
 class FollowersListAPIView(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
+    renderer_classes = (CommonRenderer,)
 
     def get(self, request, user_id):
         service = FollowService(request.user)
@@ -83,8 +89,8 @@ class FollowingListAPIView(APIView):
 
 
 class FollowSuggestionsAPIView(APIView):
-
     permission_classes = [IsAuthenticated]
+    renderer_classes = (CommonRenderer,)
 
     def get(self, request):
         service = FollowService(request.user)
@@ -94,16 +100,27 @@ class FollowSuggestionsAPIView(APIView):
         return Response(result)
 
 
-class WalletCharge(APIView):
+class WalletAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    renderer_classes = (CommonRenderer,)
+
+    def get(self, request):
+        service = WalletService(request.user)
+
+        return Response({"balance": service.get_balance()})
 
     def post(self, request):
-        amount = request.POST.get("amount")
-        # service = WalletService(request.user ,amount)
+        amount = int(request.data.get("amount"))
+        service = WalletService(request.user)
+
+        result = service.validate_for_charge(amount)
+
+        return Response(result)
 
 
 class ChangePasswordAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    renderer_classes = (CommonRenderer,)
 
     def post(self, request):
         user = request.user
@@ -129,11 +146,9 @@ class ChangePasswordAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # تغییر رمز
         user.set_password(new_password)
         user.save()
 
-        # ارسال ایمیل اطلاعرسانی
         self._send_notification(user)
 
         return Response(
