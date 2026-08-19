@@ -9,7 +9,6 @@ from apps.blog.services.post_service import PostService
 
 
 class PostViewSet(viewsets.ViewSet):
-
     permission_classes = [IsAuthenticatedOrReadOnly]
     service = PostService()
     renderer_classes = [CommonRenderer]

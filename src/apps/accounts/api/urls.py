@@ -7,6 +7,7 @@ from apps.accounts.api.accounts_views import (
     FollowingListAPIView,
     SuggestionsAPIView,
     ToggleFollowAPIView,
+    UserProfileAPIView,
 )
 
 from .auth_views import (
@@ -17,7 +18,7 @@ from .auth_views import (
 # from .accounts_views import ()
 
 urlpatterns = [
-    # path("accounts/", UserLoginView.as_view(), name="account_index"),
+    path("profile/", UserProfileAPIView.as_view(), name="user_profile_api"),
     # path("accounts/setting/", UserLoginView.as_view(), name="account_setting"),
     # path(
     #     "accounts/setting/change_password",

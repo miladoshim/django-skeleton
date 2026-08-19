@@ -109,6 +109,12 @@ class User(AbstractBaseUser, FollowMixin, PermissionsMixin):
         full_name = "%s %s" % (self.first_name, self.last_name)
         return full_name.strip()
 
+    def get_account_role_title(self):
+        return "مدیر کل" if self.is_staff else "کاربر"
+
+    def get_wallet_balance(self):
+        return self.wallet.balance
+
     @property
     def is_banned(self) -> bool:
         return self.meta.is_banned

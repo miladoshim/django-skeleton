@@ -13,9 +13,7 @@ User = get_user_model()
 
 
 class PostService(BaseService):
-
     model = Post
-
     MAX_TITLE_LENGTH = 200
     MIN_CONTENT_LENGTH = 10
 

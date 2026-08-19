@@ -5,7 +5,13 @@ info:
 
 http:
   method: GET
-  url: "{{baseurlv1}}/accounts/"
+  url: "{{baseurlv1}}profile/"
+  body:
+    type: multipart-form
+    data:
+      - name: username
+        type: text
+        value: adminuser
   auth: inherit
 
 settings:

@@ -1,26 +1,25 @@
 from django.db import models
+from django.db.models import Q
+from .models import Follow
 
 
 class FollowMixin(models.Model):
+
     class Meta:
         abstract = True
 
     @property
     def followers_count(self):
-        """تعداد دنبال‌کننده‌ها"""
         return self.followers.count()
 
     @property
     def following_count(self):
-        """تعداد افرادی که دنبال می‌کنم"""
         return self.following.count()
 
     def get_followers(self):
-        """لیست دنبال‌کننده‌ها"""
         return self.followers.select_related("follower").all()
 
     def get_following(self):
-        """لیست افرادی که دنبال می‌کنم"""
         return self.following.select_related("following").all()
 
     def is_following(self, user):
@@ -36,20 +35,16 @@ class FollowMixin(models.Model):
         return self.followers.filter(follower=user).exists()
 
     def follow(self, user):
-        """دنبال کردن کاربر"""
         if self == user:
             return False, "نمی‌توانید خودتان را دنبال کنید"
 
         if self.is_following(user):
             return False, "در حال حاضر دنبال می‌کنید"
 
-        from .models import Follow
-
         Follow.objects.create(follower=self, following=user)
         return True, "با موفقیت دنبال کردید"
 
     def unfollow(self, user):
-        """لغو دنبال کردن"""
         if self == user:
             return False, "نمی‌توانید خودتان را لغو کنید"
 
@@ -62,7 +57,6 @@ class FollowMixin(models.Model):
         return False, "شما این کاربر را دنبال نمی‌کنید"
 
     def toggle_follow(self, user):
-        """تغییر وضعیت دنبال کردن"""
         if self.is_following(user):
             return self.unfollow(user)
         return self.follow(user)
@@ -74,9 +68,8 @@ class FollowMixin(models.Model):
         mutual_ids = my_followers & their_followers
         return self.__class__.objects.filter(id__in=mutual_ids)
 
-    def get_suggestions(self, limit=10):
+    def get_follow_suggestions(self, limit=10):
         """پیشنهاد کاربران برای دنبال کردن"""
-        from django.db.models import Q
 
         # افرادی که من دنبال می‌کنم
         following_ids = self.following.values_list("following_id", flat=True)

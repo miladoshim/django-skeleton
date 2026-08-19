@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     "apps.api.apps.ApiConfig",
     "apps.financial.apps.FinancialConfig",
     "apps.pages.apps.PagesConfig",
+    "apps.notifications.apps.NotificationsConfig",
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",

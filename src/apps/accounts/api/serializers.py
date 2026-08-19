@@ -3,6 +3,7 @@ from django.utils.encoding import force_bytes, smart_str
 from django.contrib.sites.shortcuts import get_current_site
 from rest_framework import reverse, serializers
 from rest_framework.serializers import ModelSerializer, Serializer, ValidationError
+from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import (
     TokenObtainPairSerializer,
     TokenRefreshSerializer,
@@ -40,12 +41,12 @@ class UserEmailRegisterSerializer(ModelSerializer):
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
-            raise ValidationError("Email already exists.")
+            raise ValidationError("کاربری با این ایمیل ثبت نام کرده است.")
         return value
 
     def validate_password(self, value):
         if len(value) < 8:
-            raise ValidationError("Password should be at least %s characters long.")
+            raise ValidationError("رمز عبور حداقل باید ۸ کاراکتر باشد.")
         return value
 
     def create(self, validated_data):
@@ -57,15 +58,54 @@ class UserEmailRegisterSerializer(ModelSerializer):
         return instance
 
 
+class UserLoginSerializer(serializers.Serializer):
+    identifier = serializers.CharField(
+        allow_null=False,
+    )
+    password = serializers.CharField(
+        min_length=8,
+        max_length=64,
+        write_only=True,
+    )
+
+
+class UserLogoutSerializer(Serializer):
+    refresh = serializers.CharField()
+
+    def validate(self, attrs):
+        self.token = attrs.get("refresh")
+        return attrs
+
+    def save(self, **kwargs):
+        RefreshToken(self.token).blacklist()
+
+        return super().save(**kwargs)
+
+
 class UserProfileSerializer(ModelSerializer):
     class Meta:
-        model = User
-        exclude = ["updated_at", "created_at"]
+        model = UserProfile
+        fields = [
+            "avatar",
+            "banner",
+            "gender",
+            "bio",
+            "birthday_year",
+            "birthday_month",
+            "birthday_day",
+        ]
+
+
+class UserMetaSerializer(ModelSerializer):
+    class Meta:
+        model = UserMeta
+        fields = "__all__"
 
 
 class UserSerializer(ModelSerializer):
     full_name = serializers.CharField(source="get_full_name")
     role_title = serializers.CharField(source="get_account_role_title")
+    wallet_balance = serializers.CharField(source="get_wallet_balance")
     profile = UserProfileSerializer("profile")
 
     class Meta:
@@ -74,20 +114,17 @@ class UserSerializer(ModelSerializer):
             "id",
             "uuid",
             "username",
-            "email",
-            "mobile",
             "full_name",
+            "email",
+            "is_staff",
+            "role",
+            "mobile",
             "created_at",
             "role_title",
             "profile",
-            # "wallet_balance",
+            "wallet_balance",
         ]
         read_only_fields = ["id", "username"]
-
-    # def to_representation(self, instance):
-    #     representation = super().to_representation(instance)
-    #     representation["wallet_balance"] = instance.wallet.balance
-    #     return representation
 
     # def get_follower_count(self, obj):
     #     return obj.followers.count()
@@ -96,12 +133,6 @@ class UserSerializer(ModelSerializer):
 class WalletSerializer(ModelSerializer):
     class Meta:
         model = Wallet
-        fields = "__all__"
-
-
-class UserMetaSerializer(ModelSerializer):
-    class Meta:
-        model = UserMeta
         fields = "__all__"
 
 
@@ -127,40 +158,8 @@ class ObtainTokenSerializer(serializers.Serializer):
     created = serializers.BooleanField()
 
 
-class UserLoginSerializer(serializers.Serializer):
-    mobile = serializers.CharField(
-        min_length=11,
-        max_length=11,
-        allow_null=False,
-    )
-    password = serializers.CharField(
-        min_length=5,
-        max_length=64,
-        write_only=True,
-    )
-
-
 class CookieTokenRefreshSerializer(TokenRefreshSerializer):
     pass
-
-
-class UserLogoutSerializer(Serializer):
-    refresh = serializers.CharField()
-
-    def validate(self, attrs):
-        self.token = attrs.get("refresh")
-        return attrs
-
-    def save(self, **kwargs):
-        RefreshToken(self.token).blacklist()
-
-        return super().save(**kwargs)
-
-
-class UserProfileSerializer(ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["id", "uuid", "email", "first_name", "last_name", "username"]
 
 
 class UserChangePasswordSerializer(Serializer):
@@ -209,7 +208,7 @@ class UserForgotPasswordMobileSerializer(Serializer):
 
             # send sms
 
-            return response(
+            return Response(
                 reverse(
                     "apps.accounts:password_forgot_mobile_reset_view",
                     kwargs={"mobile": mobile, "reqid": otp.request_id},
@@ -232,7 +231,8 @@ class UserForgotPasswordEmailSerializer(Serializer):
         if User.objects.filter(email=email).exists():
             user = User.objects.get(email=email)
             uid = urlsafe_base64_encode(force_bytes(user.id))
-            # token = tokens.PasswordResetTokenGenerator().make_token(user)
+            # token = PasswordResetTokenGenerator().make_token(user)
+            token = ""
             currentSite = get_current_site().domain
             relativeLink = reverse("")
             link = "https://localhost:3000/api/password_reset/" + uid + "/" + token

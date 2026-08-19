@@ -6,11 +6,10 @@ from django.contrib.auth.signals import (
     user_login_failed,
 )
 from django.core.files.storage import default_storage
-from django.db.models.base import pre_save
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from apps.financial.models import Wallet
-from utils.helpers import get_user_ip_address
+from utils.helpers import get_user_agent, get_user_ip_address
 from .models import Follow, User, UserMeta, UserProfile
 
 
@@ -24,11 +23,23 @@ def user_created_signal(sender, instance, created, *args, **kwargs):
         instance.save()
 
 
+# @receiver(pre_delete, sender=User, dispatch_uid="user_delete_signal")
+# def user_deleted_signal(sender, instance, *args, **kwargs):
+#     if instance.pk:
+#         try:
+#             old_instance = sender.objects.get(pk=instance.pk)
+#         except sender.DoesNotExist:
+#             return
+
+#     delete_user_avatar_and_banner(old_instance, instance)
+
+
 @receiver(post_delete, sender=User)
-def user_created_signal(sender, instance, *args, **kwargs):
-    UserProfile.objects.filter(user=instance).delete()
-    UserMeta.objects.filter(user=instance).delete()
-    Wallet.objects.filter(user=instance).delete()
+def user_deleted_signal(sender, instance, *args, **kwargs):
+    # UserProfile.objects.filter(user=instance).delete()
+    # UserMeta.objects.filter(user=instance).delete()
+    # Wallet.objects.filter(user=instance).delete()
+    pass
 
 
 @receiver(user_logged_in, sender=User)
@@ -36,9 +47,8 @@ def user_logged_in_signal(sender, request, user, *args, **kwargs):
     meta = UserMeta.objects.get(user=user)
     meta.last_login_at = datetime.datetime.now()
     meta.last_login_ip = get_user_ip_address(request)
-    # meta.last_login_agent = ""
+    meta.last_login_agent = get_user_agent(request)
     meta.save()
-    # send_login_message.apply_async(receiver=user.mobile)
 
 
 @receiver(user_logged_out, sender=User)
@@ -46,12 +56,6 @@ def user_logged_out_signal(sender, request, user, *args, **kwargs):
     meta = UserMeta.objects.get(user=user)
     meta.last_logout_at = datetime.datetime.now()
     meta.save()
-
-
-@receiver(user_login_failed, sender=User)
-def user_login_failed_signal(sender, request, user, *args, **kwargs):
-    log_msg = str(user.mobile) + "failed to login"
-    print(log_msg)
 
 
 def delete_user_avatar_and_banner(old_instance: User, instance: User):
@@ -77,29 +81,11 @@ def delete_user_avatar_and_banner(old_instance: User, instance: User):
         print("Error in Delete user profile avatar and banner")
 
 
-@receiver(pre_delete, sender=User, dispatch_uid="user_delete_signal")
-def user_deleted_signal(sender, instance, *args, **kwargs):
-    if instance.pk:
-        try:
-            old_instance = sender.objects.get(pk=instance.pk)
-        except sender.DoesNotExist:
-            return
-
-    delete_user_avatar_and_banner(old_instance, instance)
-
-
 @receiver(post_save, sender=Follow)
 def notify_follow(sender, instance, created, **kwargs):
     if created:
-        # اینجا می‌توانید اعلان بسازید
         # Notification.objects.create(
         #     user=instance.following,
         #     message=f"{instance.follower.username} شما را دنبال کرد"
         # )
         pass
-
-
-# @receiver(post_save, sender=User)
-# def create_auth_token(sender, instance, created=False, **kwargs):
-#     if created:
-#         Token.objects.create(user=instance)

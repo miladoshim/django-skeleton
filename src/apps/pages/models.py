@@ -1,42 +1,34 @@
 from django.db import models
 from apps.core.models import BaseModel
 
-# class NewsletterSubscriber(BaseModel):
-#     email = models.EmailField(max_length=255)
-#     date_added = models.DateTimeField(auto_now_add=True)
 
-#     def __str__(self):
-#         return "%s" % self.email
+class FaqGroup(BaseModel):
+    title = models.TextField(max_length=150, verbose_name="عنوان گروه")
 
-#     class Meta:
-#         verbose_name = "مشترک خبرنامه"
-#         verbose_name_plural = "مشترکین خبرنامه "
+    def __str__(self):
+        return self.title
 
-
-# class FaqGroup(BaseModel):
-#     title = models.TextField(max_length=255)
-
-#     def __str__(self):
-#         return self.title
-
-#     class Meta:
-#         verbose_name = "گروه سوالات متداول"
-#         verbose_name_plural = "گروه های سوالات متداول"
+    class Meta:
+        verbose_name = "گروه سوالات متداول"
+        verbose_name_plural = "گروه های سوالات متداول"
 
 
-# class Faq(BaseModel):
-#     question = models.TextField(max_length=1024)
-#     answer = models.TextField(max_length=1024)
-#     group = models.OneToOneField(
-#         FaqGroup, on_delete=models.CASCADE, related_name="group"
-#     )
+class Faq(BaseModel):
+    question = models.TextField(max_length=1024, verbose_name="سوال")
+    answer = models.TextField(max_length=1024, verbose_name="پرسش")
+    group = models.OneToOneField(
+        FaqGroup,
+        on_delete=models.CASCADE,
+        related_name="group",
+        verbose_name="گروه مرتبط",
+    )
 
-#     def __str__(self):
-#         return self.question
+    def __str__(self):
+        return self.question
 
-#     class Meta:
-#         verbose_name = "سوال متداول"
-#         verbose_name_plural = "سوالات متداول"
+    class Meta:
+        verbose_name = "سوال متداول"
+        verbose_name_plural = "سوالات متداول"
 
 
 class ContactUsSubject(BaseModel):

@@ -9,7 +9,10 @@ class ContactForm(forms.ModelForm):
         label="شماره موبایل",
         required=True,
         widget=forms.TextInput(
-            attrs={"placeholder": "مثال:‌09121236515", "class": "form-control"},
+            attrs={
+                "placeholder": "مثال:‌09121236515",
+                "class": "form-control",
+            },
         ),
     )
 

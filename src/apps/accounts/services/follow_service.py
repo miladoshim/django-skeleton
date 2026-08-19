@@ -1,7 +1,5 @@
-# apps/accounts/services/follow_service.py
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
@@ -22,23 +20,21 @@ class FollowService:
         }
 
     def get_followers(self, user_id=None, page=1, limit=20):
-        """لیست دنبال‌کننده‌ها"""
         user = self._get_user(user_id)
         followers = user.get_followers()
         return self._paginate(followers, page, limit)
 
     def get_following(self, user_id=None, page=1, limit=20):
-        """لیست دنبال‌شونده‌ها"""
         user = self._get_user(user_id)
         following = user.get_following()
         return self._paginate(following, page, limit)
 
     def get_stats(self, user_id=None):
-        """آمار فالو"""
         user = self._get_user(user_id)
         return {
             "user_id": user.id,
             "username": user.username,
+            "fullname": user.get_full_name,
             "followers_count": user.followers_count,
             "following_count": user.following_count,
             "is_following_me": (
@@ -50,7 +46,6 @@ class FollowService:
         }
 
     def get_follow_status(self, target_user_id):
-        """وضعیت فالو با یک کاربر"""
         target = get_object_or_404(User, id=target_user_id)
         return {
             "is_following": self.user.is_following(target),
@@ -59,9 +54,8 @@ class FollowService:
             "following_count": target.following_count,
         }
 
-    def get_suggestions(self, limit=10):
-        """پیشنهاد کاربران"""
-        suggestions = self.user.get_suggestions(limit)
+    def get_follow_suggestions(self, limit=10):
+        suggestions = self.user.get_follow_suggestions(limit)
         return [
             {
                 "id": user.id,
@@ -75,16 +69,16 @@ class FollowService:
             for user in suggestions
         ]
 
-    # ---------- متدهای خصوصی ----------
-
     def _get_user(self, user_id=None):
-        """دریافت کاربر"""
         if user_id:
-            return get_object_or_404(User, id=user_id, is_active=True)
+            return get_object_or_404(
+                User,
+                id=user_id,
+                is_active=True,
+            )
         return self.user
 
     def _paginate(self, queryset, page, limit):
-        """صفحه‌بندی"""
         start = (page - 1) * limit
         end = start + limit
         items = queryset[start:end]

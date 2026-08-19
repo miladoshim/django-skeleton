@@ -1,19 +1,16 @@
-import jwt
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.generics import (
-    GenericAPIView,
-    ListAPIView,
     RetrieveAPIView,
 )
 from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
+    AllowAny,
 )
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from apps.accounts.models import User
 from apps.accounts.api.serializers import (
     UserProfileSerializer,
@@ -21,16 +18,13 @@ from apps.accounts.api.serializers import (
 )
 from apps.accounts.services.follow_service import FollowService
 
-######## Start Dashboard Api ############
-
 
 class UserProfileAPIView(RetrieveAPIView):
-    permission_classes = (IsAuthenticated,)
-    # authentication_classes = (TokenAuthentication,)
-    serializer_class = UserProfileSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    serializer_class = UserSerializer
 
     def get_object(self):
-        return self.request.user.userprofile
+        return get_object_or_404(User, username=self.request.POST.get("username"))
 
 
 class ToggleFollowAPIView(APIView):
@@ -88,7 +82,7 @@ class FollowingListAPIView(APIView):
         return Response(result)
 
 
-class SuggestionsAPIView(APIView):
+class FollowSuggestionsAPIView(APIView):
 
     permission_classes = [IsAuthenticated]
 
@@ -100,78 +94,12 @@ class SuggestionsAPIView(APIView):
         return Response(result)
 
 
-######## End Dashboard Api ############
-
-
 class WalletCharge(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         amount = request.POST.get("amount")
         # service = WalletService(request.user ,amount)
-
-
-@api_view(["GET"])
-@permission_classes([IsAuthenticatedOrReadOnly])
-def get_user_profile(request, username):
-    try:
-        user = User.objects.get(username=username)
-    except User.DoesNotExist:
-        return Response(
-            {"error": "user does not exists"},
-            status=status.HTTP_404_NOT_FOUND,
-            exception=True,
-        )
-
-    serializer = UserSerializer(user, many=False, context={"request": request})
-
-    # following = False
-    # if request.user in user.followers.all():
-    #     following = True
-
-    return Response(
-        {
-            "data": serializer.data,
-            "is_out_profile": request.user.username == user.username,
-            # "following": following,
-        }
-    )
-
-
-class UserProfileApiView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, format=None):
-        token = request.COOKIES.get("jwt")
-
-        if not token:
-            raise AuthenticationFailed("unauthenticated")
-
-        try:
-            payload = jwt.decode(token, "secret", algorithm="HS256")
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed("un authenticate")
-
-        user = User.objects.get(id=payload["id"])
-        serializer = UserProfileSerializer(user)
-        return Response(serializer.data)
-
-
-@api_view(["PATCH"])
-@permission_classes([IsAuthenticated])
-def user_profile_update(request):
-    data = request.data
-    try:
-        user = User.objects.get(username=request.data["username"])
-    except User.DoesNotExist:
-        return Response({"error": "user does not exists"})
-
-    serializer = UserProfileSerializer(user, data, partial=True)
-
-    if serializer.is_valid():
-        serializer.save()
-        return Response({**serializer.data, "success": True})
-    return Response({**serializer.error, "success": False})
 
 
 class ChangePasswordAPIView(APIView):
@@ -183,7 +111,6 @@ class ChangePasswordAPIView(APIView):
         new_password = request.data.get("password")
         confirm_password = request.data.get("password_confirmation")
 
-        # اعتبارسنجی
         if not user.check_password(old_password):
             return Response(
                 {"detail": "رمز عبور فعلی اشتباه است"},

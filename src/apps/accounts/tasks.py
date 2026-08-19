@@ -16,12 +16,11 @@ def users_count():
 @shared_task(bind=True, max_retries=3)
 def send_welcome_message(receiver: str):
     new_user = User.objects.filter("username" == receiver)
-    pass
 
 
 @shared_task(bind=True, max_retries=3)
 def send_login_message(receiver: str):
-    User.objects.get(mobile=receiver)
+    user = User.objects.get(mobile=receiver)
 
 
 @shared_task
@@ -30,7 +29,7 @@ def send_password_changed_message(receiver: str):
 
 
 @shared_task
-def delete_user_account():
+def delete_user_account(user: User):
     try:
         pass
     except Exception as e:
@@ -51,7 +50,7 @@ def cleanup_expired_otp_requests():
     now = timezone.now()
 
     with transaction.atomic():
-        query = Q(expired_at__lt=now) | Q(created_at__lt=now - timedelta(days=7))
+        query = Q(expired_at__lt=now) | Q(created_at__lt=now - timedelta(days=1))
 
         deleted_count = OtpRequest.objects.filter(query).delete()[0]
 

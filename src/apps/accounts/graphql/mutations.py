@@ -3,17 +3,13 @@ from typing import Optional
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.core.exceptions import ValidationError
 from strawberry.types import Info
-
 from apps.accounts.graphql.types import UserType, UserPublicType
-from apps.blog.validators import UserValidators
 
 User = get_user_model()
 
 
 @strawberry.type
 class AuthMutation:
-    """Mutation های احراز هویت"""
-
     @strawberry.mutation
     def register(
         self,
@@ -24,9 +20,7 @@ class AuthMutation:
         first_name: Optional[str] = "",
         last_name: Optional[str] = "",
     ) -> UserPublicType:
-        """ثبت‌نام کاربر جدید"""
 
-        # اعتبارسنجی
         try:
             UserValidators.validate_email(email)
             UserValidators.validate_username(username)
@@ -53,7 +47,6 @@ class AuthMutation:
 
     @strawberry.mutation
     def login(self, info: Info, email: str, password: str) -> UserType:
-        """ورود کاربر"""
 
         user = authenticate(email=email, password=password)
 

@@ -296,6 +296,15 @@ class AuthService(BaseService):
             recipient_list=[user.email],
         )
 
+    def _send_welcome_email(self, user: User):
+        """ارسال ایمیل خوشآمد"""
+        send_mail(
+            subject="خوش آمدید!",
+            message=f"سلام {user.username}، به سایت ما خوش آمدید!",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+        )
+
     @transaction.atomic
     def verify_email(self, uid: str, token: str) -> bool:
         try:

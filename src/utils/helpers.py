@@ -100,6 +100,14 @@ def get_user_ip_address(request):
     return ip
 
 
+def get_user_agent(request):
+    http_user_agent = request.META.get("HTTP_USER_AGENT")
+    if http_user_agent:
+        return http_user_agent
+    else:
+        return None
+
+
 def cache_view(timeout=60 * 15, vary_on_user=True):
     def decorator(view_func):
         @functools.wraps(view_func)
