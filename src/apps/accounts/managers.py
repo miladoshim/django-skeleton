@@ -39,26 +39,6 @@ class UserManager(BaseUserManager):
             raise ValueError("Superuser must have is_superuser=True.")
         return self._create_user(mobile, password, **extra_fields)
 
-    # def active(self):
-    #     """کاربران فعال"""
-    #     return self.get_queryset().filter(is_active=True)
-
-    # def verified(self):
-    #     """کاربران با ایمیل تایید شده"""
-    #     return self.get_queryset().filter(is_email_verified=True)
-
-    # def online(self):
-    #     """کاربران آنلاین"""
-    #     five_minutes_ago = timezone.now() - timezone.timedelta(minutes=5)
-    #     return self.get_queryset().filter(last_activity__gte=five_minutes_ago)
-
-    # def get_by_email_or_username(self, identifier):
-    #     """دریافت کاربر با ایمیل یا نام کاربری"""
-    #     try:
-    #         return self.get(email__iexact=identifier)
-    #     except self.model.DoesNotExist:
-    #         return self.get(username__iexact=identifier)
-
 
 class OtpRequestQuerySet(models.QuerySet):
 

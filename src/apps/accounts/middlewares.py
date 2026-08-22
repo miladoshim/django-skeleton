@@ -19,7 +19,7 @@ class SaveUserSessionMiddleware:
         session_key = request.session.session_key or self._create_session(request)
 
         UserSession.objects.filter(session_key=session_key).update(
-            last_activity=timezone.now()
+            last_login_at=timezone.now()
         )
 
         if not UserSession.objects.filter(session_key=session_key).exists():

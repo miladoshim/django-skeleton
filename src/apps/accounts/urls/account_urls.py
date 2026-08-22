@@ -1,7 +1,7 @@
 from django.urls import path
 
 from apps.accounts.views.account_views import (
-    ActiveSessionsView,
+    DashboardActiveSessionsView,
     DashboardView,
     DashboardSettingView,
     DashboardChangePasswordView,
@@ -42,7 +42,11 @@ urlpatterns = [
         DashboardChangePasswordView.as_view(),
         name="dashboard_setting_password",
     ),
-    path("accounts/sessions/", ActiveSessionsView.as_view(), name="sessions"),
+    path(
+        "accounts/sessions/",
+        DashboardActiveSessionsView.as_view(),
+        name="dashboard_sessions",
+    ),
     path(
         "accounts/sessions/terminate/<int:session_id>/",
         TerminateSessionView.as_view(),

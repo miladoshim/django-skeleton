@@ -24,19 +24,17 @@
                 </div>
               {% endfor %}
             </div>
-            <div class="subheader mb-2">Shipping</div>
+            <div class="subheader mb-2">بر اساس زمان</div>
             <div>
-              <select name="" class="form-select">
-                <option>United Kingdom</option>
-                <option>USA</option>
-                <option>Germany</option>
-                <option>Poland</option>
-                <option>Other…</option>
+              <select name="time" class="form-select">
+                <option value="u" selected>بروزترین</option>
+                <option value="n">جدید ترین</option>
+                <option value="o">قدیمی ترین</option>
               </select>
             </div>
             <div class="mt-5">
-              <button class="btn btn-primary btn-4 w-100">اعلام فیلتر ها</button>
-              <a href="#" class="btn btn-link btn-3 w-100">ریست فیلتر ها</a>
+              <button type="submit" class="btn btn-primary btn-4 w-100">اعلام فیلتر ها</button>
+              <a href="{% url 'apps.blog:post_list' %}" class="btn btn-link btn-3 w-100">ریست فیلتر ها</a>
             </div>
           </form>
         </div>

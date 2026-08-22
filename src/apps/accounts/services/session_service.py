@@ -11,7 +11,6 @@ class SessionService:
         self.user = user
 
     def get_sessions(self):
-        """همه نشست‌های فعال"""
         return UserSession.objects.filter(user=self.user, is_active=True)
 
     def terminate(self, session_id):
@@ -64,7 +63,7 @@ class SessionService:
                 "os": s.os,
                 "ip": s.ip,
                 "is_current": s.session_key == current_key,
-                "last_activity": s.last_activity,
+                "last_login_at": s.last_login_at,
                 "created_at": s.created_at,
                 "duration": str(timezone.now() - s.created_at).split(".")[0],
             }

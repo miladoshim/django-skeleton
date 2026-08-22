@@ -275,7 +275,7 @@ class WalletChargeCallbackView(LoginRequiredMixin, View):
             )
 
 
-class ActiveSessionsView(LoginRequiredMixin, View):
+class DashboardActiveSessionsView(LoginRequiredMixin, View):
     template_name = "accounts/sessions.html"
 
     def get(self, request):
