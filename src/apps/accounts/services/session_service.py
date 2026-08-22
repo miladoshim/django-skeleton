@@ -14,9 +14,10 @@ class SessionService:
         return UserSession.objects.filter(user=self.user, is_active=True)
 
     def terminate(self, session_id):
-        """پایان یک نشست"""
         session = UserSession.objects.filter(
-            user=self.user, id=session_id, is_active=True
+            user=self.user,
+            id=session_id,
+            is_active=True,
         ).first()
 
         if not session:

@@ -74,7 +74,6 @@ class DashboardSettingView(LoginRequiredMixin, View):
             user.username = form.cleaned_data["username"]
             user.first_name = form.cleaned_data["first_name"]
             user.last_name = form.cleaned_data["last_name"]
-
             user.email = form.cleaned_data["email"]
 
             form_mobile = form.cleaned_data["mobile"]
@@ -85,9 +84,14 @@ class DashboardSettingView(LoginRequiredMixin, View):
             else:
                 user.mobile = form_mobile
                 user.meta.mobile_verified_at = None
-
             user.save()
+
             user.profile.bio = form.cleaned_data["bio"]
+            user.profile.short_bio = form.cleaned_data["short_bio"]
+            user.profile.birthday_year = form.cleaned_data["birthday_year"]
+            user.profile.birthday_month = form.cleaned_data["birthday_month"]
+            user.profile.birthday_day = form.cleaned_data["birthday_day"]
+
             avatar = form.cleaned_data.get("avatar")
             if avatar:
                 self._save_avatar(user, avatar)
@@ -286,7 +290,7 @@ class DashboardActiveSessionsView(LoginRequiredMixin, View):
         return render(request, self.template_name, {"sessions": formatted})
 
 
-class TerminateSessionView(LoginRequiredMixin, View):
+class DashboardTerminateSessionView(LoginRequiredMixin, View):
     def post(self, request, session_id):
         result = SessionService(request.user).terminate(session_id)
 
@@ -294,7 +298,7 @@ class TerminateSessionView(LoginRequiredMixin, View):
             messages.success(request, result["message"])
         else:
             messages.error(request, result["message"])
-        return redirect("apps.accounts:sessions")
+        return redirect("apps.accounts:dashboard_sessions")
 
 
 class TerminateAllSessionsView(LoginRequiredMixin, View):

@@ -43,3 +43,8 @@ everting you need to start a project.
 ### ScreenShots
 
 ![Home Page](/screenshots/home_1.png)
+
+![Dashboard Setting](/screenshots/dashboard_setting.png)
+![Dashboard Change Password](/screenshots/dashboard_change_password.png)
+![Dashboard Active Sessions](/screenshots/dashboard_sessions.png)
+

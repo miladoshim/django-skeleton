@@ -164,11 +164,18 @@ class UserProfile(BaseModel):
         null=True,
         verbose_name="بنر پروفایل",
     )
-    gender = models.CharField(
-        max_length=8,
+    gender = models.PositiveSmallIntegerField(
         choices=GenderChoices.choices,
-        default=GenderChoices.__empty__,
+        default=GenderChoices.UNKNOWN,
         verbose_name="جنسیت",
+        null=True,
+        blank=True,
+    )
+    short_bio = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        verbose_name="تیتر شغلی یا تخصص",
     )
     bio = models.CharField(
         max_length=255,

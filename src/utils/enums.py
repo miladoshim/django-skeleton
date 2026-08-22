@@ -11,6 +11,6 @@ class PublishStatusChoice(IntegerChoices):
 
 
 class GenderChoices(IntegerChoices):
-    MALE = 1, "آقا"
-    FEMALE = 2, "خانم"
-    __empty__ = "نامشخص"
+    UNKNOWN = 1, "نامشخص"
+    MALE = 2, "آقا"
+    FEMALE = 3, "خانم"

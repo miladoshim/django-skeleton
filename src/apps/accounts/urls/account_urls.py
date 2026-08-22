@@ -5,7 +5,7 @@ from apps.accounts.views.account_views import (
     DashboardView,
     DashboardSettingView,
     DashboardChangePasswordView,
-    TerminateSessionView,
+    DashboardTerminateSessionView,
     ToggleFollowView,
     UserProfileView,
     UserProfilePostsView,
@@ -49,7 +49,7 @@ urlpatterns = [
     ),
     path(
         "accounts/sessions/terminate/<int:session_id>/",
-        TerminateSessionView.as_view(),
-        name="terminate_session",
+        DashboardTerminateSessionView.as_view(),
+        name="dashboard_session_terminate",
     ),
 ]

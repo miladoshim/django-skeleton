@@ -80,6 +80,7 @@
             <input type="text" class="form-control" name="username" id="username" required value="{{ user.username }}" />
           </div>
         </div>
+
         <div class="row g-3 my-3">
           <div class="col-md d-flex justify-content-between">
             <div class="w-100">
@@ -108,13 +109,93 @@
             </div>
           </div>
         </div>
+
+        <div class="row g-3 mt-3">
+          <div class="col-md">
+            <div class="form-label">تیتر تخصص یا شغلی</div>
+            <input type="text" class="form-control" name="short_bio" id="short_bio" required value="{{ user.short_bio }}" placeholder="در حد ۱۰۰ کاراکتر تیتر شغل یا تخصص " />
+          </div>
+          <div class="col-md">
+            <div class="form-label">تاریخ تولد</div>
+            <div class="row">
+              <div class="col-4">
+                <select class="form-select" name="birthday_month" id="birthday_month" required value="{{ user.birthday_month }}">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
+                  <option value="11">11</option>
+                  <option value="12">12</option>
+                  <option value="12">13</option>
+                  <option value="12">14</option>
+                  <option value="12">15</option>
+                  <option value="12">16</option>
+                  <option value="12">17</option>
+                  <option value="12">18</option>
+                  <option value="12">19</option>
+                  <option value="12">20</option>
+                  <option value="12">21</option>
+                  <option value="12">22</option>
+                  <option value="12">23</option>
+                  <option value="12">24</option>
+                  <option value="12">25</option>
+                  <option value="12">26</option>
+                  <option value="12">27</option>
+                  <option value="12">28</option>
+                  <option value="12">29</option>
+                  <option value="12">30</option>
+                  <option value="12">31</option>
+                </select>
+              </div>
+              <div class="col-4">
+                <select class="form-select" name="birthday_month" id="birthday_month" required value="{{ user.birthday_month }}">
+                  <option value="1">فروردین</option>
+                  <option value="2">اردیبهش</option>
+                  <option value="3">خرداد</option>
+                  <option value="4">تیر</option>
+                  <option value="5">مرداد</option>
+                  <option value="6">شهریور</option>
+                  <option value="7">مهر</option>
+                  <option value="8">آبان</option>
+                  <option value="9">آذر</option>
+                  <option value="10">دی</option>
+                  <option value="11">بهمن</option>
+                  <option value="12">اسفند</option>
+                </select>
+              </div>
+              <div class="col-4">
+                <input type="text" class="form-control" name="birthday_year" id="birthday_year" required value="{{ user.birthday_year }}" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="row g-3 my-3">
           <div class="col-md">
             <div class="form-label">بیوگرافی</div>
             <textarea class="form-control" name="bio" id="bio" required rows="6" placeholder="مختصری درباره خود بنویسید...">{{ user.profile.bio|default:'' }}</textarea>
           </div>
         </div>
+
+        {% comment %} <h3 class="card-title mt-2">شبکه های اجتماعی</h3>
+        <div class="row g-3 mt-3">
+          <div class="col-md">
+            <div class="form-label">وب سایت</div>
+            <input type="text" class="form-control" name="first_name" id="first_name" required value="{{ user.first_name }}" />
+          </div>
+          <div class="col-md">
+            <div class="form-label">گیت هاب</div>
+            <input type="text" class="form-control" name="last_name" id="last_name" required value="{{ user.last_name }}" />
+          </div>
+        </div> {% endcomment %}
       </div>
+
       <div class="card-footer bg-transparent mt-auto">
         <div class="btn-list justify-content-center">
           <button type="submit" class="btn btn-primary btn-2 w-25">تغییر</button>

@@ -28,7 +28,7 @@
                     <tr>
                       <td class="d-flex align-items-center">
                         {% comment %} <span class="avatar avatar-sm" style="background-image: url(./static/avatars/000m.jpg)"></span> {% endcomment %}
-                        <div class="mx-1">{{ session.browser }} ({{ session.device }})</div>
+                        <div class="mx-1">{{ session.browser }} - {{ session.os }} ({{ session.device }})</div>
                       </td>
                       <td class="">{{ session.ip }}</td>
                       <td class="text-nowrap text-secondary">{{ session.last_login_at }}</td>
@@ -36,7 +36,7 @@
                         {% if session.is_current %}
                           <span class="btn btn-sm btn-outline btn-success">نشست فعلی</span>
                         {% else %}
-                          <form action="" method="post">
+                          <form action="{% url 'apps.accounts:dashboard_session_terminate' session.id %}" method="post">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-outline btn-danger">خاتمه نشست</button>
                           </form>
