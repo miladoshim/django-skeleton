@@ -1,5 +1,4 @@
-from django.urls import include, path
-
+from django.urls import path
 from apps.accounts.api.accounts_views import (
     FollowStatsAPIView,
     FollowStatusAPIView,
@@ -7,52 +6,54 @@ from apps.accounts.api.accounts_views import (
     FollowingListAPIView,
     FollowSuggestionsAPIView,
     ToggleFollowAPIView,
+    UserPostsAPIView,
     UserProfileAPIView,
+    UserChangePasswordAPIView,
+    UserProfileUpdateAPIView,
 )
-
 from .auth_views import (
     SocialLoginAPIView,
     UserEmailRegisterView,
 )
 
-# from .accounts_views import ()
-
 urlpatterns = [
     path("profile/", UserProfileAPIView.as_view(), name="user_profile_api"),
-    # path("accounts/setting/", UserLoginView.as_view(), name="account_setting"),
-    # path(
-    #     "accounts/setting/change_password",
-    #     UserLoginView.as_view(),
-    #     name="account_setting",
-    # ),
-    # path("accounts/comments", UserLoginView.as_view(), name="account_setting"),
+    path("accounts/update/", UserProfileUpdateAPIView.as_view(), name="account_update"),
     path(
-        "api/follow/<uuid:user_id>/",
+        "accounts/change_password/",
+        UserChangePasswordAPIView.as_view(),
+        name="account_change_password",
+    ),
+    path("accounts/posts/", UserPostsAPIView.as_view(), name="account_posts"),
+    path(
+        "profile/friends/<uuid:uuid>/",
         ToggleFollowAPIView.as_view(),
         name="api_toggle_follow",
     ),
     path(
-        "api/follow/stats/<uuid:user_id>/",
+        "profile/friends/stats/<uuid:uuid>/",
         FollowStatsAPIView.as_view(),
         name="api_follow_stats",
     ),
     path(
-        "api/follow/status/<uuid:user_id>/",
+        "profile/friends/status/<uuid:uuid>/",
         FollowStatusAPIView.as_view(),
         name="api_follow_status",
     ),
     path(
-        "api/followers/<uuid:user_id>/",
+        "profile/friends/followers/<uuid:uuid>/",
         FollowersListAPIView.as_view(),
         name="api_followers",
     ),
     path(
-        "api/following/<uuid:user_id>/",
+        "profile/friends/following/<uuid:uuid>/",
         FollowingListAPIView.as_view(),
         name="api_following",
     ),
     path(
-        "api/suggestions/", FollowSuggestionsAPIView.as_view(), name="api_suggestions"
+        "profile/friends/followers/suggestions/",
+        FollowSuggestionsAPIView.as_view(),
+        name="api_suggestions",
     ),
     # Authentication
     path(

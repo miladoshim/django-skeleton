@@ -45,26 +45,13 @@ class UserEmailRegisterForm(Form):
     )
     password = forms.CharField(
         widget=forms.PasswordInput(
-            attrs={"placeholder": "رمز عبور", "class": "form-control"},
+            attrs={"placeholder": "رمز عبور قوی انتخاب کنید", "class": "form-control"},
         ),
         validators=[
             validators.MinLengthValidator(8),
         ],
         label="رمز عبور",
     )
-
-    def clean_email(self):
-        email = self.cleaned_data.get("email", "").strip().lower()
-
-        if not email:
-            raise ValidationError("ایمیل الزامی است")
-
-        user = User.objects.filter(email=email).exists()
-
-        if user:
-            raise ValidationError("کاربری با این ایمیل ثبت نام کرده است.")
-
-        return email
 
 
 class UserLoginForm(Form):

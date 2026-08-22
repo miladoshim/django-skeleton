@@ -36,6 +36,11 @@ def delete_user_account(user: User):
         pass
 
 
+@shared_task(bind=True, max_retries=3)
+def send_activation_email(email: str):
+    pass
+
+
 @shared_task(bind=True)
 def send_otp_password(self, receiver: str, otp: str):
     try:

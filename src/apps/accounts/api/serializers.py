@@ -164,13 +164,19 @@ class CookieTokenRefreshSerializer(TokenRefreshSerializer):
 
 class UserChangePasswordSerializer(Serializer):
     old_password = serializers.CharField(
-        max_length=255, style={"input_type": "password"}, write_only=True
+        max_length=255,
+        style={"input_type": "password"},
+        write_only=True,
     )
     password = serializers.CharField(
-        max_length=255, style={"input_type": "password"}, write_only=True
+        max_length=255,
+        style={"input_type": "password"},
+        write_only=True,
     )
     password2 = serializers.CharField(
-        max_length=255, style={"input_type": "password"}, write_only=True
+        max_length=255,
+        style={"input_type": "password"},
+        write_only=True,
     )
 
     class Meta:
@@ -182,7 +188,7 @@ class UserChangePasswordSerializer(Serializer):
         user = self.context.get("user")
 
         if password != password2:
-            raise ValidationError({"password": "Passwords not same"})
+            raise ValidationError({"password": "رمز عبور یکسان نیست!"})
 
         user.set_password(password)
         user.save()

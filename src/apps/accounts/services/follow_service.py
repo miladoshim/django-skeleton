@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 
@@ -8,16 +9,19 @@ class FollowService:
     def __init__(self, user):
         self.user = user
 
+    @transaction.atomic
     def toggle_follow(self, target_user_uuid):
-        target = get_object_or_404(User, uuid=target_user_uuid)
-        success, message = self.user.toggle_follow(target)
-        return {
-            "success": success,
-            "message": message,
-            "is_following": self.user.is_following(target),
-            "followers_count": target.followers_count,
-            "following_count": target.following_count,
-        }
+        try:
+
+            target = get_object_or_404(User, uuid=target_user_uuid, is_active=True)
+
+            if self.user == target:
+                return {"success": False, "message": "نمی‌توانید خودتان را دنبال کنید"}
+
+            return self.user.toggle_follow(target)
+
+        except Exception as e:
+            return {"success": False, "message": "خطا در فالو کردن"}
 
     def get_followers(self, user_id=None, page=1, limit=20):
         user = self._get_user(user_id)

@@ -164,10 +164,8 @@ class UserProfileView(DetailView):
 
 
 class ToggleFollowView(LoginRequiredMixin, View):
-
     def post(self, request, uuid):
-        service = FollowService(request.user)
-        result = service.toggle_follow(uuid)
+        result = FollowService(request.user).toggle_follow(uuid)
 
         if result["success"]:
             messages.success(request, result["message"])

@@ -63,6 +63,7 @@ class UserClassicRegisterView(IsUnAuthenticatedMixin, FormView):
         result = AuthService().register_email(first_name, last_name, email, password)
 
         messages.success(self.request, result["message"])
+
         return redirect(self.success_url)
 
     def form_invalid(self, form):

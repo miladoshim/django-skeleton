@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Q
 
 
@@ -23,40 +23,72 @@ class FollowMixin(models.Model):
 
     def is_following(self, user):
         """آیا این کاربر را دنبال می‌کند"""
-        if not user or not user.is_authenticated:
+        if not user:
             return False
+
         return self.following.filter(following=user).exists()
 
     def is_followed_by(self, user):
         """آیا این کاربر مرا دنبال می‌کند"""
-        if not user or not user.is_authenticated:
+        if not user:
             return False
         return self.followers.filter(follower=user).exists()
 
+    @transaction.atomic
     def follow(self, user):
         if self == user:
-            return False, "نمی‌توانید خودتان را دنبال کنید"
+            return {"success": False, "message": "نمی‌توانید خودتان را دنبال کنید"}
 
         if self.is_following(user):
-            return False, "در حال حاضر دنبال می‌کنید"
+            return {"success": False, "message": "در حال حاضر دنبال میکنید"}
 
         self.followers.create(follower=self, following=user)
-        return True, "با موفقیت دنبال کردید"
+        return {"success": True, "message": "با موفقیت دنبال کردید"}
 
+    @transaction.atomic
     def unfollow(self, user):
         if self == user:
-            return False, "نمی‌توانید خودتان را لغو کنید"
+            return {"success": False, "message": "نمی‌توانید خودتان را لغو کنید"}
 
         deleted, _ = self.following.filter(follower=self, following=user).delete()
 
         if deleted:
-            return True, "لغو دنبال کردید"
-        return False, "شما این کاربر را دنبال نمی‌کنید"
+            return {"success": True, "message": "آنفالو کردید"}
 
-    def toggle_follow(self, user):
-        if self.is_following(user):
-            return self.unfollow(user)
-        return self.follow(user)
+        return {"success": False, "message": "شما اینکاربر را دنبال نمیکنید"}
+
+    def toggle_follow(self, target_user):
+
+        if self == target_user:
+            return {
+                "success": False,
+                "is_following": False,
+                "message": "نمی‌توانید خودتان را دنبال کنید",
+            }
+
+        if not target_user or not target_user.is_authenticated:
+            return {
+                "success": False,
+                "is_following": False,
+                "message": "کاربر نامعتبر است",
+            }
+
+        is_following = self.following.filter(following=target_user).exists()
+
+        if is_following:
+            self.following.filter(following=target_user).delete()
+            return {
+                "success": True,
+                "is_following": False,
+                "message": f"دنبال کردن {target_user.username} لغو شد",
+            }
+        else:
+            self.following.create(following=target_user)
+            return {
+                "success": True,
+                "is_following": True,
+                "message": f"شما {target_user.username} را دنبال میکنید",
+            }
 
     def get_mutual_followers(self, user):
         """دنبال‌کننده‌های مشترک"""

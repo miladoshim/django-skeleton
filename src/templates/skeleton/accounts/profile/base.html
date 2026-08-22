@@ -84,11 +84,10 @@
                     </svg>داشبورد
                   </a>
                 {% else %}
-                  <a href="{% url 'apps.accounts:dashboard_index' %}" class="btn btn-primary btn-3">دنبال کردن</a>
                   <form method="POST" action="{% url 'apps.accounts:toggle_follow' profile.uuid %}">
                     {% csrf_token %}
-                    {% if user|is_following:profile_user %}
-                      <button type="submit" class="btn btn-primary">لغو دنبال کردن</button>
+                    {% if request.user|is_following:profile %}
+                      <button type="submit" class="btn btn-outline-primary">لغو دنبال کردن</button>
                     {% else %}
                       <button type="submit" class="btn btn-primary">دنبال کردن</button>
                     {% endif %}

@@ -5,15 +5,18 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from apps.accounts.api.permissions import IsNotAuthenticated
 from apps.accounts.api.serializers import UserEmailRegisterSerializer
 from apps.accounts.services.social_auth__service import SocialAuthService
 from apps.accounts.services.auth_service import AuthService
 from utils.logger import logger
 
 
-# Classic Register with email/password
 class UserEmailRegisterView(APIView):
-    # permission_classes = (IsUnAuthenticated)
+    """Classic Register with email/password"""
+
+    permission_classes = (IsNotAuthenticated,)
+
     def post(self, request, *args, **kwargs):
         serializer = UserEmailRegisterSerializer(data=request.data)
         if serializer.is_valid():
@@ -31,7 +34,7 @@ class UserEmailRegisterView(APIView):
 
 
 class LogoutAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = (IsAuthenticated,)
 
     def post(self, request):
         try:

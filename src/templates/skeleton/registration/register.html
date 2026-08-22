@@ -21,32 +21,7 @@
         {% csrf_token %}
         <div class="card-body">
           <h2 class="card-title text-center mb-4">در اسکلتون ثبت نام کنید</h2>
-          <div class="mb-3">
-            <label class="form-label">نام</label>
-            <input type="text" class="form-control" placeholder="نام" name="first_name" required />
-          </div>
-          <div class="mb-3">
-            <label class="form-label">نام خانودگی</label>
-            <input type="text" class="form-control" placeholder="نام خانوادگی" name="last_name" required />
-          </div>
-          <div class="mb-3">
-            <label class="form-label">ایمیل</label>
-            <input type="email" class="form-control" placeholder="ایمیل" name="email" required />
-          </div>
-          <div class="mb-3">
-            <label class="form-label">رمز عبور</label>
-            <div class="input-group input-group-flat">
-              <input type="password" class="form-control" placeholder="Password" autocomplete="off" required name="password" />
-              <span class="input-group-text">
-                <a href="#" class="link-secondary" title="Show password" data-bs-toggle="tooltip">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
-                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-                    <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
-                  </svg>
-                </a>
-              </span>
-            </div>
-          </div>
+          {{ form.as_p }}
           <div class="mb-3">
             <label class="form-check"><span>با ثبت نام در اسکلتون <a href="./terms-of-service.html" tabindex="-1">قوانین و شرایط</a> را میپذیرم.</span></label>
           </div>

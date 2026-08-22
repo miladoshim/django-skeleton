@@ -1,13 +1,11 @@
+import uuid
 from typing import Optional, Dict, Any
+from django.core.cache import cache
 from datetime import datetime
 from django.contrib.auth.tokens import (
     PasswordResetTokenGenerator,
     default_token_generator,
 )
-from django.contrib.sites.shortcuts import get_current_site
-from django.core.mail.message import EmailMessage
-from django.shortcuts import reverse
-from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from apps.accounts.admin import User
@@ -16,6 +14,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.db import transaction
 from rest_framework_simplejwt.tokens import RefreshToken
+from apps.accounts.tasks import send_activation_email
 from apps.core.services.base_service import BaseService
 from utils.helpers import full_url
 
@@ -280,21 +279,45 @@ class AuthService(BaseService):
 
     @transaction.atomic
     def _send_activation_email(self, user):
-
-        token = default_token_generator.make_token(user)
+        token = str(uuid.uuid4())
         uid = urlsafe_base64_encode(force_bytes(user.pk))
+        cache.set(f"verify_email_{token}", user.id, timeout=86400)
+
         activation_url = full_url("apps.accounts:email_activation", uid, token)
 
         send_mail(
-            subject="فعال‌سازی ایمیل حساب کاربری",
+            subject="فعالسازی ایمیل",
             message=f"""
-            به سایت ما خوش آمدید!
-            برای فعال‌سازی ایمیل حساب خود روی لینک زیر کلیک کنید:
-            {activation_url}
-            """,
+                 به سایت ما خوش آمدید!
+                 برای فعال‌سازی ایمیل حساب خود روی لینک زیر کلیک کنید:
+                 {activation_url}
+                 """,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
         )
+
+    @transaction.atomic
+    def verify_email(self, uid: str, token: str) -> bool:
+
+        user_id = cache.get(f"verify_email_{token}")
+
+        if not user_id:
+            return False
+
+        try:
+            user = User.objects.get(pk=force_str(urlsafe_base64_decode(uid)))
+
+            if str(user.id) == str(user_id):
+                user.is_active = True
+                user.save(update_fields=["is_active"])
+                user.meta.email_verified_at = datetime.now()
+                user.meta.save()
+
+                cache.delete(f"verify_email_{token}")
+                return True
+
+        except User.DoesNotExist:
+            return False
 
     def _send_welcome_email(self, user: User):
         """ارسال ایمیل خوشآمد"""
@@ -304,24 +327,6 @@ class AuthService(BaseService):
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
         )
-
-    @transaction.atomic
-    def verify_email(self, uid: str, token: str) -> bool:
-        try:
-            user_id = force_str(urlsafe_base64_decode(uid))
-            user = User.objects.get(pk=user_id)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            user = None
-            raise ValueError("لینک تایید نامعتبر است")
-
-        if user is not None and default_token_generator.check_token(user, token):
-            user.is_acitve = True
-            user.save()
-            user.meta.email_verified_at = datetime.now()
-            user.meta.save()
-            return True
-
-        return False
 
     def _send_password_change_notification(self, user: User):
         send_mail(
