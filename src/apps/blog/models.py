@@ -78,8 +78,7 @@ class Post(BaseModel, HitCountMixin):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        limit_choices_to={"is_staff": True},
-        related_name="authored_posts",
+        related_name="posts",
         verbose_name="نویسنده",
     )
     category = models.ForeignKey(

@@ -1,3 +1,5 @@
+import json
+
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
@@ -26,12 +28,12 @@ class FollowService:
     def get_followers(self, user_id=None, page=1, limit=20):
         user = self._get_user(user_id)
         followers = user.get_followers()
-        return self._paginate(followers, page, limit)
+        return followers
 
     def get_following(self, user_id=None, page=1, limit=20):
         user = self._get_user(user_id)
         following = user.get_following()
-        return self._paginate(following, page, limit)
+        return following
 
     def get_stats(self, user_id=None):
         user = self._get_user(user_id)
@@ -82,36 +84,36 @@ class FollowService:
             )
         return self.user
 
-    def _paginate(self, queryset, page, limit):
-        start = (page - 1) * limit
-        end = start + limit
-        items = queryset[start:end]
-
-        return {
-            "items": [
-                {
-                    "id": item.id,
-                    "username": item.username,
-                    "email": item.email,
-                    "first_name": item.first_name,
-                    "last_name": item.last_name,
-                    "followers_count": item.followers_count,
-                    "following_count": item.following_count,
-                    "is_following": (
-                        self.user.is_following(item)
-                        if self.user.is_authenticated
-                        else False
-                    ),
-                    "is_followed_by": (
-                        item.is_following(self.user)
-                        if self.user.is_authenticated
-                        else False
-                    ),
-                }
-                for item in items
-            ],
-            "total": queryset.count(),
-            "page": page,
-            "limit": limit,
-            "has_next": end < queryset.count(),
-        }
+    # def _paginate(self, queryset, page, limit):
+    #     start = (page - 1) * limit
+    #     end = start + limit
+    #     items = queryset[start:end]
+    #     print(items)
+    #     return {
+    #         "items": [
+    #             {
+    #                 "id": item.id,
+    #                 # "username": item.username,
+    #                 # "email": item.email,
+    #                 "first_name": item.first_name,
+    #                 "last_name": item.last_name,
+    #                 "followers_count": item.followers_count,
+    #                 "following_count": item.following_count,
+    #                 "is_following": (
+    #                     self.user.is_following(item)
+    #                     if self.user.is_authenticated
+    #                     else False
+    #                 ),
+    #                 "is_followed_by": (
+    #                     item.is_following(self.user)
+    #                     if self.user.is_authenticated
+    #                     else False
+    #                 ),
+    #             }
+    #             for item in items
+    #         ],
+    #         "total": queryset.count(),
+    #         "page": page,
+    #         "limit": limit,
+    #         "has_next": end < queryset.count(),
+    #     }

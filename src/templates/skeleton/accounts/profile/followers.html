@@ -1,5 +1,7 @@
 {% extends 'accounts/profile/base.html' %}
 
+{% load static %} {% load accounts_tags %}
+
 {% block title %}
   دنبال کننده ها
 {% endblock %}
@@ -8,6 +10,51 @@
   <div class="card card-body">
     <div class="mb-3">
       <h3 class="fw-bold">دنبال کننده ها</h3>
+      <div class="divide-y">
+        {% for item in followers %}
+          <div class="row">
+            <div class="d-flex justify-content-between">
+              <div class="col-auto d-flex align-items-center">
+                <div>
+                  {% if item.follower.profile.avatar %}
+                    <span class="avatar avatar-lg" style="background-image: url({{ profile.get_avatar_url }})"></span>
+                  {% else %}
+                    <span class="avatar avatar-lg" style="background-image: url({% static 'images/default_man_avatar.jpg' %})"></span>
+                  {% endif %}
+                </div>
+                <div>
+                  <a href="{{ item.follower.get_profile_url }}" class="text-reset mx-2">{{ item.follower.get_full_name }}</a>
+                </div>
+              </div>
+
+              <div class="col-aoto">
+                {% if request.user.is_authenticated %}
+                  {% if request.user.id == item.follower.id %}
+                    <a href="{% url 'apps.accounts:dashboard_index' %}" class="btn btn-primary btn-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-user">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+                        <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                      </svg>داشبورد
+                    </a>
+                  {% else %}
+                    <form method="POST" action="{% url 'apps.accounts:toggle_follow' item.follower.uuid %}">
+                      {% csrf_token %}
+                      {% if request.user|is_following:item.follower %}
+                        <button type="submit" class="btn btn-outline-primary">لغو دنبال کردن</button>
+                      {% else %}
+                        <button type="submit" class="btn btn-primary">دنبال کردن</button>
+                      {% endif %}
+                    </form>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          no followers
+        {% endfor %}
+      </div>
     </div>
   </div>
 {% endblock %}

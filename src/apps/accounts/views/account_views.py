@@ -7,7 +7,7 @@ from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import (
@@ -163,6 +163,47 @@ class UserProfileView(DetailView):
         return User.objects.filter(is_active=True)
 
 
+class UserProfilePostsView(View):
+    template_name = "accounts/profile/posts.html"
+
+    def get(self, request, username):
+        user = get_object_or_404(User, username=username, is_active=True)
+
+        return render(
+            request, self.template_name, {"posts": user.posts, "profile": user}
+        )
+
+
+class UserProfileFollowersView(View):
+    template_name = "accounts/profile/followers.html"
+
+    def get(self, request, username):
+        user = get_object_or_404(User, username=username)
+        service = FollowService(request.user)
+        result = service.get_followers(user.id)
+
+        return render(
+            request,
+            self.template_name,
+            {"followers": result, "profile": user},
+        )
+
+
+class UserProfileFollowingView(View):
+    template_name = "accounts/profile/following.html"
+
+    def get(self, request, username):
+        user = get_object_or_404(User, username=username)
+        service = FollowService(request.user)
+        result = service.get_following(user.id)
+
+        return render(
+            request,
+            self.template_name,
+            {"following": result, "profile": user},
+        )
+
+
 class ToggleFollowView(LoginRequiredMixin, View):
     def post(self, request, uuid):
         result = FollowService(request.user).toggle_follow(uuid)
@@ -173,46 +214,6 @@ class ToggleFollowView(LoginRequiredMixin, View):
             messages.error(request, result["message"])
 
         return redirect(request.META.get("HTTP_REFERER", "/"))
-
-
-class FollowersListView(View):
-    template_name = "accounts/followers_list.html"
-
-    def get(self, request, user_id):
-        service = FollowService(request.user)
-        result = service.get_followers(
-            user_id,
-            page=int(request.GET.get("page", 1)),
-        )
-
-        return render(
-            request,
-            self.template_name,
-            {
-                "followers": result["items"],
-                "pagination": result,
-            },
-        )
-
-
-class FollowingListView(View):
-    template_name = "accounts/following_list.html"
-
-    def get(self, request, user_id):
-        service = FollowService(request.user)
-        result = service.get_following(
-            user_id,
-            page=int(request.GET.get("page", 1)),
-        )
-
-        return render(
-            request,
-            self.template_name,
-            {
-                "following": result["items"],
-                "pagination": result,
-            },
-        )
 
 
 class WalletChargeView(LoginRequiredMixin, View):
