@@ -14,6 +14,16 @@ urlpatterns = [
     #     comment_reply,
     #     name="comment_reply",
     # ),
+    # path(
+    #     "like/<str:model_name>/<uuid:object_id>/",
+    #     ToggleLikeView.as_view(),
+    #     name="toggle_like",
+    # ),
+    # path(
+    #     "bookmark/<str:model_name>/<uuid:object_id>/",
+    #     ToggleBookmarkView.as_view(),
+    #     name="toggle_bookmark",
+    # ),
 ]
 
 

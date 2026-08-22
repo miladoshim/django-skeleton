@@ -1,12 +1,14 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.views import APIView
 from django.core.exceptions import PermissionDenied
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from apps.api.renderers import CommonRenderer
 from apps.blog.models import Post
 from apps.core.api.serializers import TagSerializer
+from apps.core.services.bookmark_service import BookmarkService
+from apps.core.services.like_service import LikeService
 from apps.core.services.tag_service import TagService
 
 
@@ -139,3 +141,73 @@ def GlobalSearch(APIView):
                 .order_by("-rank")
             )
             return Response({"posts": posts})
+
+
+class ToggleLikeAPIView(APIView):
+    """لایک - API"""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, model_name, object_id):
+        obj = get_object_or_404(self._get_model(model_name), id=object_id)
+        result = LikeService(request.user).toggle(obj)
+        return Response(result)
+
+    def _get_model(self, name):
+        from apps.blog.models import Post
+
+        models = {"post": Post}
+        return models[name]
+
+
+class ToggleBookmarkAPIView(APIView):
+    """بوکمارک - API"""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, model_name, object_id):
+        obj = get_object_or_404(self._get_model(model_name), id=object_id)
+        note = request.data.get("note", "")
+        result = BookmarkService(request.user).toggle(obj, note)
+        return Response(result)
+
+    def _get_model(self, name):
+        from apps.blog.models import Post
+
+        return {"post": Post}[name]
+
+
+class BookmarkListAPIView(APIView):
+    """لیست بوکمارک‌ها - API"""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, model_name):
+        from apps.blog.models import Post
+
+        model = {"post": Post}[model_name]
+
+        items = BookmarkService(request.user).get_bookmarked_ids(model)
+        return Response({"ids": list(items)})
+
+
+class InteractionStatusAPIView(APIView):
+    """وضعیت تعامل - API"""
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request, model_name, object_id):
+        from apps.blog.models import Post
+
+        obj = get_object_or_404(Post, id=object_id)
+
+        if not request.user.is_authenticated:
+            return Response({"liked": False, "bookmarked": False})
+
+        return Response(
+            {
+                "liked": LikeService(request.user).is_liked(obj),
+                "bookmarked": BookmarkService(request.user).is_bookmarked(obj),
+                "likes_count": obj.likes_count,
+            }
+        )

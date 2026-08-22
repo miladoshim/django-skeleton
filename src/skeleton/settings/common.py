@@ -77,7 +77,6 @@ INSTALLED_APPS = [
     "apps.api.apps.ApiConfig",
     "apps.financial.apps.FinancialConfig",
     "apps.pages.apps.PagesConfig",
-    "apps.notifications.apps.NotificationsConfig",
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
@@ -138,6 +137,7 @@ MIDDLEWARE = [
     "drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware",
     "django_minify_html.middleware.MinifyHtmlMiddleware",
     "apps.core.middlewares.RequestIdMiddleware",
+    "apps.accounts.middlewares.SaveUserSessionMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
@@ -479,6 +479,7 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SESSION_CACHE_ALIAS = "default"
+SESSION_SAVE_EVERY_REQUEST = True
 CORS_ALLOW_CREDENTIALS = True
 
 
@@ -574,13 +575,6 @@ IRANIAN_CITIES_ADMIN_ADD_READONLY_ENABLED = False
 IRANIAN_CITIES_ADMIN_DELETE_READONLY_ENABLED = False
 IRANIAN_CITIES_ADMIN_CHANGE_READONLY_ENABLED = True
 IRANIAN_CITIES_ADMIN_INLINE_ENABLED = False
-
-
-CART_SESSION_ID = ""
-
-FIXTURE_DIRS = [
-    "fixtures",
-]
 
 customColorPalette = [
     {"color": "hsl(4, 90%, 58%)", "label": "Red"},

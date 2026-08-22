@@ -13,9 +13,10 @@ from hitcount.settings import MODEL_HITCOUNT
 from taggit_selectize.managers import TaggableManager
 from treebeard.mp_tree import MP_Node
 from apps.core.managers import PublishedManager
+from apps.core.mixins import BookmarkableMixin, CommentableMixin, LikeableMixin
 from apps.core.models import BaseModel
 from utils.enums import PublishStatusChoice
-from utils.storage_paths import thumbnail_path
+from utils.storage_paths import category_icon_path, thumbnail_path
 
 User = get_user_model()
 
@@ -51,7 +52,7 @@ class Category(MP_Node):
         verbose_name="آیکون",
         null=True,
         blank=True,
-        upload_to="blog/categories/",
+        upload_to=category_icon_path,
     )
     is_active = models.BooleanField(
         default=True,
@@ -74,7 +75,13 @@ class Category(MP_Node):
         return reverse("apps.blog:category_detail", args=[str(self.slug)])
 
 
-class Post(BaseModel, HitCountMixin):
+class Post(
+    BaseModel,
+    HitCountMixin,
+    LikeableMixin,
+    BookmarkableMixin,
+    CommentableMixin,
+):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -112,6 +119,11 @@ class Post(BaseModel, HitCountMixin):
         default=PublishStatusChoice.DRAFT,
         verbose_name="وضعیت انتشار",
     )
+    published_at = models.DateTimeField(
+        verbose_name="تاریخ انتشار",
+        blank=True,
+        null=True,
+    )
     tags = TaggableManager(
         verbose_name="برچسب ها",
         related_name="tags",
@@ -125,7 +137,7 @@ class Post(BaseModel, HitCountMixin):
     objects = models.Manager()
     published = PublishedManager()
 
-    def get_meta_thumbnail(self):
+    def get_thumbnail_url(self):
         if self.thumbnail:
             return self.thumbnail.url
 
@@ -141,10 +153,10 @@ class Post(BaseModel, HitCountMixin):
         return reverse("apps.blog:post_detail", args=[str(self.slug)])
 
     def posts_was_published_recently(self):
-        return self.created_at >= timezone.now() - datetime.timedelta(days=1)
+        return self.created_at >= timezone.now() - datetime.timedelta(days=3)
 
     def thumbnail_tag(self):
-        return format_html("<img width=50 src='{}' />".format(self.thumbnail.url))
+        return format_html("<img width=50 src='{}' />".format(self.get_thumbnail_url))
 
     @property
     def view_count(self):

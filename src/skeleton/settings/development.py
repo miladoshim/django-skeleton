@@ -41,7 +41,6 @@ STORAGES = {
 DEFAULT_PROTOCOL = "http"
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
-SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_AGE = 1209600  # 2 هفته
 SESSION_COOKIE_HTTPONLY = True
 

@@ -8,6 +8,9 @@ from django.utils.safestring import mark_safe
 from jalali_date import datetime2jalali
 from persiantools.jdatetime import JalaliDate
 
+from apps.core.services.bookmark_service import BookmarkService
+from apps.core.services.like_service import LikeService
+
 register = template.Library()
 
 
@@ -65,3 +68,27 @@ def format_price(value):
         return f"{value:,}".replace(",", "٬")
     except (ValueError, TypeError):
         return value
+
+
+@register.filter
+def is_liked(obj, user):
+    if not user.is_authenticated:
+        return False
+    return LikeService(user).is_liked(obj)
+
+
+@register.filter
+def is_bookmarked(obj, user):
+    if not user.is_authenticated:
+        return False
+    return BookmarkService(user).is_bookmarked(obj)
+
+
+@register.simple_tag
+def like_count(obj):
+    return obj.likes_count
+
+
+@register.simple_tag
+def bookmark_count(obj):
+    return obj.bookmarks_count

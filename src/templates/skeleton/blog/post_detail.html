@@ -59,14 +59,15 @@
                       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                       <path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" />
                     </svg>
-                    <span style="font-size: 0.8rem;">20</span>
+                    <span style="fs-8">0</span>
+                    {% comment %} <span style="fs-8">{{ post.likes_count }}</span> {% endcomment %}
                   </span>
                   <span class="mx-3 d-flex justify-content-center align-items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-message-circle">
                       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                       <path d="M3 20l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c3.255 2.777 3.695 7.266 1.029 10.501c-2.666 3.235 -7.615 4.215 -11.574 2.293l-4.7 1" />
                     </svg>
-                    <span c style="font-size: 0.8rem;">20</span>
+                    <span c style="fs-8">0</span>
                   </span>
                   <span class="mx-3 d-flex justify-content-center align-items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-bookmark">
@@ -75,6 +76,48 @@
                     </svg>
                   </span>
                 </div>
+
+                {% comment %} <div class="interactions">
+                  <!-- ===== لایک ===== -->
+                  <form class="like-form" method="post" action="{% url 'common:toggle_like' 'post' post.id %}" data-post-id="{{ post.id }}">
+                    {% csrf_token %}
+                    <button type="submit" class="like-btn {% if post|is_liked:user %}liked{% endif %}">
+                      {% if post|is_liked:user %}
+                        ❤️
+                      {% else %}
+                        🤍
+                      {% endif %}
+                      <span class="like-count">{{ post.likes_count }}</span>
+                      <span class="like-text">
+                        {% if post|is_liked:user %}
+                          لایک کردی
+                        {% else %}
+                          لایک
+                        {% endif %}
+                      </span>
+                    </button>
+                  </form>
+
+                  <!-- ===== بوکمارک ===== -->
+                  <form class="bookmark-form" method="post" action="{% url 'common:toggle_bookmark' 'post' post.id %}" data-post-id="{{ post.id }}">
+                    {% csrf_token %}
+                    <button type="submit" class="bookmark-btn {% if post|is_bookmarked:user %}bookmarked{% endif %}">
+                      {% if post|is_bookmarked:user %}
+                        🔖
+                      {% else %}
+                        🔖
+                      {% endif %}
+                      <span class="bookmark-text">
+                        {% if post|is_bookmarked:user %}
+                          ذخیره شده
+                        {% else %}
+                          ذخیره
+                        {% endif %}
+                      </span>
+                    </button>
+                  </form>
+                </div>
+                {% endcomment %}
                 <div class="d-flex">
                   <a href="" target="_blank" class="">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-brand-telegram">

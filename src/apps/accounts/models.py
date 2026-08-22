@@ -1,9 +1,10 @@
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.contrib.sessions.models import Session
 from django.utils import timezone
-from jalali_date import date2jalali
 from django.core.exceptions import PermissionDenied
+from jalali_date import date2jalali
 from apps.accounts.mixins import FollowMixin
 from apps.core.models import BaseModel
 from utils.enums import GenderChoices, UserRole
@@ -46,7 +47,7 @@ class User(AbstractBaseUser, FollowMixin, PermissionsMixin):
         null=True,
         editable=False,
         unique=True,
-        max_length=9,
+        max_length=35,
     )
     email = models.EmailField(
         verbose_name="ایمیل",
@@ -75,7 +76,7 @@ class User(AbstractBaseUser, FollowMixin, PermissionsMixin):
     is_active = models.BooleanField(
         verbose_name="فعال باشد؟",
         default=False,
-        help_text="Unselect this instead of deleting accounts.",
+        help_text="با این گزینه کاربر فعال می باشد.",
     )
     role = models.PositiveSmallIntegerField(
         verbose_name="نقش کاربر",
@@ -137,35 +138,7 @@ class User(AbstractBaseUser, FollowMixin, PermissionsMixin):
         else:
             return self.profile.get_default_avatar_image()
 
-    def has_delete_permission(self, request, obj=None):
-        if not request.user.is_superuser:
-            if obj is not None and obj.id != request.user.id:
-                return False
-        return True
-
-    # Staff can only change their own account info
-    def has_change_permission(self, request, obj=None):
-        if not request.user.is_superuser:
-            if obj is not None and obj.id != request.user.id:
-                return False
-        return True
-
-    # Staff can't add new account
-    def has_add_permission(self, request):
-        if not request.user.is_superuser:
-            return False
-        return True
-
-    def get_readonly_fields(self, request, obj=None):
-        if not request.user.is_superuser:
-            return "is_superuser", "is_staff", "is_active"
-        return super(User, self).get_readonly_fields(request)
-
-    def is_registered(self):
-        return self.meta.mobile_verified_at
-
     def check_login_allowed(self):
-        """بررسی مجاز بودن ورود"""
         if self.is_blocked:
             raise PermissionDenied("Your account is blocked.")
         if not self.is_active:
@@ -243,26 +216,10 @@ class UserMeta(BaseModel):
         related_name="meta",
         verbose_name="کاربر",
     )
-    last_login_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name="تاریخ آخرین لاگین",
-    )
-
-    last_login_ip = models.GenericIPAddressField(
-        null=True,
-        blank=True,
-        verbose_name="ip آخرین لاگین",
-    )
     last_logout_at = models.DateTimeField(
         null=True,
         blank=True,
         verbose_name="تاریخ آخرین خروج",
-    )
-    last_login_agent = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name="مرورگر آخرین ورود",
     )
     email_verified_at = models.DateTimeField(
         null=True,
@@ -284,16 +241,6 @@ class UserMeta(BaseModel):
         blank=True,
         verbose_name="تاریخ تایید موبایل",
     )
-    username_changed_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name="تاریخ تغییر نام کاربری",
-    )
-    password_changed_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name="تاریخ تغییر رمز عبور",
-    )
     is_banned = models.BooleanField(
         default=False,
         verbose_name="کاربر مسدود می باشد؟",
@@ -308,7 +255,41 @@ class UserMeta(BaseModel):
         blank=True,
         verbose_name="تاریخ رفع مسدودی ",
     )
-    # two_factor_enabled = models.BooleanField("2FA enabled", default=False)
+
+
+class UserSession(BaseModel):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="sessions",
+    )
+    session_key = models.CharField(
+        max_length=40,
+        unique=True,
+    )
+    ip = models.GenericIPAddressField(null=True)
+    device = models.CharField(max_length=20, blank=True)  # mobile, tablet, desktop
+    browser = models.CharField(max_length=50, blank=True)
+    os = models.CharField(max_length=50, blank=True)
+    is_current = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    last_login_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="تاریخ آخرین ورود",
+    )
+
+    class Meta:
+        ordering = ["-last_login_at"]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.browser} ({self.device})"
+
+    def terminate(self):
+        self.is_active = False
+        self.is_current = False
+        self.save()
+        Session.objects.filter(session_key=self.session_key).delete()
 
 
 class SocialAccountProvider(models.TextChoices):
@@ -361,59 +342,9 @@ class SocialAccount(BaseModel):
 
     @property
     def is_token_valid(self):
-        """بررسی اعتبار توکن"""
         if self.token_expires_at:
             return self.token_expires_at > timezone.now()
         return True
-
-
-class AuthenticatedHistoryMethod(models.IntegerChoices):
-    SOCIAL_GITHUB = 1, "github"
-    SOCIAL_GITLAB = 2, "gitlab"
-    SOCIAL_GOOGLE = 3, "google"
-    CLASSIC_LOGIN = 4, "classic"
-    OTP = 5, "otp"
-
-
-class AuthenticateHistory(BaseModel):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="login_history",
-    )
-    login_at = models.DateTimeField("login time", auto_now_add=True)
-    logout_at = models.DateTimeField("logout time", null=True, blank=True)
-    ip_address = models.GenericIPAddressField("IP address", null=True)
-    user_agent = models.TextField("user agent", blank=True)
-    device = models.CharField("device", max_length=100, blank=True)
-    browser = models.CharField("browser", max_length=100, blank=True)
-    os = models.CharField("operating system", max_length=100, blank=True)
-    location = models.CharField("location", max_length=100, blank=True)
-    is_successful = models.BooleanField("successful login", default=True)
-    auth_method = models.PositiveSmallIntegerField(
-        "auth method", choices=AuthenticatedHistoryMethod.choices
-    )
-
-    class Meta:
-        verbose_name = "login history"
-        verbose_name_plural = "login histories"
-        ordering = ["-login_at"]
-
-    def __str__(self):
-        return f"{self.user.email} - {self.login_at}"
-
-
-class PasswordResetHistory(models.Model):
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    method = models.CharField(
-        max_length=20, choices=[("email", "Email"), ("mobile", "Mobile")]
-    )
-    identifier = models.CharField(max_length=100)
-    ip_address = models.GenericIPAddressField(null=True)
-    user_agent = models.TextField(blank=True)
-    is_successful = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class OtpChannel(models.TextChoices):
@@ -461,10 +392,6 @@ class OtpRequest(BaseModel):
     def delete_expired(cls):
         expired_count = cls.objects.filter(expires_at__lt=timezone.now()).delete()[0]
         return expired_count
-
-    # @property
-    # def is_valid(self):
-    #     return not self.is_used and self.expires_at > timezone.now()
 
 
 class Follow(models.Model):

@@ -1,46 +1,48 @@
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.utils import timezone
+
+from apps.core.models import Bookmark, Comment, Like
 from .managers import SoftDeleteManager
 
 User = settings.AUTH_USER_MODEL
 
 
-class SoftDeleteModelMixin:
-    is_deleted = models.BooleanField(default=False, db_index=True)
-    deleted_at = models.DateTimeField(null=True, blank=True)
-    restored_at = models.DateTimeField(null=True, blank=True)
-    deleted_by = models.ForeignKey(
-        User,
-        related_name="deleted_%(class)s_objects",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        verbose_name="حذف شده توسط",
-    )
+class LikeableMixin(models.Model):
+    likes = GenericRelation(Like)
 
-    objects = SoftDeleteManager()
+    class Meta:
+        abstract = True
 
-    def delete(self, using=None, keep_parents=False, user=None):
-        self.is_deleted = True
-        self.deleted_at = timezone.now()
-        if user and user.is_authenticated:
-            self.deleted_by = user
-        self.save(update_fields=["is_deleted", "deleted_at", "deleted_by"])
+    @property
+    def likes_count(self):
+        return self.likes.count()
 
-    def hard_delete(self, using=None, keep_parents=False):
-        super().delete(using=using, keep_parents=keep_parents)
+    def is_liked_by(self, user):
+        if not user.is_authenticated:
+            return False
+        return self.likes.filter(user=user).exists()
 
-    def restore(self):
-        self.is_deleted = False
-        self.restored_at = timezone.now()
-        self.deleted_at = None
-        self.deleted_by = None
-        self.save(
-            update_fields=[
-                "is_deleted",
-                "restored_at",
-                "deleted_at",
-                "deleted_by",
-            ]
-        )
+
+class BookmarkableMixin(models.Model):
+    bookmarks = GenericRelation(Bookmark)
+
+    class Meta:
+        abstract = True
+
+    @property
+    def bookmarks_count(self):
+        return self.bookmarks.count()
+
+    def is_bookmarked_by(self, user):
+        if not user.is_authenticated:
+            return False
+        return self.bookmarks.filter(user=user).exists()
+
+
+class CommentableMixin(models.Model):
+    comments = GenericRelation(Comment)
+
+    class Meta:
+        abstract = True

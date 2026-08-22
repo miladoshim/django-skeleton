@@ -17,6 +17,7 @@ from apps.accounts.api.serializers import (
     UserSerializer,
 )
 from apps.accounts.services.follow_service import FollowService
+from apps.accounts.services.session_service import SessionService
 from apps.api.renderers import CommonRenderer
 from apps.financial.services.wallet_service import WalletService
 
@@ -180,3 +181,26 @@ class UserChangePasswordAPIView(APIView):
 class UserPostsAPIView(APIView):
     renderer_classes = (CommonRenderer,)
     permission_classes = (IsAuthenticatedOrReadOnly,)
+
+
+class SessionsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        service = SessionService(request.user)
+        return Response(
+            {
+                "sessions": service.format(service.get_sessions()),
+                "current_key": request.session.session_key,
+            }
+        )
+
+    def delete(self, request, session_id=None):
+        service = SessionService(request.user)
+
+        if session_id:
+            result = service.terminate(session_id)
+        else:
+            result = service.terminate_all(request.session.session_key)
+
+        return Response(result, status=200 if result["success"] else 400)

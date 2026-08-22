@@ -15,6 +15,36 @@ def send_comment_approved_notification(self, user: str):
         raise self.retry(exc=exc, countdown=60)
 
 
+@shared_task
+def send_like_notification(user_id, object_id, content_type_id):
+    """ارسال نوتیفیکیشن لایک"""
+    from apps.accounts.models import User
+
+    user = User.objects.get(id=user_id)
+    ct = ContentType.objects.get(id=content_type_id)
+    obj = ct.get_object_for_this_type(id=object_id)
+
+    # اینجا می‌توانید نوتیفیکیشن بسازید
+    # Notification.objects.create(
+    #     user=obj.author,
+    #     message=f"{user.username} پست شما را لایک کرد",
+    # )
+    return f"Like notification sent for {obj}"
+
+
+@shared_task
+def update_likes_count(content_type_id, object_id):
+    """به‌روزرسانی کش تعداد لایک‌ها"""
+    from django.core.cache import cache
+
+    ct = ContentType.objects.get(id=content_type_id)
+    count = ct.model_class().objects.get(id=object_id).likes_count
+
+    cache_key = f"likes_count_{content_type_id}_{object_id}"
+    cache.set(cache_key, count, timeout=3600)
+    return f"Updated likes count: {count}"
+
+
 # @shared_task
 # def generate_thumbnails(model, pk, field):
 #     instance = model._default_manager.get(pk=pk)

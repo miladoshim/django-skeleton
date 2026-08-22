@@ -118,3 +118,23 @@ class FollowMixin(models.Model):
         )
 
         return suggestions
+
+
+#  def has_delete_permission(self, request, obj=None):
+#         if not request.user.is_superuser:
+#             if obj is not None and obj.id != request.user.id:
+#                 return False
+#         return True
+
+#     # Staff can only change their own account info
+# def has_change_permission(self, request, obj=None):
+#     if not request.user.is_superuser:
+#         if obj is not None and obj.id != request.user.id:
+#             return False
+#     return True
+
+# # Staff can't add new account
+# def has_add_permission(self, request):
+#     if not request.user.is_superuser:
+#         return False
+#     return True

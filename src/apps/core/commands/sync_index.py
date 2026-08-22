@@ -1,7 +1,5 @@
 from django.core.management.base import BaseCommand
 
-from apps.academy.search import index_courses
-
 
 class Command(BaseCommand):
     help = "Syncs the search index with the database"

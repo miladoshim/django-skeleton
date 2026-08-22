@@ -13,6 +13,7 @@ class PaymentMethods(models.IntegerChoices):
 
 class PaymentFor(models.IntegerChoices):
     WALLET_CHARGE = 1, "شارژ کیف پول"
+    ACCOUNT_PLUS = 2, "حساب پلاس"
 
 
 class Payment(BaseModel):
@@ -55,8 +56,10 @@ class Payment(BaseModel):
     def get_for(self):
         if self.payment_for == PaymentFor.WALLET_CHARGE:
             return "شارژ کیف پول"
+        elif self.payment_for == PaymentFor.ACCOUNT_PLUS:
+            return "شارژ حساب پلاس"
         else:
-            return "خرید از فروشگاه"
+            return "نامشخص"
 
     def get_method(self):
         if self.payment_method == PaymentMethods.WALLET:
@@ -119,16 +122,32 @@ class Wallet(BaseModel):
         self.save()
 
     def spend(self, amount: int):
-        self.balance -= amount
+        self.balance -= int(amount)
         self.save()
 
 
 class WalletTransaction(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    tracking_code = models.CharField(max_length=100, unique=True)
-    amount = models.DecimalField(max_digits=10, decimal_places=0, default=0)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+    )
+    tracking_code = models.CharField(
+        max_length=100,
+        unique=True,
+    )
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        default=0,
+    )
     is_processed = models.BooleanField(default=False)
-    processed_at = models.DateTimeField(null=True, blank=True)
+    processed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    def __str__(self):
+        return f"تراکنش کیف پول کاربر {self.user.get_full_name}"
 
     class Meta:
         indexes = [

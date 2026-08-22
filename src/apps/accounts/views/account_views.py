@@ -1,3 +1,4 @@
+from apps.accounts.services.session_service import SessionService
 from apps.financial.services.wallet_service import WalletService
 from utils.logger import logger
 import os
@@ -272,6 +273,35 @@ class WalletChargeCallbackView(LoginRequiredMixin, View):
                     "btn_title": "رفتن به کیف پول",
                 },
             )
+
+
+class ActiveSessionsView(LoginRequiredMixin, View):
+    template_name = "accounts/sessions.html"
+
+    def get(self, request):
+        service = SessionService(request.user)
+        sessions = service.get_sessions()
+        formatted = service.format(sessions)
+
+        return render(request, self.template_name, {"sessions": formatted})
+
+
+class TerminateSessionView(LoginRequiredMixin, View):
+    def post(self, request, session_id):
+        result = SessionService(request.user).terminate(session_id)
+
+        if result["success"]:
+            messages.success(request, result["message"])
+        else:
+            messages.error(request, result["message"])
+        return redirect("apps.accounts:sessions")
+
+
+class TerminateAllSessionsView(LoginRequiredMixin, View):
+    def post(self, request):
+        result = SessionService(request.user).terminate_all(request.session.session_key)
+        messages.success(request, result["message"])
+        return redirect("apps.accounts:sessions")
 
 
 # class CommentListView(LoginRequiredMixin, ListView):
