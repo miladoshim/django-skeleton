@@ -1,4 +1,3 @@
-import json
 from django.http import JsonResponse
 from rest_framework.views import APIView, View
 from rest_framework.response import Response
@@ -9,6 +8,7 @@ from apps.accounts.api.permissions import IsNotAuthenticated
 from apps.accounts.api.serializers import UserEmailRegisterSerializer
 from apps.accounts.services.social_auth__service import SocialAuthService
 from apps.accounts.services.auth_service import AuthService
+from apps.api.renderers import CommonRenderer
 from utils.logger import logger
 
 
@@ -16,15 +16,17 @@ class UserEmailRegisterView(APIView):
     """Classic Register with email/password"""
 
     permission_classes = (IsNotAuthenticated,)
+    renderer_classes = (CommonRenderer,)
 
     def post(self, request, *args, **kwargs):
         serializer = UserEmailRegisterSerializer(data=request.data)
         if serializer.is_valid():
-
-            print(serializer.data.get("first_name") + "---------------------------")
-            # result = AuthService().register_email(
-            #     first_name, last_name, email, password
-            # )
+            result = AuthService().register_email(
+                serializer.data.get("first_name"),
+                serializer.data.get("last_name"),
+                serializer.data.get("email"),
+                serializer.data.get("password"),
+            )
 
             return Response(
                 {"message": result["message"]},
@@ -33,7 +35,14 @@ class UserEmailRegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LogoutAPIView(APIView):
+class UserLoginAPIView(APIView):
+    permission_classes = (IsNotAuthenticated,)
+
+    def post(self, request):
+        pass
+
+
+class UserLogoutAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):

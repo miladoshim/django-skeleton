@@ -39,10 +39,10 @@ class UserEmailRegisterSerializer(ModelSerializer):
             }
         }
 
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise ValidationError("کاربری با این ایمیل ثبت نام کرده است.")
-        return value
+    # def validate_email(self, value):
+    #     if User.objects.filter(email=value).exists():
+    #         raise ValidationError("کاربری با این ایمیل ثبت نام کرده است.")
+    #     return value
 
     def validate_password(self, value):
         if len(value) < 8:

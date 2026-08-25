@@ -20,7 +20,7 @@ from apps.accounts.views.auth_views import (
 )
 
 urlpatterns = [
-    path("auth/register/", UserClassicRegisterView.as_view(), name="register_classic"),
+    path("register/", UserClassicRegisterView.as_view(), name="register_classic"),
     path(
         "auth/email/verify/<str:uid>/<str:token>/",
         EmailVerificationView.as_view(),
@@ -47,7 +47,7 @@ urlpatterns = [
     #     name="register_otp_complete_view",
     # ),
     # path("auth/register/otp/complete", UserLoginView.as_view(), name="register_view"),
-    path("auth/login/", UserLoginView.as_view(), name="login_classic"),
+    path("login/", UserLoginView.as_view(), name="login_classic"),
     path("auth/logout/", UserLogoutView.as_view(), name="logout"),
     path("password/forgot/", ForgotPasswordView.as_view(), name="password_forgot_view"),
     path(

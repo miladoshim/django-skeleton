@@ -565,7 +565,6 @@ class ForgotPasswordForm(forms.Form):
             is_email = "@" in identifier
 
             if is_email:
-                # بررسی وجود کاربر با این ایمیل
                 user = User.objects.filter(email__iexact=identifier).first()
                 if not user:
                     raise forms.ValidationError("کاربری با این ایمیل یافت نشد")

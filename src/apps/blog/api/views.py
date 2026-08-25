@@ -4,8 +4,52 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from apps.api.renderers import CommonRenderer
-from apps.blog.api.serializers import PostSerializer
+from apps.blog.api.serializers import CategorySerializer, PostSerializer
+from apps.blog.services.category_service import CategoryService
 from apps.blog.services.post_service import PostService
+
+
+class CategoryViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    service = CategoryService()
+    renderer_classes = [CommonRenderer]
+
+    def list(self, request):
+        result = self.service.list_categories(
+            search=request.query_params.get("search"),
+            page=int(request.query_params.get("page", 1)),
+            page_size=int(request.query_params.get("page_size", 10)),
+        )
+
+        serializer = CategorySerializer(result["items"], many=True)
+        return Response(
+            {
+                "items": serializer.data,
+                "pagination": {
+                    "total": result["total"],
+                    "page": result["page"],
+                    "page_size": result["page_size"],
+                    "total_pages": result["total_pages"],
+                    "has_next": result["has_next"],
+                    "has_previous": result["has_previous"],
+                },
+            }
+        )
+
+    def retrieve(self, request, pk=None):
+        post = self.service.get_category_detail(
+            request=request,
+            slug=pk,
+        )
+
+        if not post:
+            return Response(
+                {"detail": "دسته بندی پیدا نشد"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = CategorySerializer(post, context={"request": request})
+        return Response(serializer.data)
 
 
 class PostViewSet(viewsets.ViewSet):
@@ -44,14 +88,14 @@ class PostViewSet(viewsets.ViewSet):
 
         if not post:
             return Response(
-                {"detail": "پست پیدا نشد"}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "پست پیدا نشد"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         serializer = PostSerializer(post, context={"request": request})
         return Response(serializer.data)
 
     def create(self, request):
-        """ایجاد پست جدید"""
         serializer = PostSerializer(data=request.data)
         if serializer.is_valid():
             try:
@@ -71,7 +115,6 @@ class PostViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk=None):
-        """ویرایش پست"""
         post = self.service.get(pk)
         if not post:
             return Response(
@@ -94,7 +137,6 @@ class PostViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk=None):
-        """حذف پست"""
         post = self.service.get(pk)
         if not post:
             return Response(
@@ -112,7 +154,6 @@ class PostViewSet(viewsets.ViewSet):
 
     @action(detail=True, methods=["post"])
     def publish(self, request, pk=None):
-        """انتشار پست"""
         post = self.service.get(pk)
         if not post:
             return Response({"detail": "پست پیدا نش"})

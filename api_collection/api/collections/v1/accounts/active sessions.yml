@@ -1,20 +1,17 @@
 info:
-  name: login
+  name: active sessions
   type: http
-  seq: 1
+  seq: 4
 
 http:
-  method: POST
-  url: "{{baseurlv1}}auth/login/"
+  method: GET
+  url: "{{baseurlv1}}accounts/sessions/"
   body:
     type: multipart-form
     data:
       - name: username
         type: text
-        value: "09376686365"
-      - name: password
-        type: text
-        value: "12344321"
+        value: adminuser
   auth: inherit
 
 settings:

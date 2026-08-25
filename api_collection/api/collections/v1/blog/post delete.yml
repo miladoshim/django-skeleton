@@ -1,11 +1,11 @@
 info:
-  name: logout
+  name: post delete
   type: http
-  seq: 2
+  seq: 4
 
 http:
-  method: POST
-  url: "{{baseurlv1}}auth/logout/"
+  method: DELETE
+  url: "{{baseurlv1}}blog/posts/1/"
   auth: inherit
 
 settings:

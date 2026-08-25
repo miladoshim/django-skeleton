@@ -1,11 +1,11 @@
 info:
-  name: logout
+  name: post update
   type: http
-  seq: 2
+  seq: 5
 
 http:
-  method: POST
-  url: "{{baseurlv1}}auth/logout/"
+  method: PUT
+  url: "{{baseurlv1}}blog/posts/1/"
   auth: inherit
 
 settings:

@@ -25,6 +25,9 @@ class CategorySerializer(ModelSerializer):
             "id",
             "name",
             "slug",
+            "description",
+            "icon",
+            "parent",
         ]
 
 

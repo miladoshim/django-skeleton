@@ -40,34 +40,37 @@ class AuthService(BaseService):
         need_token=False,
         **extra_data,
     ) -> Dict[str, Any]:
-        with transaction.atomic():
-            if User.objects.filter(email=email).exists():
-                raise ValueError("این ایمیل قبلاً ثبت شده است")
+        try:
+            with transaction.atomic():
+                exists_user = User.objects.filter(email=email).first()
+                print(exists_user)
+                print("0------------------------------------")
+                if exists_user and exists_user.is_active:
+                    raise ValueError("این ایمیل قبلاً ثبت شده است")
 
-            user = User.objects.create(
-                first_name=first_name,
-                last_name=last_name,
-                email=email,
-            )
-            user.set_password(password)
-            user.save()
+                raise ValueError("ثبت نشده یا فعال نیست")
 
-            self._send_activation_email(user)
+                self._send_activation_email(user)
 
-            response = {
-                "user": user,
-                "message": "لینک فعال سازی به ایمیل شما ارسال شد.",
-            }
-
-            if need_token:
-                tokens = self._get_tokens_for_user(user)
                 response = {
                     "user": user,
-                    "tokens": tokens,
-                    "message": "ثبت‌نام با موفقیت انجام شد",
+                    "message": "لینک فعال سازی به ایمیل شما ارسال شد.",
                 }
 
-            return response
+                if need_token:
+                    tokens = self._get_tokens_for_user(user)
+                    response = {
+                        "user": user,
+                        "tokens": tokens,
+                        "message": "ثبت‌نام با موفقیت انجام شد",
+                    }
+
+                return response
+        except Exception as e:
+            return {
+                "success": False,
+                "message": str(e),
+            }
 
     def login(
         self,
@@ -156,6 +159,17 @@ class AuthService(BaseService):
         )
 
         return True
+
+    @transaction.atomic
+    def _create_user(first_name, last_name, email, password):
+        user = User.objects.create(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+        )
+        user.set_password(password)
+        user.save()
+        return user
 
     # transaction.atomic
 
@@ -279,22 +293,27 @@ class AuthService(BaseService):
 
     @transaction.atomic
     def _send_activation_email(self, user):
-        token = str(uuid.uuid4())
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        cache.set(f"verify_email_{token}", user.id, timeout=86400)
+        try:
+            token = str(uuid.uuid4())
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            cache.set(f"verify_email_{token}", user.id, timeout=86400)
 
-        activation_url = full_url("apps.accounts:email_activation", uid, token)
+            activation_url = full_url("apps.accounts:email_activation", uid, token)
 
-        send_mail(
-            subject="فعالسازی ایمیل",
-            message=f"""
-                 به سایت ما خوش آمدید!
-                 برای فعال‌سازی ایمیل حساب خود روی لینک زیر کلیک کنید:
-                 {activation_url}
-                 """,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-        )
+            send_mail(
+                subject="فعالسازی ایمیل",
+                message=f"""
+                    به سایت ما خوش آمدید!
+                    برای فعال‌سازی ایمیل حساب خود روی لینک زیر کلیک کنید:
+                    {activation_url}
+                    """,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+            )
+
+            return True
+        except Exception as e:
+            raise ValueError("خطا در ارسال ایمیل")
 
     @transaction.atomic
     def verify_email(self, uid: str, token: str) -> bool:

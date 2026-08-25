@@ -8,7 +8,7 @@ class IsNotAuthenticated(BasePermission):
     """
 
     def has_permission(self, request, view):
-        return not request.user.is_authenticated()
+        return not request.user.is_authenticated
 
 
 class CanEditPost(Permission):

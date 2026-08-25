@@ -14,17 +14,19 @@ from apps.accounts.api.accounts_views import (
 from .auth_views import (
     SocialLoginAPIView,
     UserEmailRegisterView,
+    UserLoginAPIView,
+    UserLogoutAPIView,
 )
 
 urlpatterns = [
-    path("profile/", UserProfileAPIView.as_view(), name="user_profile_api"),
-    path("accounts/update/", UserProfileUpdateAPIView.as_view(), name="account_update"),
+    path("profile/", UserProfileAPIView.as_view()),
+    path("accounts/update/", UserProfileUpdateAPIView.as_view()),
     path(
         "accounts/change_password/",
         UserChangePasswordAPIView.as_view(),
         name="account_change_password",
     ),
-    path("accounts/posts/", UserPostsAPIView.as_view(), name="account_posts"),
+    path("accounts/posts/", UserPostsAPIView.as_view()),
     path(
         "profile/friends/<uuid:uuid>/",
         ToggleFollowAPIView.as_view(),
@@ -61,8 +63,8 @@ urlpatterns = [
         UserEmailRegisterView.as_view(),
         name="email_register_view",
     ),
-    # path("auth/register/otp/request", UserLoginView.as_view(), name="register_view"),
-    # path("auth/register/otp/verify", UserLoginView.as_view(), name="register_view"),
+    # path("auth/register/otp/request", UserLoginView.as_view()),
+    # path("auth/register/otp/verify", UserLoginView.as_view()),
     # path(
     #     "register/otp/verify/<str:mobile>/<str:reqid>/",
     #     user_register_otp_verify,
@@ -73,9 +75,9 @@ urlpatterns = [
     #     user_register_otp_complete,
     #     name="register_otp_complete_view",
     # ),
-    # path("auth/register/otp/complete", UserLoginView.as_view(), name="register_view"),
-    # path("auth/login/", UserLoginView.as_view(), name="login_view"),
-    # path("auth/logout/", UserLoginView.as_view(), name="logout"),
+    # path("auth/register/otp/complete", UserLoginView.as_view()),
+    path("auth/login/", UserLoginAPIView.as_view()),
+    path("auth/logout/", UserLogoutAPIView.as_view()),
     # path(
     #     "password/forgot/mobile/",
     #     forgot_password_mobile,
@@ -86,11 +88,11 @@ urlpatterns = [
     #     forgot_password_mobile_reset,
     #     name="password_forgot_mobile_reset_view",
     # ),
-    # path("auth/token/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    # path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    # path("auth/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
+    # path("auth/token/login/", TokenObtainPairView.as_view()),
+    # path("auth/token/refresh/", TokenRefreshView.as_view()),
+    # path("auth/token/verify/", TokenVerifyView.as_view()),
     path(
-        "api/auth/social/<str:provider>/",
+        "auth/social/<str:provider>/",
         SocialLoginAPIView.as_view(),
         name="api_social_login",
     ),
