@@ -26,6 +26,13 @@ def active(context, pattern_or_urlname, *args):
     return ""
 
 
+@register.filter
+def selected(value, arg):
+    if str(value) == str(arg):
+        return "selected"
+    return ""
+
+
 @register.filter("jalali")
 def jalali(value):
     return datetime2jalali(value).strftime("%y/%m/%d _ %H:%M:%S")

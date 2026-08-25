@@ -69,11 +69,11 @@
         <div class="row g-3 mt-3">
           <div class="col-md">
             <div class="form-label">نام</div>
-            <input type="text" class="form-control" name="first_name" id="first_name" required value="{{ user.first_name }}" />
+            <input type="text" class="form-control" name="first_name" id="first_name" required value="{{ user.first_name|default:'' }}" />
           </div>
           <div class="col-md">
             <div class="form-label">نام خانوادگی</div>
-            <input type="text" class="form-control" name="last_name" id="last_name" required value="{{ user.last_name }}" />
+            <input type="text" class="form-control" name="last_name" id="last_name" required value="{{ user.last_name|default:'' }}" />
           </div>
           <div class="col-md">
             <div class="form-label">نام کاربری</div>
@@ -113,64 +113,38 @@
         <div class="row g-3 mt-3">
           <div class="col-md">
             <div class="form-label">تیتر تخصص یا شغلی</div>
-            <input type="text" class="form-control" name="short_bio" id="short_bio" required value="{{ user.short_bio }}" placeholder="در حد ۱۰۰ کاراکتر تیتر شغل یا تخصص " />
+            <input type="text" class="form-control" name="short_bio" id="short_bio" required value="{{ user.profile.short_bio|default:'' }}" placeholder="در حد ۱۰۰ کاراکتر تیتر شغل یا تخصص " />
           </div>
           <div class="col-md">
             <div class="form-label">تاریخ تولد</div>
             <div class="row">
               <div class="col-4">
-                <select class="form-select" name="birthday_month" id="birthday_month" required value="{{ user.birthday_month }}">
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                  <option value="9">9</option>
-                  <option value="10">10</option>
-                  <option value="11">11</option>
-                  <option value="12">12</option>
-                  <option value="12">13</option>
-                  <option value="12">14</option>
-                  <option value="12">15</option>
-                  <option value="12">16</option>
-                  <option value="12">17</option>
-                  <option value="12">18</option>
-                  <option value="12">19</option>
-                  <option value="12">20</option>
-                  <option value="12">21</option>
-                  <option value="12">22</option>
-                  <option value="12">23</option>
-                  <option value="12">24</option>
-                  <option value="12">25</option>
-                  <option value="12">26</option>
-                  <option value="12">27</option>
-                  <option value="12">28</option>
-                  <option value="12">29</option>
-                  <option value="12">30</option>
-                  <option value="12">31</option>
+                <select class="form-select" name="birthday_day" id="birthday_day" required value="{{ user.profile.birthday_day }}">
+                  <option value="0">روز تولد</option>
+                  {% for day in 'x'|rjust:'31' %}
+                    <option value="{{ forloop.counter }}" {{ forloop.counter|selected:user.profile.birthday_day }}>{{ forloop.counter }}</option>
+                  {% endfor %}
                 </select>
               </div>
               <div class="col-4">
-                <select class="form-select" name="birthday_month" id="birthday_month" required value="{{ user.birthday_month }}">
-                  <option value="1">فروردین</option>
-                  <option value="2">اردیبهش</option>
-                  <option value="3">خرداد</option>
-                  <option value="4">تیر</option>
-                  <option value="5">مرداد</option>
-                  <option value="6">شهریور</option>
-                  <option value="7">مهر</option>
-                  <option value="8">آبان</option>
-                  <option value="9">آذر</option>
-                  <option value="10">دی</option>
-                  <option value="11">بهمن</option>
-                  <option value="12">اسفند</option>
+                <select class="form-select" name="birthday_month" id="birthday_month" required value="{{ user.profile.birthday_month }}">
+                  <option value="0">ماه تولد</option>
+                  <option value="1" {{ 1|selected:user.profile.birthday_month }}>فروردین</option>
+                  <option value="2" {{ 2|selected:user.profile.birthday_month }}>اردیبهش</option>
+                  <option value="3" {{ 3|selected:user.profile.birthday_month }}>خرداد</option>
+                  <option value="4" {{ 4|selected:user.profile.birthday_month }}>تیر</option>
+                  <option value="5" {{ 5|selected:user.profile.birthday_month }}>مرداد</option>
+                  <option value="6" {{ 6|selected:user.profile.birthday_month }}>شهریور</option>
+                  <option value="7" {{ 7|selected:user.profile.birthday_month }}>مهر</option>
+                  <option value="8" {{ 8|selected:user.profile.birthday_month }}>آبان</option>
+                  <option value="9" {{ 9|selected:user.profile.birthday_month }}>آذر</option>
+                  <option value="10" {{ 10|selected:user.profile.birthday_month }}>دی</option>
+                  <option value="11" {{ 11|selected:user.profile.birthday_month }}>بهمن</option>
+                  <option value="12" {{ 12|selected:user.profile.birthday_month }}>اسفند</option>
                 </select>
               </div>
               <div class="col-4">
-                <input type="text" class="form-control" name="birthday_year" id="birthday_year" required value="{{ user.birthday_year }}" />
+                <input type="text" class="form-control" name="birthday_year" id="birthday_year" required value="{{ user.profile.birthday_year|default:'' }}" placeholder="1380" minlength="4" maxlength="4" />
               </div>
             </div>
           </div>

@@ -419,6 +419,46 @@ class UserAccountEditForm(Form):
         ),
     )
 
+    short_bio = forms.CharField(
+        label="تیر تخصص یا شغلی",
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+            },
+        ),
+    )
+
+    birthday_day = forms.CharField(
+        label="روز تولد",
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+            },
+        ),
+    )
+
+    birthday_month = forms.CharField(
+        label="ماه تولد",
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+            },
+        ),
+    )
+
+    birthday_year = forms.CharField(
+        label="سال تولد",
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+            },
+        ),
+    )
+
     bio = forms.CharField(
         validators=[
             validators.MinLengthValidator(10),
@@ -477,21 +517,17 @@ class UserAccountEditForm(Form):
         return mobile
 
     def _get_avatar(self):
-        """دریافت آواتار از پروفایل یا مدل کاربر"""
         if hasattr(self.user, "profile"):
             return self.user.profile.avatar or getattr(self.user, "avatar", None)
         return getattr(self.user, "avatar", None)
 
     def clean_avatar(self):
-        """اعتبارسنجی آواتار"""
         avatar = self.cleaned_data.get("avatar")
 
         if avatar:
-            # بررسی حجم (حداکثر 2 مگابایت)
             if avatar.size > 2 * 1024 * 1024:
                 raise ValidationError("حجم عکس نباید بیشتر از 2 مگابایت باشد")
 
-            # بررسی پسوند
             allowed_extensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"]
             ext = avatar.name.lower()
             if not any(ext.endswith(e) for e in allowed_extensions):

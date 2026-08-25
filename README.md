@@ -21,7 +21,7 @@ everting you need to start a project.
 - [ ] Dashboard
 - [ ] User Setting
 - [ ] Change Password
-- [ ] Active sessions
+- [x] Active sessions
 
 ### Blog
 
