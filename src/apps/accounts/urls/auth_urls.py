@@ -22,17 +22,17 @@ from apps.accounts.views.auth_views import (
 urlpatterns = [
     path("register/", UserClassicRegisterView.as_view(), name="register_classic"),
     path(
-        "auth/email/verify/<str:uid>/<str:token>/",
+        "email/verify/<str:uid>/<str:token>/",
         EmailVerificationView.as_view(),
         name="email_activation",
     ),
     path(
-        "auth/register/otp/request/",
+        "register/otp/request/",
         UserOTPRegisterRequestView.as_view(),
         name="register_otp_view",
     ),
     path(
-        "auth/register/otp/verify/",
+        "register/otp/verify/",
         UserOTPRegisterVerifyView.as_view(),
         name="register_otp_verify_view",
     ),
@@ -46,9 +46,9 @@ urlpatterns = [
     #     user_register_otp_complete,
     #     name="register_otp_complete_view",
     # ),
-    # path("auth/register/otp/complete", UserLoginView.as_view(), name="register_view"),
+    # path("register/otp/complete", UserLoginView.as_view(), name="register_view"),
     path("login/", UserLoginView.as_view(), name="login_classic"),
-    path("auth/logout/", UserLogoutView.as_view(), name="logout"),
+    path("logout/", UserLogoutView.as_view(), name="logout"),
     path("password/forgot/", ForgotPasswordView.as_view(), name="password_forgot_view"),
     path(
         "password/forgot/done/",
@@ -71,23 +71,23 @@ urlpatterns = [
         name="password_forgot_mobile_resend",
     ),
     path(
-        "auth/password/reset/<str:uidb64>/<str:token>/",
+        "password/reset/<str:uid>/<str:token>/",
         PasswordResetConfirmView.as_view(),
         name="password_reset_confirm",
     ),
-    path("auth/login/<str:provider>/", SocialLoginView.as_view(), name="social_login"),
+    path("login/<str:provider>/", SocialLoginView.as_view(), name="social_login"),
     path(
-        "auth/callback/<str:provider>/",
+        "callback/<str:provider>/",
         SocialCallbackView.as_view(),
         name="social_callback",
     ),
     path(
-        "auth/social/accounts/",
+        "social/accounts/",
         SocialAccountsListView.as_view(),
         name="social_accounts",
     ),
     path(
-        "auth/disconnect/<str:provider>/",
+        "disconnect/<str:provider>/",
         SocialDisconnectView.as_view(),
         name="social_disconnect",
     ),

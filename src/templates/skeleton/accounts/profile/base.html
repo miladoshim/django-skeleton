@@ -60,8 +60,8 @@
               </div>
 
               <div class="list-inline-item">
-                <a class="fs-7" href="{% url 'apps.accounts:user_profile_followers' user.username %}">followers: {{ profile.followers.count }}</a> .
-                <a class="fs-7" href="{% url 'apps.accounts:user_profile_following' user.username %}">following: {{ profile.following.count }}</a>
+                <a class="fs-7" href="{% url 'apps.accounts:user_profile_followers' profile.username %}">followers: {{ profile.followers.count }}</a> .
+                <a class="fs-7" href="{% url 'apps.accounts:user_profile_following' profile.username %}">following: {{ profile.following.count }}</a>
               </div>
             </div>
           </div>

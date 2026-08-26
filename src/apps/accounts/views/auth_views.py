@@ -256,8 +256,8 @@ class UserLoginView(IsUnAuthenticatedMixin, FormView):
     def form_valid(self, form):
         username = form.cleaned_data.get("username")
         password = form.cleaned_data.get("password")
-        # arcaptcha_token = form.cleaned_data.get("arcaptcha-token")
 
+        print(username, password)
         user = authenticate(request=self.request, username=username, password=password)
 
         if user is not None:
@@ -330,13 +330,13 @@ class ForgotPasswordView(IsUnAuthenticatedMixin, View):
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         domain = get_current_site(request).domain
-        reset_link = f"http://{domain}{reverse('apps.accounts:password_reset_confirm', kwargs={'uidb64': uid, 'token': token})}"
+        reset_link = f"http://{domain}{reverse('apps.accounts:password_reset_confirm', kwargs={'uid': uid, 'token': token})}"
 
         try:
             send_mail(
                 subject="بازیابی رمز عبور",
                 message=f"""
-                سلام {user.username}،
+                سلام {user.get_full_name}،
                 
                 برای بازیابی رمز عبور خود روی لینک زیر کلیک کنید:
                 {reset_link}
@@ -505,9 +505,9 @@ class ForgotPasswordMobileResetView(View):
 class PasswordResetConfirmView(View):
     template_name = "registration/password_reset_confirm.html"
 
-    def get(self, request, uidb64, token):
+    def get(self, request, uid, token):
         try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
+            uid = force_str(urlsafe_base64_decode(uid))
             user = User.objects.get(pk=uid)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             messages.error(request, "لینک نامعتبر است")
@@ -519,9 +519,9 @@ class PasswordResetConfirmView(View):
 
         request.session["reset_user_id"] = str(user.id)
 
-        return render(request, self.template_name)
+        return render(request, self.template_name, {"uid": uid, "token": token})
 
-    def post(self, request, uidb64, token):
+    def post(self, request, uid, token):
         user_id = request.session.get("reset_user_id")
 
         if not user_id:

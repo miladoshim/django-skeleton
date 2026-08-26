@@ -16,6 +16,7 @@ from django.db import transaction
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.accounts.tasks import send_activation_email
 from apps.core.services.base_service import BaseService
+from utils import logger
 from utils.helpers import full_url
 
 User = get_user_model()
@@ -40,36 +41,48 @@ class AuthService(BaseService):
         need_token=False,
         **extra_data,
     ) -> Dict[str, Any]:
+
         try:
             with transaction.atomic():
-                exists_user = User.objects.filter(email=email).first()
-                print(exists_user)
-                print("0------------------------------------")
-                if exists_user and exists_user.is_active:
-                    raise ValueError("این ایمیل قبلاً ثبت شده است")
+                email = email.lower().strip()
+                user = User.objects.filter(email=email).first()
 
-                raise ValueError("ثبت نشده یا فعال نیست")
+                if user and user.is_active:
+                    raise ValueError("این ایمیل قبلاً ثبت و فعال شده است")
 
-                self._send_activation_email(user)
+                if user and not user.is_active:
+                    user.first_name = first_name
+                    user.last_name = last_name
+                    user.set_password(password)
+                    user.save(update_fields=["first_name", "last_name", "password"])
 
-                response = {
-                    "user": user,
-                    "message": "لینک فعال سازی به ایمیل شما ارسال شد.",
+                if not user:
+                    user = self._create_user(first_name, last_name, email, password)
+
+                if not self._send_activation_email(user):
+                    raise ValueError("خطا در ارسال ایمیل فعال‌سازی")
+
+                result = {
+                    "success": True,
+                    "user_id": user.id,
+                    "email": user.email,
+                    "message": "لینک فعال‌سازی به ایمیل شما ارسال شد.",
                 }
 
                 if need_token:
                     tokens = self._get_tokens_for_user(user)
-                    response = {
-                        "user": user,
-                        "tokens": tokens,
-                        "message": "ثبت‌نام با موفقیت انجام شد",
-                    }
+                    result["tokens"] = tokens
+                    result["message"] = "ثبت‌نام با موفقیت انجام شد"
 
-                return response
+                return result
+
+        except ValueError as e:
+            return {"success": False, "message": str(e)}
         except Exception as e:
+            print(str(e))
             return {
                 "success": False,
-                "message": str(e),
+                "message": "خطا در ثبت‌نام. لطفا دوباره تلاش کنید.",
             }
 
     def login(
@@ -78,6 +91,7 @@ class AuthService(BaseService):
         password: str,
         need_token=False,
     ) -> Optional[Dict[str, Any]]:
+
         user = authenticate(username=username, password=password)
 
         if not user:
@@ -137,14 +151,11 @@ class AuthService(BaseService):
         try:
             user = User.objects.get(email=identifier)
         except User.DoesNotExist:
-            # برای امنیت، همین پیام را برمی‌گردانیم
             return True
 
-        # ساخت توکن بازیابی
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-        # ساخت لینک بازیابی
         reset_url = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
 
         # ارسال ایمیل
@@ -161,7 +172,13 @@ class AuthService(BaseService):
         return True
 
     @transaction.atomic
-    def _create_user(first_name, last_name, email, password):
+    def _create_user(
+        self,
+        first_name: str,
+        last_name: str,
+        email: str,
+        password: str,
+    ):
         user = User.objects.create(
             first_name=first_name,
             last_name=last_name,
