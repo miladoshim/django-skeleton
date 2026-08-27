@@ -337,10 +337,10 @@ class ForgotPasswordView(IsUnAuthenticatedMixin, View):
                 subject="بازیابی رمز عبور",
                 message=f"""
                 سلام {user.get_full_name}،
-                
+
                 برای بازیابی رمز عبور خود روی لینک زیر کلیک کنید:
                 {reset_link}
-                
+
                 این لینک ۲۴ ساعت اعتبار دارد.
                 اگر شما درخواست نداده‌اید، این ایمیل را نادیده بگیرید.
                 """,
@@ -375,13 +375,13 @@ class ForgotPasswordView(IsUnAuthenticatedMixin, View):
 
         try:
             task = send_otp_password.apply_async(
-                kwargs={"receiver": mobile, "otp": otp.password}
+                kwargs={"receiver": mobile, "otp": otp.password},
             )
 
             if task.status in ["PENDING", "SUCCESS"]:
                 messages.success(request, "کد یکبار مصرف برای شما ارسال شد.")
                 return redirect(
-                    "apps.accounts:forgot_mobile_verify",
+                    reverse("apps.accounts:password_forgot_mobile_verify_view"),
                     mobile=mobile,
                     reqid=otp.request_id,
                 )
@@ -392,6 +392,7 @@ class ForgotPasswordView(IsUnAuthenticatedMixin, View):
 
         except Exception as e:
             messages.error(request, f"خطا در ارسال کد: {str(e)}")
+            print(str(e))
 
             return redirect("apps.accounts:password_forgot_view")
 
@@ -506,52 +507,43 @@ class PasswordResetConfirmView(View):
     template_name = "registration/password_reset_confirm.html"
 
     def get(self, request, uid, token):
-        try:
-            uid = force_str(urlsafe_base64_decode(uid))
-            user = User.objects.get(pk=uid)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = self._get_user(uid)
+
+        if not user or not default_token_generator.check_token(user, token):
             messages.error(request, "لینک نامعتبر است")
             return redirect("apps.accounts:password_forgot_view")
 
-        if not default_token_generator.check_token(user, token):
-            messages.error(request, "لینک منقضی شده است. لطفا دوباره درخواست دهید.")
-            return redirect("apps.accounts:password_forgot_view")
-
         request.session["reset_user_id"] = str(user.id)
-
-        return render(request, self.template_name, {"uid": uid, "token": token})
+        return render(request, self.template_name)
 
     def post(self, request, uid, token):
-        user_id = request.session.get("reset_user_id")
+        password = request.POST.get("password")
+        confirm = request.POST.get("confirm_password")
 
+        if not password or len(password) < 8:
+            messages.error(request, "رمز حداقل ۸ کاراکتر")
+            return render(request, self.template_name)
+
+        if password != confirm:
+            messages.error(request, "رمزها یکسان نیستند")
+            return render(request, self.template_name)
+
+        user_id = request.session.get("reset_user_id")
         if not user_id:
-            messages.error(request, "لطفا دوباره تلاش کنید")
             return redirect("apps.accounts:password_forgot_view")
 
-        password = request.POST.get("password", "")
-        confirm_password = request.POST.get("confirm_password", "")
-
-        if len(password) < 8:
-            messages.error(request, "رمز عبور باید حداقل ۸ کاراکتر باشد")
-            return render(request, self.template_name)
-
-        if password != confirm_password:
-            messages.error(request, "رمزهای عبور یکسان نیستند")
-            return render(request, self.template_name)
-
-        try:
-            user = User.objects.get(id=user_id)
-            user.set_password(password)
-            user.save()
-
+        with transaction.atomic():
+            User.objects.filter(id=user_id).update(password=make_password(password))
             request.session.pop("reset_user_id", None)
 
-            messages.success(request, "رمز عبور شما تغییر کرد. وارد شوید.")
-            return redirect("apps.accounts:login_classic")
+        messages.success(request, "رمز شما تغییر کرد. وارد شوید.")
+        return redirect("apps.accounts:login_view")
 
-        except User.DoesNotExist:
-            messages.error(request, "خطا در تغییر رمز")
-            return redirect("apps.accounts:password_forgot_view")
+    def _get_user(self, uidb64):
+        try:
+            return User.objects.get(pk=force_str(urlsafe_base64_decode(uidb64)))
+        except:
+            return None
 
 
 class ResendOtpView(View):

@@ -5,6 +5,31 @@ from apps.core.services.sms_service import Kavenegar
 
 # from easy_thumbnails.files import generate_all_aliases
 
+@shared_task
+def simple_async_task(message: str) -> str:
+    """
+    Simple async task example.
+
+    Args:
+        message: A message to process
+
+    Returns:
+        str: Processed message
+    """
+    return f"Processed: {message}"
+
+
+@shared_task
+def periodic_task() -> str:
+    """
+    Simple periodic task example.
+
+    This task can be scheduled to run periodically.
+
+    Returns:
+        str: Task result
+    """
+    return "Periodic task executed"
 
 @shared_task(bind=True, max_retries=3)
 def send_comment_approved_notification(self, user: str):
