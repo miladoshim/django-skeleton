@@ -11,7 +11,6 @@ from apps.accounts.services.auth_service import AuthService
 from apps.api.renderers import CommonRenderer
 from utils.logger import logger
 
-
 class UserEmailRegisterView(APIView):
     """Classic Register with email/password"""
 

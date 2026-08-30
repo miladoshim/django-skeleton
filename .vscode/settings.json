@@ -4,5 +4,6 @@
     },
     "emmet.includeLanguages": {
         "django-html": "html"
-    }
+    },
+    "python-envs.defaultEnvManager": "ms-python.python:venv"
 }
