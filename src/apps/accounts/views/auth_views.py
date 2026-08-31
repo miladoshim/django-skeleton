@@ -254,11 +254,24 @@ class UserLoginView(IsUnAuthenticatedMixin, FormView):
     form_class = ClassicLoginForm
 
     def form_valid(self, form):
-        username = form.cleaned_data.get("username")
+        identifier = form.cleaned_data.get("identifier")
         password = form.cleaned_data.get("password")
+        
+        service = AuthService(request=self.request)
+        result = service.login(identifier, password)
 
-        print(username, password)
-        user = authenticate(request=self.request, username=username, password=password)
+        if result['success']:
+            if not self.request.user.is_authenticated:
+                messages.error(self.request, "خطا در ورود")
+                return redirect(reverse("apps.accounts:login_classic"))
+            
+            messages.success(self.request, "خوش آمدید!")
+            return redirect(reverse("apps.accounts:home_view"))
+        
+        messages.error(self.request, result['error'])
+        return redirect(reverse("apps.accounts:login_classic"))
+    
+        user = authenticate(request=self.request, username=identifier, password=password)
 
         if user is not None:
             login(self.request, user)
@@ -291,8 +304,11 @@ class UserLogoutView(LoginRequiredMixin, View):
     success_url = reverse_lazy("apps.pages:home_view")
 
     @method_decorator(csrf_protect)
-    @method_decorator(require_POST)  # فقط POST - امنتر
+    @method_decorator(require_POST) 
     def post(self, request):
+        # service = AuthService(self.request)
+        # result = service.logout()
+
         logout(request)
         messages.success(request, "از حساب کاربری خود خارج شدید.")
         return redirect(self.success_url)

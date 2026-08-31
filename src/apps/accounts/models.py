@@ -95,8 +95,8 @@ class User(AbstractBaseUser, FollowMixin, PermissionsMixin):
     def get_jalali_date(self):
         return date2jalali(self.created_at)
 
-    USERNAME_FIELD = "mobile"
-    REQUIRED_FIELDS = []
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["mobile"]
 
     objects = UserManager()
 

@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Dict, Any
 from django.db import transaction
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from django.db.models.aggregates import Sum
 from apps.core.services.base_service import BaseService
 
@@ -12,7 +13,7 @@ class UserService(BaseService):
     model = User
 
     @transaction.atomic
-    def update_profile(self, user: User, **validated_data) -> User:
+    def update_profile2(self, user: User, **validated_data) -> User:
 
         allowed_fields = [
             "first_name",
@@ -58,6 +59,104 @@ class UserService(BaseService):
         }
 
     def _request_email_change(self, user: User, new_email: str):
+        
+        
+  
+    def update_profile(self, user, **data):
+        """ویرایش پروفایل کاربر"""
+        allowed_fields = ['first_name', 'last_name', 'avatar', 'bio', 'phone']
+
+        update_data = {}
+        for field in allowed_fields:
+            if field in data:
+                update_data[field] = data[field]
+
+        # استفاده از متد update از BaseService
+        user = self.update(user, **update_data)
+
+        return {'success': True, 'user': user}
+
+    # ============================
+    #   GET USER PROFILE
+    # ============================
+    def get_user_profile(self, user_id=None, username=None):
+        if user_id:
+            user = self.get(user_id)
+        elif username:
+            user = self.get_queryset().filter(username=username).first()
+        else:
+            user = self.request.user if self.request else None
+
+        if not user:
+            return {'success': False, 'error': 'کاربر یافت نشد'}
+
+        return {
+            'success': True,
+            'user': self._serialize_user(user),
+        }
+
+    # ============================
+    #   USER LIST (برای ادمین)
+    # ============================
+    def get_search_users(self, is_active=None, search=None, page=1, limit=20):
+        queryset = self.get_queryset()
+
+        if is_active is not None:
+            queryset = queryset.filter(is_active=is_active)
+
+        if search:
+            queryset = queryset.filter(
+                Q(email__icontains=search) |
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(mobile__icontains=search)
+            )
+
+        total = queryset.count()
+        start = (page - 1) * limit
+        end = start + limit
+
+        users = queryset[start:end]
+
+        return {
+            'items': [self._serialize_user(u) for u in users],
+            'total': total,
+            'page': page,
+            'limit': limit,
+            'has_next': end < total,
+        }
+
+    # ============================
+    #   UPDATE USER (ادمین)
+    # ============================
+    def update_user(self, user_id, **data):
+        """ویرایش کاربر توسط ادمین"""
+        user = self.get(user_id)
+        if not user:
+            return {'success': False, 'error': 'کاربر یافت نشد'}
+
+        user = self.update(user, **data)
+        return {'success': True, 'user': self._serialize_user(user)}
+
+    # ============================
+    #   DELETE USER (ادمین)
+    # ============================
+    @transaction.atomic
+    def delete_user(self, user_id, hard_delete=False):
+        """حذف کاربر"""
+        user = self.get(user_id)
+        if not user:
+            return {'success': False, 'error': 'کاربر یافت نشد'}
+
+        if hard_delete:
+            # حذف کامل
+            self.delete(user)
+        else:
+            # حذف نرم
+            self.update(user, is_active=False)
+
+        return {'success': True, 'message': 'کاربر حذف شد'}
+
         """درخواست تغییر ایمیل"""
         # اینجا میتوانید ایمیل تاییدیه بفرستید
         pass

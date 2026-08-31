@@ -37,13 +37,30 @@ class UserEmailRegisterView(APIView):
         )
 
 
-class UserLoginAPIView(APIView):
+class UserLoginAPIView(APIView):    
     permission_classes = (IsNotAuthenticated,)
-
+    
     def post(self, request):
-        pass
+        service = AuthService(request=request)
+        result = service.login(
+            identifier=request.data.get('identifier'),
+            password=request.data.get('password'),
+        )
+        
+        return Response(result, status=200 if result['success'] else 401)
 
 
+
+class LogoutAPIView(APIView):
+    """خروج - API"""
+    
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        service = AuthService(request=request)
+        result = service.logout(request.user)
+        return Response(result)
+    
 class UserLogoutAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 

@@ -9,9 +9,9 @@ http:
   body:
     type: multipart-form
     data:
-      - name: username
+      - name: identifier
         type: text
-        value: "09376686365"
+        value: "09935402841"
       - name: password
         type: text
         value: "12344321"
@@ -22,3 +22,4 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true

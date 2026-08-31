@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.forms import Form, ModelForm
 
+from apps.accounts.backends import EmailMobileUsernameBackend
 from utils.validators import validate_phone_number
 from .models import User, UserProfile
 
@@ -18,7 +19,8 @@ class UserEmailRegisterForm(Form):
         ],
         label="نام",
         required=True,
-        widget=forms.TextInput(attrs={"placeholder": "نام", "class": "form-control"}),
+        widget=forms.TextInput(
+            attrs={"placeholder": "نام", "class": "form-control"}),
     )
 
     last_name = forms.CharField(
@@ -45,7 +47,8 @@ class UserEmailRegisterForm(Form):
     )
     password = forms.CharField(
         widget=forms.PasswordInput(
-            attrs={"placeholder": "رمز عبور قوی انتخاب کنید", "class": "form-control"},
+            attrs={"placeholder": "رمز عبور قوی انتخاب کنید",
+                   "class": "form-control"},
         ),
         validators=[
             validators.MinLengthValidator(8),
@@ -54,45 +57,20 @@ class UserEmailRegisterForm(Form):
     )
 
 
-class UserLoginForm(Form):
-    mobile = forms.CharField(
-        max_length=11,
-        label="شماره موبایل",
-        widget=forms.TextInput(
-            attrs={"class": "form-control", "placeholder": "مثال:‌09121236515"},
-        ),
-    )
-    password = forms.CharField(
-        widget=forms.PasswordInput(
-            attrs={"class": "form-control", "placeholder": "رمز عبور"},
-        ),
-        min_length=8,
-        max_length=30,
-    )
-
-    def clean_mobile(self):
-        mobile = self.cleaned_data.get("mobile", "").strip().lower()
-
-        if not mobile:
-            raise ValidationError("موبایل الزامی است")
-
-        validate_phone_number(mobile)
-
-        return mobile
-
 
 class ClassicLoginForm(forms.Form):
-    username = forms.CharField(
+    identifier = forms.CharField(
         label="ایمیل، موبایل یا نام کاربری",
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "ایمیل، موبایل یا نام کاربری",
+                'placeholder': 'example@email.com یا 09123456789 یا username',
                 "autofocus": True,
             },
         ),
         validators=[
             validators.MinLengthValidator(6),
+            validators.MaxLengthValidator(100),
         ],
     )
 
@@ -106,29 +84,25 @@ class ClassicLoginForm(forms.Form):
         ],
     )
 
-    def clean_username(self):
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super().__init__(*args, **kwargs)
 
-        username = self.cleaned_data.get("username", "").strip().lower()
+    def clean(self):
+        cleaned_data = super().clean()
+        identifier = cleaned_data.get('identifier')
+        password = cleaned_data.get('password')
 
-        if not username:
-            raise ValidationError("نام کاربری یا ایمیل یا موبایل الزامی است")
+        if identifier and password:
+            backend = EmailMobileUsernameBackend()
+            user = backend.authenticate(self.request, identifier, password)
 
-        user = User.objects.filter(
-            Q(username__iexact=username)
-            | Q(email__iexact=username)
-            | Q(mobile__iexact=username)
-        ).first()
+            if not user:
+                raise forms.ValidationError("اطلاعات وارد شده اشتباه است")
 
-        if user is None:
-            raise ValidationError("کاربری با این مشخصات یافت نشد")
+            cleaned_data['user'] = user
 
-        # if not user.is_active:
-        #     raise ValidationError(_("حساب کاربری شما غیرفعال است"))
-
-        # if getattr(user, "is_blocked", False):
-        #     raise ValidationError(_("حساب کاربری شما مسدود شده است"))
-
-        return username
+        return cleaned_data
 
     def clean_password(self):
         password = self.cleaned_data.get("password", "")
@@ -241,7 +215,8 @@ class UserOtpCompleteForm(Form):
         ],
         label="نام",
         required=True,
-        widget=forms.TextInput(attrs={"placeholder": "نام", "class": "form-control"}),
+        widget=forms.TextInput(
+            attrs={"placeholder": "نام", "class": "form-control"}),
     )
     last_name = forms.CharField(
         validators=[
@@ -332,7 +307,8 @@ class ChangePasswordForm(Form):
 
     password_confirmation = forms.CharField(
         widget=forms.PasswordInput(
-            attrs={"placeholder": "تکرار رمز عبور جدید", "class": "form-control"},
+            attrs={"placeholder": "تکرار رمز عبور جدید",
+                   "class": "form-control"},
         ),
         validators=[
             validators.MinLengthValidator(8),
@@ -372,7 +348,8 @@ class UserAccountEditForm(Form):
         ],
         label="نام",
         required=True,
-        widget=forms.TextInput(attrs={"placeholder": "نام", "class": "form-control"}),
+        widget=forms.TextInput(
+            attrs={"placeholder": "نام", "class": "form-control"}),
     )
 
     last_name = forms.CharField(
@@ -477,7 +454,8 @@ class UserAccountEditForm(Form):
 
     avatar = forms.ImageField(
         required=False,
-        widget=forms.FileInput(attrs={"class": "form-control", "accept": "image/*"}),
+        widget=forms.FileInput(
+            attrs={"class": "form-control", "accept": "image/*"}),
     )
 
     def __init__(self, *args, **kwargs):
@@ -531,7 +509,8 @@ class UserAccountEditForm(Form):
             allowed_extensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"]
             ext = avatar.name.lower()
             if not any(ext.endswith(e) for e in allowed_extensions):
-                raise ValidationError("فرمت عکس باید jpg, jpeg, png, gif یا webp باشد")
+                raise ValidationError(
+                    "فرمت عکس باید jpg, jpeg, png, gif یا webp باشد")
 
         return avatar
 
@@ -573,7 +552,8 @@ class ForgotPasswordForm(forms.Form):
 
                 user = User.objects.filter(mobile=mobile).first()
                 if not user:
-                    raise forms.ValidationError("کاربری با این شماره موبایل یافت نشد")
+                    raise forms.ValidationError(
+                        "کاربری با این شماره موبایل یافت نشد")
 
         return cleaned_data
 
