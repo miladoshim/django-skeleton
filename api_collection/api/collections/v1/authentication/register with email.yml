@@ -17,7 +17,7 @@ http:
         value: واحدی
       - name: email
         type: text
-        value: miladimos@gmail.com
+        value: admin@gmail.com
         description: milad.jafari6210@gmail.com
       - name: password
         type: text

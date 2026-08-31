@@ -19,8 +19,7 @@ class UserEmailRegisterForm(Form):
         ],
         label="نام",
         required=True,
-        widget=forms.TextInput(
-            attrs={"placeholder": "نام", "class": "form-control"}),
+        widget=forms.TextInput(attrs={"placeholder": "نام", "class": "form-control"}),
     )
 
     last_name = forms.CharField(
@@ -47,8 +46,7 @@ class UserEmailRegisterForm(Form):
     )
     password = forms.CharField(
         widget=forms.PasswordInput(
-            attrs={"placeholder": "رمز عبور قوی انتخاب کنید",
-                   "class": "form-control"},
+            attrs={"placeholder": "رمز عبور قوی انتخاب کنید", "class": "form-control"},
         ),
         validators=[
             validators.MinLengthValidator(8),
@@ -57,14 +55,13 @@ class UserEmailRegisterForm(Form):
     )
 
 
-
 class ClassicLoginForm(forms.Form):
     identifier = forms.CharField(
         label="ایمیل، موبایل یا نام کاربری",
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                'placeholder': 'example@email.com یا 09123456789 یا username',
+                "placeholder": "example@email.com یا 09123456789 یا username",
                 "autofocus": True,
             },
         ),
@@ -85,13 +82,13 @@ class ClassicLoginForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop('request', None)
+        self.request = kwargs.pop("request", None)
         super().__init__(*args, **kwargs)
 
     def clean(self):
         cleaned_data = super().clean()
-        identifier = cleaned_data.get('identifier')
-        password = cleaned_data.get('password')
+        identifier = cleaned_data.get("identifier")
+        password = cleaned_data.get("password")
 
         if identifier and password:
             backend = EmailMobileUsernameBackend()
@@ -100,7 +97,7 @@ class ClassicLoginForm(forms.Form):
             if not user:
                 raise forms.ValidationError("اطلاعات وارد شده اشتباه است")
 
-            cleaned_data['user'] = user
+            cleaned_data["user"] = user
 
         return cleaned_data
 
@@ -215,8 +212,7 @@ class UserOtpCompleteForm(Form):
         ],
         label="نام",
         required=True,
-        widget=forms.TextInput(
-            attrs={"placeholder": "نام", "class": "form-control"}),
+        widget=forms.TextInput(attrs={"placeholder": "نام", "class": "form-control"}),
     )
     last_name = forms.CharField(
         validators=[
@@ -307,8 +303,7 @@ class ChangePasswordForm(Form):
 
     password_confirmation = forms.CharField(
         widget=forms.PasswordInput(
-            attrs={"placeholder": "تکرار رمز عبور جدید",
-                   "class": "form-control"},
+            attrs={"placeholder": "تکرار رمز عبور جدید", "class": "form-control"},
         ),
         validators=[
             validators.MinLengthValidator(8),
@@ -348,8 +343,7 @@ class UserAccountEditForm(Form):
         ],
         label="نام",
         required=True,
-        widget=forms.TextInput(
-            attrs={"placeholder": "نام", "class": "form-control"}),
+        widget=forms.TextInput(attrs={"placeholder": "نام", "class": "form-control"}),
     )
 
     last_name = forms.CharField(
@@ -454,8 +448,7 @@ class UserAccountEditForm(Form):
 
     avatar = forms.ImageField(
         required=False,
-        widget=forms.FileInput(
-            attrs={"class": "form-control", "accept": "image/*"}),
+        widget=forms.FileInput(attrs={"class": "form-control", "accept": "image/*"}),
     )
 
     def __init__(self, *args, **kwargs):
@@ -509,8 +502,7 @@ class UserAccountEditForm(Form):
             allowed_extensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"]
             ext = avatar.name.lower()
             if not any(ext.endswith(e) for e in allowed_extensions):
-                raise ValidationError(
-                    "فرمت عکس باید jpg, jpeg, png, gif یا webp باشد")
+                raise ValidationError("فرمت عکس باید jpg, jpeg, png, gif یا webp باشد")
 
         return avatar
 
@@ -552,8 +544,7 @@ class ForgotPasswordForm(forms.Form):
 
                 user = User.objects.filter(mobile=mobile).first()
                 if not user:
-                    raise forms.ValidationError(
-                        "کاربری با این شماره موبایل یافت نشد")
+                    raise forms.ValidationError("کاربری با این شماره موبایل یافت نشد")
 
         return cleaned_data
 

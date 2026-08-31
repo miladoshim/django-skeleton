@@ -60,11 +60,23 @@ class UserClassicRegisterView(IsUnAuthenticatedMixin, FormView):
         email = form.cleaned_data.get("email")
         password = form.cleaned_data.get("password")
 
-        result = AuthService().register_email(first_name, last_name, email, password)
+        result = AuthService(request=self.request).register(
+            first_name,
+            last_name,
+            email,
+            password,
+        )
 
-        messages.success(self.request, result["message"])
-
-        return redirect(self.success_url)
+        if result is None:
+            messages.error(self.request, "خطای ناشناخته. لطفا دوباره تلاش کنید.")
+            return redirect(reverse_lazy('apps.accounts:register_classic'))
+        
+        if result.get('success'):
+            messages.success(self.request, result["message"])
+            return redirect(self.success_url)
+        else:
+            messages.error(self.request, result["message"])
+            return redirect(reverse_lazy('apps.accounts:register_classic'))
 
     def form_invalid(self, form):
 
@@ -88,7 +100,7 @@ class EmailVerificationView(View):
     success_url = reverse_lazy("apps.accounts:login_classic")
 
     def get(self, request, uid, token):
-        result = AuthService().verify_email(uid, token)
+        result = AuthService(self.request).verify_email(uid, token)
         if result:
             messages.success(request, "ایمیل شما تایید شد, لطفا وارد شوید.")
             return redirect(self.success_url)
@@ -256,30 +268,20 @@ class UserLoginView(IsUnAuthenticatedMixin, FormView):
     def form_valid(self, form):
         identifier = form.cleaned_data.get("identifier")
         password = form.cleaned_data.get("password")
-        
+
         service = AuthService(request=self.request)
         result = service.login(identifier, password)
 
-        if result['success']:
+        if result["success"]:
             if not self.request.user.is_authenticated:
                 messages.error(self.request, "خطا در ورود")
                 return redirect(reverse("apps.accounts:login_classic"))
-            
-            messages.success(self.request, "خوش آمدید!")
-            return redirect(reverse("apps.accounts:home_view"))
-        
-        messages.error(self.request, result['error'])
-        return redirect(reverse("apps.accounts:login_classic"))
-    
-        user = authenticate(request=self.request, username=identifier, password=password)
 
-        if user is not None:
-            login(self.request, user)
-            messages.success(self.request, "خوش آمدید.")
-            return redirect(self.success_url)
-        else:
-            messages.error(self.request, "نام کاربری یا رمز عبور اشتباه است")
-            return redirect(reverse("apps.accounts:login_classic"))
+            messages.success(self.request, "خوش آمدید!")
+            return redirect(reverse("apps.pages:home_view"))
+
+        messages.error(self.request, result["error"])
+        return redirect(reverse("apps.accounts:login_classic"))
 
     def form_invalid(self, form):
 
@@ -304,13 +306,14 @@ class UserLogoutView(LoginRequiredMixin, View):
     success_url = reverse_lazy("apps.pages:home_view")
 
     @method_decorator(csrf_protect)
-    @method_decorator(require_POST) 
+    @method_decorator(require_POST)
     def post(self, request):
-        # service = AuthService(self.request)
-        # result = service.logout()
-
-        logout(request)
-        messages.success(request, "از حساب کاربری خود خارج شدید.")
+        service = AuthService(request=self.request)
+        result = service.logout()
+        if result["success"]:
+            messages.success(self.request, result["message"])
+            return redirect(self.success_url)
+        messages.error(self.request, result["error"])
         return redirect(self.success_url)
 
 

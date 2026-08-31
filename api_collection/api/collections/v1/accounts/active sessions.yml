@@ -6,16 +6,13 @@ info:
 http:
   method: GET
   url: "{{baseurlv1}}accounts/sessions/"
-  body:
-    type: multipart-form
-    data:
-      - name: username
-        type: text
-        value: adminuser
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc4ODgwNTczMSwiaWF0IjoxNzg4MjAwOTMxLCJqdGkiOiJlYmE2MjlkZTY4OWM0MmYxOWNlN2I0ZTJmNDhlMDk2NiIsInVzZXJfaWQiOiIxIn0.eO30tmZH8b5d419t9ryahuGHTHgpgdqntNyFSLxrEEk
 
 settings:
   encodeUrl: true
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true

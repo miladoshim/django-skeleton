@@ -257,11 +257,3 @@ class TokenGenerator(PasswordResetTokenGenerator):
 
 
 token_generator = TokenGenerator()
-
-
-def full_url(view_name, *args, **kwargs):
-
-    protocol = "https" if not settings.DEBUG else "http"
-    domain = Site.objects.get_current().domain
-
-    return f"{protocol}://{domain}{reverse(view_name, args=args, kwargs=kwargs)}"

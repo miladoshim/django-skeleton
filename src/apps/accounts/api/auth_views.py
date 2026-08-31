@@ -20,17 +20,23 @@ class UserEmailRegisterView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = UserEmailRegisterSerializer(data=request.data)
         if serializer.is_valid():
-            result = AuthService().register_email(
+            result = AuthService(request=request).register(
                 serializer.data.get("first_name"),
                 serializer.data.get("last_name"),
                 serializer.data.get("email"),
                 serializer.data.get("password"),
             )
-
-            return Response(
-                {"message": result["message"]},
-                status=status.HTTP_201_CREATED,
-            )
+            
+            if result['success']:
+                return Response(
+                    {"message": result["message"]},
+                    status=status.HTTP_201_CREATED,
+                )
+            else:
+                return Response(
+                    {"message": result["message"]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST,
@@ -66,12 +72,11 @@ class UserLogoutAPIView(APIView):
 
     def post(self, request):
         try:
-            service = AuthService(request=request).logout()
+            AuthService(request=request).logout()
 
             refresh_token = request.data.get("refresh")
             if refresh_token:
-                token = RefreshToken(refresh_token)
-                token.blacklist()
+                token = RefreshToken(refresh_token).blacklist()
 
             response = Response(
                 {"detail": "با موفقیت خارج شدید"},

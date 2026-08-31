@@ -8,7 +8,7 @@ everting you need to start a project.
 
 - [ ] Register with Mobile OTP
 - [ ] Register with Email
-- [ ] Login with mobile/email/username
+- [x] Login with mobile/email/username
 - [ ] Login with OTP Password
 - [ ] Forgot Password with Email
 - [ ] Forgot Password with Mobile

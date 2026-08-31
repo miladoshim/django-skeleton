@@ -1,0 +1,18 @@
+info:
+  name: my posts
+  type: http
+  seq: 5
+
+http:
+  method: GET
+  url: "{{baseurlv1}}accounts/posts/"
+  auth:
+    type: bearer
+    token: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg4NzE5MzMxLCJpYXQiOjE3ODgyMDA5MzEsImp0aSI6ImY3YjczYzk0MDM4YzQyMjA5MmViMzM0YmZhZGVjZDkyIiwidXNlcl9pZCI6IjEifQ.R-QkyJ1UjJ_iwm4By1byH_38LEGyiXJCSNatemLhm1E
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
