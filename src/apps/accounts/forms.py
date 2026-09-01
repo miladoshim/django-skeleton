@@ -1,15 +1,12 @@
 import re
-
 from django import forms
 from django.contrib.auth.forms import UserChangeForm
 from django.core import validators
 from django.core.exceptions import ValidationError
-from django.db.models import Q
-from django.forms import Form, ModelForm
-
+from django.forms import Form
 from apps.accounts.backends import EmailMobileUsernameBackend
 from utils.validators import validate_phone_number
-from .models import User, UserProfile
+from .models import User
 
 
 class UserEmailRegisterForm(Form):
@@ -55,7 +52,7 @@ class UserEmailRegisterForm(Form):
     )
 
 
-class ClassicLoginForm(forms.Form):
+class ClassicLoginForm(Form):
     identifier = forms.CharField(
         label="ایمیل، موبایل یا نام کاربری",
         widget=forms.TextInput(
@@ -158,6 +155,82 @@ class ClassicLoginForm(forms.Form):
     #     if hasattr(user, "failed_login_attempts"):
     #         user.failed_login_attempts += 1
     #         user.save(update_fields=["failed_login_attempts"])
+
+
+class ForgotPasswordForm(Form):
+    identifier = forms.CharField(
+        label="ایمیل یا شماره موبایل",
+        max_length=100,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "example@email.com یا 09123456789",
+                "autofocus": True,
+            }
+        ),
+    )
+
+    def clean_identifier(self):
+        identifier = self.cleaned_data["identifier"].strip()
+
+        if not identifier:
+            raise ValidationError("این فیلد الزامی است")
+
+        return identifier
+
+    def clean(self):
+        cleaned_data = super().clean()
+        identifier = cleaned_data.get("identifier")
+
+        if not identifier:
+            return cleaned_data
+
+        if "@" in identifier:
+            user = User.objects.filter(email__iexact=identifier).first()
+            error_msg = "کاربری با این ایمیل یافت نشد"
+        else:
+            mobile = validate_phone_number(identifier)
+            user = User.objects.filter(mobile=mobile).first()
+            error_msg = "کاربری با این شماره موبایل یافت نشد"
+
+            if not user:
+                raise ValidationError(error_msg)
+
+            return cleaned_data
+
+
+class ForgotPasswordResetForm(Form):
+    password = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={
+                "placeholder": "رمز جدید (حداقل ۸ کاراکتر)",
+                 "class": "form-control",
+            },
+        ),
+        validators=[
+            validators.MinLengthValidator(8),
+            validators.MaxLengthValidator(100),
+        ],
+        label="رمز عبور جدید",
+    )
+
+    password_confirmation = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={"placeholder": "تایید رمز عبور", "class": "form-control"},
+        ),
+        validators=[
+            validators.MinLengthValidator(8),
+        ],
+        label="تایید رمز عبور",
+    )
+
+    def clean_password_confirmation(self):
+        password = self.cleaned_data.get("password")
+        password_confirmation = self.cleaned_data["password_confirmation"]
+
+        if password and password_confirmation and password != password_confirmation:
+            raise ValidationError("رمز عبور ها یکی نیستند")
+        return password_confirmation
 
 
 class UserOtpForm(Form):
@@ -505,111 +578,3 @@ class UserAccountEditForm(Form):
                 raise ValidationError("فرمت عکس باید jpg, jpeg, png, gif یا webp باشد")
 
         return avatar
-
-
-class ForgotPasswordForm(forms.Form):
-    identifier = forms.CharField(
-        label="ایمیل یا شماره موبایل",
-        max_length=100,
-        widget=forms.TextInput(
-            attrs={
-                "class": "form-control",
-                "placeholder": "example@email.com یا 09123456789",
-                "autofocus": True,
-            }
-        ),
-    )
-
-    def clean_identifier(self):
-        identifier = self.cleaned_data["identifier"].strip()
-
-        if not identifier:
-            raise forms.ValidationError("این فیلد الزامی است")
-
-        return identifier
-
-    def clean(self):
-        cleaned_data = super().clean()
-        identifier = cleaned_data.get("identifier")
-
-        if identifier:
-            is_email = "@" in identifier
-
-            if is_email:
-                user = User.objects.filter(email__iexact=identifier).first()
-                if not user:
-                    raise forms.ValidationError("کاربری با این ایمیل یافت نشد")
-            else:
-                mobile = self._normalize_mobile(identifier)
-
-                user = User.objects.filter(mobile=mobile).first()
-                if not user:
-                    raise forms.ValidationError("کاربری با این شماره موبایل یافت نشد")
-
-        return cleaned_data
-
-    def _normalize_mobile(self, mobile):
-        """نرمال‌سازی شماره موبایل"""
-        mobile = re.sub(r"[^\d]", "", mobile)
-
-        validate_phone_number(mobile)
-
-        return mobile
-
-
-# # uploads/forms.py - updated with validators
-# from .validators import (
-#     validate_file_type,
-#     validate_file_size,
-#     validate_image_dimensions,
-#     sanitize_filename,
-#     ALLOWED_DOCUMENT_TYPES,
-#     ALLOWED_IMAGE_TYPES,
-# )
-
-
-# class SecureDocumentForm(forms.ModelForm):
-#     """Form with comprehensive file validation"""
-
-#     class Meta:
-#         model = Document
-#         fields = ["title", "file", "category", "description"]
-
-#     def clean_file(self):
-#         file = self.cleaned_data.get("file")
-#         if file:
-#             # Sanitize filename
-#             file.name = sanitize_filename(file.name)
-
-#             # Validate file size (max 10MB)
-#             validate_file_size(file, max_size_mb=10)
-
-#             # Validate file type by content
-#             validate_file_type(file, ALLOWED_DOCUMENT_TYPES)
-
-#         return file
-
-
-# class SecureImageForm(forms.Form):
-#     """Form for secure image upload"""
-
-#     image = forms.ImageField()
-
-#     def clean_image(self):
-#         image = self.cleaned_data.get("image")
-#         if image:
-#             # Sanitize filename
-#             image.name = sanitize_filename(image.name)
-
-#             # Validate size
-#             validate_file_size(image, max_size_mb=5)
-
-#             # Validate type by content
-#             validate_file_type(image, ALLOWED_IMAGE_TYPES)
-
-#             # Validate dimensions
-#             validate_image_dimensions(
-#                 image, max_width=4096, max_height=4096, min_width=50, min_height=50
-#             )
-
-#         return image

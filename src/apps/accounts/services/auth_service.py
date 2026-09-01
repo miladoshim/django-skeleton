@@ -20,7 +20,8 @@ from django.contrib.sites.models import Site
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.accounts.api.serializers import UserSerializer
 from apps.accounts.backends import EmailMobileUsernameBackend
-from apps.accounts.tasks import send_activation_email
+from apps.accounts.models import OtpChannel, OtpRequest
+from apps.accounts.tasks import send_activation_email, send_otp_password
 from apps.core.services.base_service import BaseService
 from utils import logger
 
@@ -39,7 +40,7 @@ class AuthService(BaseService):
 
     def __init__(self, request=None):
         super().__init__(request=request)
-        
+
     def register(
         self,
         first_name: str,
@@ -59,28 +60,30 @@ class AuthService(BaseService):
                     return {"success": False, "message": "این ایمیل قبلاً ثبت شده است"}
 
                 if user and not user.is_active:
-                    user = self._update_existing_user(user, first_name, last_name, password)
+                    user = self._update_existing_user(
+                        user, first_name, last_name, password
+                    )
                     message = "لینک فعال‌سازی مجدد ارسال شد."
                 else:
                     user = self._create_user(first_name, last_name, email, password)
                     message = "لینک فعال‌سازی ارسال شد."
 
-                email_ok = self._send_activation_email(user) 
+                email_ok = self._send_activation_email(user)
                 if email_ok is not True:
                     return {"success": False, "message": "خطا در ارسال ایمیل"}
 
                 return {"success": True, "email": user.email, "message": message}
 
-
         except ValueError as e:
-            return {"success": False, "message": str(e)} 
+            return {"success": False, "message": str(e)}
         except Exception as e:
-            print('-----------------------')
+            print("-----------------------")
             print(str(e))
             return {
                 "success": False,
                 "message": "خطا در ثبت‌نام. لطفا دوباره تلاش کنید.",
-                }  
+            }
+
     def login(
         self,
         identifier: str,
@@ -97,8 +100,7 @@ class AuthService(BaseService):
                 return {"success": False, "error": "اطلاعات ورود اشتباه است"}
 
             if user.is_banned:
-                return {"success": False, "error":"حساب کاربری شما مسدود است"}
-
+                return {"success": False, "error": "حساب کاربری شما مسدود است"}
 
             if self.request:
                 login(self.request, user)
@@ -132,7 +134,7 @@ class AuthService(BaseService):
         """فعال‌سازی حساب با ایمیل"""
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
-            user = self.get(uid)  # استفاده از متد BaseService
+            user = self.get(uid)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             return {"success": False, "error": "لینک نامعتبر است"}
 
@@ -158,35 +160,7 @@ class AuthService(BaseService):
 
         return {"success": True, "message": "رمز عبور تغییر کرد"}
 
-    # ============================
-    #    FORGOT PASSWORD
-    # ============================
-    def forgot_password(self, identifier):
-        """فراموشی رمز عبور"""
-        user = None
-
-        if "@" in identifier:
-            user = self.get_queryset().filter(email__iexact=identifier).first()
-        else:
-            mobile = self._clean_mobile(identifier)
-            user = self.get_queryset().filter(mobile=mobile).first()
-
-        if not user:
-            return {
-                "success": True,
-                "message": "اگر حساب موجود باشد، لینک ارسال می‌شود",
-            }
-
-        if user.email and "@" in identifier:
-            self._send_password_reset_email(user)
-        elif user.mobile:
-            self._send_password_reset_sms(user)
-
-        return {"success": True, "message": "لینک بازنشانی رمز ارسال شد"}
-
-    # ============================
-    #  RESET PASSWORD CONFIRM
-    # ============================
+   
     @transaction.atomic
     def reset_password_confirm(self, uidb64, token, new_password):
         """تایید بازنشانی رمز"""
@@ -239,17 +213,16 @@ class AuthService(BaseService):
         user.save()
         return user
 
-    
     def _update_existing_user(self, user, first_name, last_name, password) -> User:
         user.first_name = first_name.strip()
         user.last_name = last_name.strip()
         user.set_password(password)
         user.save()
         return user
-    
+
     @transaction.atomic
     def _send_activation_email(self, user):
-        print(f"🔍 _send_activation_email called for {user.email}") 
+        print(f"🔍 _send_activation_email called for {user.email}")
 
         try:
             token = str(uuid.uuid4())
@@ -322,9 +295,9 @@ class AuthService(BaseService):
         try:
             refresh = RefreshToken(refresh_token)
             return {
-        "access": str(refresh.access_token),
-        "refresh": str(refresh),
-    }
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+            }
         except Exception as e:
             raise ValueError("توکن نامعتبر است")
 
@@ -341,126 +314,83 @@ class AuthService(BaseService):
 
     def forgot_password(self, identifier: str) -> bool:
         identifier = identifier.strip().lower()
+        print('-------------------------------')
+        print(identifier)
+        if "@" in identifier:
+            print('email')
+            return self._handle_email(email=identifier)
+        else:
+            print('mobile')
+            return self._handle_mobile(mobile=identifier)
 
-        #     if "@" in identifier:
-            #         return self._handle_email(request, identifier)
-            #     else:
-                #         return self._handle_mobile(request, identifier)
-
+    def _handle_email(self, email: str):
         try:
-            user = User.objects.get(email=identifier)
-        except User.DoesNotExist:
-            return True
+            user = User.objects.filter(email__iexact=email, is_active=True).first()
 
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            reset_link = self._build_url(
+                "apps.accounts:password_reset_confirm", uid, token
+            )
 
-        reset_url = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
+            send_mail(
+                subject="بازیابی رمز عبور",
+                message=f"""
+                سلام {user.get_full_name}،
 
-        # ارسال ایمیل
-        send_mail(
-            subject="بازیابی رمز عبور",
-            message=f"""
-            برای بازیابی رمز عبور خود روی لینک زیر کلیک کنید:
-                {reset_url}
-                """,
+                برای بازیابی رمز عبور خود روی لینک زیر کلیک کنید:
+                    {reset_link}
+
+                    این لینک ۲۴ ساعت اعتبار دارد.
+                    اگر شما درخواست نداده‌اید، این ایمیل را نادیده بگیرید.
+                    """,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
             )
 
-        return True
+            return {"success": True, "message": "لینک بازنشانی رمز ارسال شد"}
 
+        except Exception as e:
+            print(str(e))
+            return {
+                "success": False,
+                "message": "خطا در ارسال ایمیل. لطفا بعدا تلاش کنید",
+            }
 
-    def _get_tokens(self, user):
+    @transaction.atomic
+    def _handle_mobile(self, mobile: str):
+        user = User.objects.filter(mobile=mobile, is_active=True).first()
 
-        refresh = RefreshToken.for_user(user)
-        return {
-    "refresh": str(refresh),
-    "access": str(refresh.access_token),
-    }
+        otp = OtpRequest.objects.generate_otp(
+            {
+                "channel": OtpChannel.MOBILE,
+                "receiver": mobile,
+            }
+        )
 
-    # transaction.atomic
+        cache.set(f"otp_{mobile}", otp.password, timeout=300)
 
-    # def _handle_email(self, request, email):
-        #     user = User.objects.filter(email__iexact=email).first()
+        try:
+            task = send_otp_password.apply_async(
+                kwargs={"receiver": mobile, "otp": otp.password},
+            )
 
-        #     if not user:
-            #         messages.error(request, "کاربری با این ایمیل یافت نشد")
-            #         return redirect("apps.accounts:password_forgot_view")
+            if task.status in ["PENDING", "SUCCESS"]:
+                return {
+                    "success": True,
+                    "message": "کد یکبار مصرف برای شما ارسال شد.",
+                    "mobile": mobile,
+                    "reqid": otp.request_id,
+                }
+            else:
+                return {
+                    "success": False,
+                    "message": "خطا در ارسال کد یکبار مصرف. لطفا دوباره تلاش کنید.",
+                }
 
-            #     token = default_token_generator.make_token(user)
-            #     uid = urlsafe_base64_encode(force_bytes(user.pk))
-            #     domain = get_current_site(request).domain
-            #     reset_link = f"http://{domain}{reverse('apps.accounts:password_reset_confirm', kwargs={'uidb64': uid, 'token': token})}"
-            # reset_url = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
-
-            #     try:
-                #         send_mail(
-                    #             subject="بازیابی رمز عبور",
-                    #             message=f"""
-                    #             سلام {user.username}،
-
-                    #             برای بازیابی رمز عبور خود روی لینک زیر کلیک کنید:
-                        #             {reset_link}
-
-                        #             این لینک ۲۴ ساعت اعتبار دارد.
-                        #             اگر شما درخواست نداده‌اید، این ایمیل را نادیده بگیرید.
-                        #             """,
-                        #             from_email=settings.DEFAULT_FROM_EMAIL,
-                        #             recipient_list=[user.email],
-                        #         )
-                        #         messages.success(request, "لینک بازیابی به ایمیل شما ارسال شد")
-                        #         return redirect("apps.accounts:password_forgot_done_view")
-
-                        #     except Exception:
-                            #         messages.error(request, "خطا در ارسال ایمیل. لطفا بعدا تلاش کنید")
-                            #         return redirect("apps.accounts:password_forgot_view")
-
-                            # @transaction.atomic
-                            # def _handle_mobile(self, request, mobile):
-                                #     mobile = self._normalize_mobile(mobile)
-
-                                #     user = User.objects.filter(mobile=mobile, is_active=True).first()
-
-                                #     if not user:
-                                    #         messages.error(request, "کاربری با این شماره یافت نشد")
-                                    #         return redirect("apps.accounts:password_forgot_view")
-
-                                    #     otp = OtpRequest.objects.generate_otp(
-                                        #         {
-                                            #             "channel": OtpChannel.MOBILE,
-                                            #             "receiver": mobile,
-                                            #         }
-                                            #     )
-
-                                            #     cache.set(f"otp_{mobile}", otp.password, timeout=300)
-
-                                            #     try:
-                                                #         task = send_otp_password.apply_async(
-                                                    #             kwargs={"receiver": mobile, "otp": otp.password}
-                                                    #         )
-
-                                                    #         if task.status in ["PENDING", "SUCCESS"]:
-                                                        #             messages.success(request, "کد یکبار مصرف برای شما ارسال شد.")
-                                                        #             return redirect(
-                                                            #                 "apps.accounts:forgot_mobile_verify",
-                                                            #                 mobile=mobile,
-                                                            #                 reqid=otp.request_id,
-                                                            #             )
-                                                            #         else:
-                                                                #             messages.error(
-                                                                    #                 request, "خطا در ارسال کد یکبار مصرف. لطفا دوباره تلاش کنید."
-                                                                    #             )
-
-                                                                    #     except Exception as e:
-                                                                        #         messages.error(request, f"خطا در ارسال کد: {str(e)}")
-
-                                                                        #         return redirect("apps.accounts:password_forgot_view")
-
-                                                                        # def _normalize_mobile(self, mobile):
-                                                                            #     mobile = re.sub(r"[^\d]", "", mobile)
-
-                                                                            #     return mobile
+        except Exception as e:
+            print(str(e))
+            return {"success": False, "message": f"خطا در ارسال کد: {str(e)}"}
 
     @transaction.atomic
     def reset_password(self, uid: str, token: str, new_password: str) -> bool:
@@ -489,14 +419,14 @@ class AuthService(BaseService):
         except Exception:
             return None
 
-        def social_login(self, provider: str, token: str) -> Dict[str, Any]:
-            pass
+    def social_login(self, provider: str, token: str) -> Dict[str, Any]:
+        pass
 
-        def _get_tokens_for_user(self, user) -> Dict[str, str]:
-            refresh = RefreshToken.for_user(user)
-            return {
-        "refresh": str(refresh),
-        "access": str(refresh.access_token),
+    def _get_tokens_for_user(self, user) -> Dict[str, str]:
+        refresh = RefreshToken.for_user(user)
+        return {
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
         }
 
     @transaction.atomic
@@ -523,23 +453,11 @@ class AuthService(BaseService):
         except Exception as e:
             print(str(e))
             return False
-        
-        def _send_welcome_email(self, user: User):
-            """ارسال ایمیل خوشآمد"""
-            send_mail(
-                subject="خوش آمدید!",
-                message=f"سلام {user.username}، به سایت ما خوش آمدید!",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-            )
 
-        def _send_password_change_notification(self, user: User):
-            send_mail(
-                subject="تغییر رمز عبور",
-                message="رمز عبور شما با موفقیت تغییر کرد. اگر این تغییر توسط شما نبوده، سریعاً پشتیبانی را مطلع کنید.",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-            )
-
-
-            
+    def _send_password_change_notification(self, user: User):
+        send_mail(
+            subject="تغییر رمز عبور",
+            message="رمز عبور شما با موفقیت تغییر کرد. اگر این تغییر توسط شما نبوده، سریعاً پشتیبانی را مطلع کنید.",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+        )

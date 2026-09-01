@@ -32,6 +32,7 @@ from celery.result import AsyncResult
 from apps.accounts.forms import (
     ClassicLoginForm,
     ForgotPasswordForm,
+    ForgotPasswordResetForm,
     ResetPasswordMobileForm,
     UserEmailRegisterForm,
     UserOtpCompleteForm,
@@ -317,108 +318,39 @@ class UserLogoutView(LoginRequiredMixin, View):
         return redirect(self.success_url)
 
 
-class ForgotPasswordView(IsUnAuthenticatedMixin, View):
+class ForgotPasswordView(IsUnAuthenticatedMixin, FormView):
     template_name = "registration/forgot_password.html"
     form_class = ForgotPasswordForm
 
-    def get(self, request):
-        form = self.form_class()
-        return render(request, self.template_name, {"form": form})
-
-    def post(self, request):
-        identifier = request.POST.get("identifier", "").strip().lower()
-
-        if not identifier:
-            messages.error(request, "ایمیل یا موبایل را وارد کنید")
-            return redirect("apps.accounts:password_forgot_view")
-
-        if "@" in identifier:
-            return self._handle_email(request, identifier)
+    def form_valid(self, form):
+        identifier = form.cleaned_data.get("identifier").strip()
+        
+        result = AuthService(request=self.request).forgot_password(identifier=identifier)
+        if result["success"]:
+            messages.success(self.request, result["message"])
+            return redirect(reverse("apps.accounts:password_forgot_done_view"))
         else:
-            return self._handle_mobile(request, identifier)
+            messages.error(self.request, result["message"])
+            return redirect(reverse("apps.accounts:password_forgot_view"))
 
-    transaction.atomic
 
-    def _handle_email(self, request, email):
-        user = User.objects.filter(email__iexact=email).first()
+    def form_invalid(self, form):
+        if form.non_field_errors():
+            for error in form.non_field_errors():
+                messages.error(self.request, error)
 
-        if not user:
-            messages.error(request, "کاربری با این ایمیل یافت نشد")
-            return redirect("apps.accounts:password_forgot_view")
+                for field_name, errors in form.errors.items():
+                    for error in errors:
+                        field_label = (
+                            form.fields[field_name].label
+                            if field_name in form.fields
+                            else field_name
+                        )
+                        messages.error(self.request, f"{field_label}: {error}")
 
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        domain = get_current_site(request).domain
-        reset_link = f"http://{domain}{reverse('apps.accounts:password_reset_confirm', kwargs={'uid': uid, 'token': token})}"
+                        return super().form_invalid(form)
+  
 
-        try:
-            send_mail(
-                subject="بازیابی رمز عبور",
-                message=f"""
-                سلام {user.get_full_name}،
-
-                برای بازیابی رمز عبور خود روی لینک زیر کلیک کنید:
-                {reset_link}
-
-                این لینک ۲۴ ساعت اعتبار دارد.
-                اگر شما درخواست نداده‌اید، این ایمیل را نادیده بگیرید.
-                """,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-            )
-            messages.success(request, "لینک بازیابی به ایمیل شما ارسال شد")
-            return redirect("apps.accounts:password_forgot_done_view")
-
-        except Exception:
-            messages.error(request, "خطا در ارسال ایمیل. لطفا بعدا تلاش کنید")
-            return redirect("apps.accounts:password_forgot_view")
-
-    @transaction.atomic
-    def _handle_mobile(self, request, mobile):
-        mobile = self._normalize_mobile(mobile)
-
-        user = User.objects.filter(mobile=mobile, is_active=True).first()
-
-        if not user:
-            messages.error(request, "کاربری با این شماره یافت نشد")
-            return redirect("apps.accounts:password_forgot_view")
-
-        otp = OtpRequest.objects.generate_otp(
-            {
-                "channel": OtpChannel.MOBILE,
-                "receiver": mobile,
-            }
-        )
-
-        cache.set(f"otp_{mobile}", otp.password, timeout=300)
-
-        try:
-            task = send_otp_password.apply_async(
-                kwargs={"receiver": mobile, "otp": otp.password},
-            )
-
-            if task.status in ["PENDING", "SUCCESS"]:
-                messages.success(request, "کد یکبار مصرف برای شما ارسال شد.")
-                return redirect(
-                    reverse("apps.accounts:password_forgot_mobile_verify_view"),
-                    mobile=mobile,
-                    reqid=otp.request_id,
-                )
-            else:
-                messages.error(
-                    request, "خطا در ارسال کد یکبار مصرف. لطفا دوباره تلاش کنید."
-                )
-
-        except Exception as e:
-            messages.error(request, f"خطا در ارسال کد: {str(e)}")
-            print(str(e))
-
-            return redirect("apps.accounts:password_forgot_view")
-
-    def _normalize_mobile(self, mobile):
-        mobile = re.sub(r"[^\d]", "", mobile)
-
-        return mobile
 
 
 class ForgotPasswordDoneView(View):
@@ -427,6 +359,48 @@ class ForgotPasswordDoneView(View):
     def get(self, request):
         return render(request, self.template_name)
 
+
+class PasswordResetConfirmView(FormView):
+    template_name = "registration/password_reset_confirm.html"
+    form_class = ForgotPasswordResetForm
+    success_url = reverse_lazy("apps.accounts:login_classic")
+
+    def dispatch(self, request, *args, **kwargs):
+        if 'uid' in kwargs:
+            self.user = self._get_user(kwargs['uid'])
+            if not self.user or not default_token_generator.check_token(self.user, kwargs['token']):
+                messages.error(request, "لینک نامعتبر است")
+                return redirect("apps.accounts:password_forgot_view")
+            request.session["reset_user_id"] = str(self.user.id)
+            return super().dispatch(request, *args, **kwargs)
+
+    @transaction.atomic
+    def form_valid(self, form):
+        user_id = self.request.session.get("reset_user_id")
+        if not user_id:
+            messages.error(self.request, "مشکل سیستمی پیش آمده.")
+            return redirect("apps.accounts:password_forgot_view")
+
+        
+        user = User.objects.get(id=user_id)
+        user.set_password(form.cleaned_data['password'])
+        user.save()
+        
+        self.request.session.pop("reset_user_id", None)
+
+        messages.success(self.request, "رمز تغییر کرد")
+        return redirect(self.success_url)
+        
+    def form_invalid(self, form):
+        for error in form.errors.values():
+            messages.error(self.request, error)
+            return super().form_invalid(form)
+        
+    def _get_user(self, uid):
+        try:
+            return User.objects.get(pk=force_str(urlsafe_base64_decode(uid)))
+        except:
+            return None
 
 class ForgotPasswordMobileVerifyView(View):
 
@@ -521,48 +495,6 @@ class ForgotPasswordMobileResetView(View):
             request.session.pop("reset_user_id", None)
             return redirect("apps.accounts:password_forgot_view")
 
-
-class PasswordResetConfirmView(View):
-    template_name = "registration/password_reset_confirm.html"
-
-    def get(self, request, uid, token):
-        user = self._get_user(uid)
-
-        if not user or not default_token_generator.check_token(user, token):
-            messages.error(request, "لینک نامعتبر است")
-            return redirect("apps.accounts:password_forgot_view")
-
-        request.session["reset_user_id"] = str(user.id)
-        return render(request, self.template_name)
-
-    def post(self, request, uid, token):
-        password = request.POST.get("password")
-        confirm = request.POST.get("confirm_password")
-
-        if not password or len(password) < 8:
-            messages.error(request, "رمز حداقل ۸ کاراکتر")
-            return render(request, self.template_name)
-
-        if password != confirm:
-            messages.error(request, "رمزها یکسان نیستند")
-            return render(request, self.template_name)
-
-        user_id = request.session.get("reset_user_id")
-        if not user_id:
-            return redirect("apps.accounts:password_forgot_view")
-
-        with transaction.atomic():
-            User.objects.filter(id=user_id).update(password=make_password(password))
-            request.session.pop("reset_user_id", None)
-
-        messages.success(request, "رمز شما تغییر کرد. وارد شوید.")
-        return redirect("apps.accounts:login_view")
-
-    def _get_user(self, uidb64):
-        try:
-            return User.objects.get(pk=force_str(urlsafe_base64_decode(uidb64)))
-        except:
-            return None
 
 
 class ResendOtpView(View):

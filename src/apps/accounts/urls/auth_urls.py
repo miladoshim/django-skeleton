@@ -12,8 +12,6 @@ from apps.accounts.views.auth_views import (
     SocialLoginView,
     UserLoginView,
     UserClassicRegisterView,
-    UserOTPRegisterRequestView,
-    UserOTPRegisterVerifyView,
     ForgotPasswordView,
     UserLogoutView,
     EmailVerificationView,
@@ -26,16 +24,16 @@ urlpatterns = [
         EmailVerificationView.as_view(),
         name="email_activation",
     ),
-    path(
-        "register/otp/request/",
-        UserOTPRegisterRequestView.as_view(),
-        name="register_otp_view",
-    ),
-    path(
-        "register/otp/verify/",
-        UserOTPRegisterVerifyView.as_view(),
-        name="register_otp_verify_view",
-    ),
+    # path(
+    #     "register/otp/request/",
+    #     UserOTPRegisterRequestView.as_view(),
+    #     name="register_otp_view",
+    # ),
+    # path(
+    #     "register/otp/verify/",
+    #     UserOTPRegisterVerifyView.as_view(),
+    #     name="register_otp_verify_view",
+    # ),
     # path(
     #     "register/otp/verify/<str:mobile>/<str:reqid>/",
     #     user_register_otp_verify,
@@ -56,6 +54,11 @@ urlpatterns = [
         name="password_forgot_done_view",
     ),
     path(
+        "password/reset/<str:uid>/<str:token>/",
+        PasswordResetConfirmView.as_view(),
+        name="password_reset_confirm",
+    ),
+    path(
         "password/forgot/mobile/verify/",
         ForgotPasswordMobileVerifyView.as_view(),
         name="password_forgot_mobile_verify_view",
@@ -69,11 +72,6 @@ urlpatterns = [
         "password/forgot/mobile/resend/",
         ResendOtpView.as_view(),
         name="password_forgot_mobile_resend",
-    ),
-    path(
-        "password/reset/<str:uid>/<str:token>/",
-        PasswordResetConfirmView.as_view(),
-        name="password_reset_confirm",
     ),
     path("login/<str:provider>/", SocialLoginView.as_view(), name="social_login"),
     path(

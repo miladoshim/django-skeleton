@@ -711,6 +711,22 @@
         "documentation": {}
     },
     {
+        "label": "OtpChannel",
+        "importPath": "apps.accounts.models",
+        "description": "apps.accounts.models",
+        "isExtraImport": true,
+        "detail": "apps.accounts.models",
+        "documentation": {}
+    },
+    {
+        "label": "OtpRequest",
+        "importPath": "apps.accounts.models",
+        "description": "apps.accounts.models",
+        "isExtraImport": true,
+        "detail": "apps.accounts.models",
+        "documentation": {}
+    },
+    {
         "label": "UserSession",
         "importPath": "apps.accounts.models",
         "description": "apps.accounts.models",
@@ -2507,6 +2523,14 @@
         "documentation": {}
     },
     {
+        "label": "send_otp_password",
+        "importPath": "apps.accounts.tasks",
+        "description": "apps.accounts.tasks",
+        "isExtraImport": true,
+        "detail": "apps.accounts.tasks",
+        "documentation": {}
+    },
+    {
         "label": "apps.accounts.managers",
         "kind": 6,
         "isExtraImport": true,
@@ -3264,14 +3288,6 @@
         "documentation": {}
     },
     {
-        "label": "Q",
-        "importPath": "django.db.models",
-        "description": "django.db.models",
-        "isExtraImport": true,
-        "detail": "django.db.models",
-        "documentation": {}
-    },
-    {
         "label": "QuerySet",
         "importPath": "django.db.models",
         "description": "django.db.models",
@@ -3915,22 +3931,6 @@
         "documentation": {}
     },
     {
-        "label": "UserOTPRegisterRequestView",
-        "importPath": "apps.accounts.views.auth_views",
-        "description": "apps.accounts.views.auth_views",
-        "isExtraImport": true,
-        "detail": "apps.accounts.views.auth_views",
-        "documentation": {}
-    },
-    {
-        "label": "UserOTPRegisterVerifyView",
-        "importPath": "apps.accounts.views.auth_views",
-        "description": "apps.accounts.views.auth_views",
-        "isExtraImport": true,
-        "detail": "apps.accounts.views.auth_views",
-        "documentation": {}
-    },
-    {
         "label": "ForgotPasswordView",
         "importPath": "apps.accounts.views.auth_views",
         "description": "apps.accounts.views.auth_views",
@@ -4339,6 +4339,14 @@
         "documentation": {}
     },
     {
+        "label": "ForgotPasswordResetForm",
+        "importPath": "apps.accounts.forms",
+        "description": "apps.accounts.forms",
+        "isExtraImport": true,
+        "detail": "apps.accounts.forms",
+        "documentation": {}
+    },
+    {
         "label": "ResetPasswordMobileForm",
         "importPath": "apps.accounts.forms",
         "description": "apps.accounts.forms",
@@ -4614,14 +4622,6 @@
     },
     {
         "label": "Form",
-        "importPath": "django.forms",
-        "description": "django.forms",
-        "isExtraImport": true,
-        "detail": "django.forms",
-        "documentation": {}
-    },
-    {
-        "label": "ModelForm",
         "importPath": "django.forms",
         "description": "django.forms",
         "isExtraImport": true,
@@ -7162,7 +7162,7 @@
         "kind": 5,
         "importPath": "src.apps.accounts.urls.auth_urls",
         "description": "src.apps.accounts.urls.auth_urls",
-        "peekOfCode": "urlpatterns = [\n    path(\"register/\", UserClassicRegisterView.as_view(), name=\"register_classic\"),\n    path(\n        \"email/verify/<str:uid>/<str:token>/\",\n        EmailVerificationView.as_view(),\n        name=\"email_activation\",\n    ),\n    path(\n        \"register/otp/request/\",\n        UserOTPRegisterRequestView.as_view(),",
+        "peekOfCode": "urlpatterns = [\n    path(\"register/\", UserClassicRegisterView.as_view(), name=\"register_classic\"),\n    path(\n        \"email/verify/<str:uid>/<str:token>/\",\n        EmailVerificationView.as_view(),\n        name=\"email_activation\",\n    ),\n    # path(\n    #     \"register/otp/request/\",\n    #     UserOTPRegisterRequestView.as_view(),",
         "detail": "src.apps.accounts.urls.auth_urls",
         "documentation": {}
     },
@@ -7297,7 +7297,7 @@
         "kind": 6,
         "importPath": "src.apps.accounts.views.auth_views",
         "description": "src.apps.accounts.views.auth_views",
-        "peekOfCode": "class EmailVerificationView(View):\n    success_url = reverse_lazy(\"apps.accounts:login_classic\")\n    def get(self, request, uid, token):\n        result = AuthService().verify_email(uid, token)\n        if result:\n            messages.success(request, \"ایمیل شما تایید شد, لطفا وارد شوید.\")\n            return redirect(self.success_url)\n        messages.error(request, \"خطا در تایید ایمیل\")\n        return redirect(self.success_url)\nclass UserOTPRegisterRequestView(TemplateView):",
+        "peekOfCode": "class EmailVerificationView(View):\n    success_url = reverse_lazy(\"apps.accounts:login_classic\")\n    def get(self, request, uid, token):\n        result = AuthService(self.request).verify_email(uid, token)\n        if result:\n            messages.success(request, \"ایمیل شما تایید شد, لطفا وارد شوید.\")\n            return redirect(self.success_url)\n        messages.error(request, \"خطا در تایید ایمیل\")\n        return redirect(self.success_url)\nclass UserOTPRegisterRequestView(TemplateView):",
         "detail": "src.apps.accounts.views.auth_views",
         "documentation": {}
     },
@@ -7369,7 +7369,7 @@
         "kind": 6,
         "importPath": "src.apps.accounts.views.auth_views",
         "description": "src.apps.accounts.views.auth_views",
-        "peekOfCode": "class ForgotPasswordView(IsUnAuthenticatedMixin, View):\n    template_name = \"registration/forgot_password.html\"\n    form_class = ForgotPasswordForm\n    def get(self, request):\n        form = self.form_class()\n        return render(request, self.template_name, {\"form\": form})\n    def post(self, request):\n        identifier = request.POST.get(\"identifier\", \"\").strip().lower()\n        if not identifier:\n            messages.error(request, \"ایمیل یا موبایل را وارد کنید\")",
+        "peekOfCode": "class ForgotPasswordView(IsUnAuthenticatedMixin, FormView):\n    template_name = \"registration/forgot_password.html\"\n    form_class = ForgotPasswordForm\n    def form_valid(self, form):\n        identifier = form.cleaned_data.get(\"identifier\").strip()\n        result = AuthService(request=self.request).forgot_password(identifier=identifier)\n        if result[\"success\"]:\n            messages.success(self.request, result[\"message\"])\n            return redirect(reverse(\"apps.accounts:password_forgot_done_view\"))\n        else:",
         "detail": "src.apps.accounts.views.auth_views",
         "documentation": {}
     },
@@ -7378,7 +7378,16 @@
         "kind": 6,
         "importPath": "src.apps.accounts.views.auth_views",
         "description": "src.apps.accounts.views.auth_views",
-        "peekOfCode": "class ForgotPasswordDoneView(View):\n    template_name = \"registration/forgot_password_done.html\"\n    def get(self, request):\n        return render(request, self.template_name)\nclass ForgotPasswordMobileVerifyView(View):\n    template_name = \"registration/forgot_mobile_verify.html\"\n    def get(self, request):\n        mobile = request.session.get(\"reset_mobile\")\n        if not mobile:\n            messages.error(request, \"لطفا ابتدا شماره موبایل را وارد کنید\")",
+        "peekOfCode": "class ForgotPasswordDoneView(View):\n    template_name = \"registration/forgot_password_done.html\"\n    def get(self, request):\n        return render(request, self.template_name)\nclass PasswordResetConfirmView(FormView):\n    template_name = \"registration/password_reset_confirm.html\"\n    form_class = ForgotPasswordResetForm\n    success_url = reverse_lazy(\"apps.accounts:login_classic\")\n    def dispatch(self, request, *args, **kwargs):\n        if 'uid' in kwargs:",
+        "detail": "src.apps.accounts.views.auth_views",
+        "documentation": {}
+    },
+    {
+        "label": "PasswordResetConfirmView",
+        "kind": 6,
+        "importPath": "src.apps.accounts.views.auth_views",
+        "description": "src.apps.accounts.views.auth_views",
+        "peekOfCode": "class PasswordResetConfirmView(FormView):\n    template_name = \"registration/password_reset_confirm.html\"\n    form_class = ForgotPasswordResetForm\n    success_url = reverse_lazy(\"apps.accounts:login_classic\")\n    def dispatch(self, request, *args, **kwargs):\n        if 'uid' in kwargs:\n            self.user = self._get_user(kwargs['uid'])\n            if not self.user or not default_token_generator.check_token(self.user, kwargs['token']):\n                messages.error(request, \"لینک نامعتبر است\")\n                return redirect(\"apps.accounts:password_forgot_view\")",
         "detail": "src.apps.accounts.views.auth_views",
         "documentation": {}
     },
@@ -7397,15 +7406,6 @@
         "importPath": "src.apps.accounts.views.auth_views",
         "description": "src.apps.accounts.views.auth_views",
         "peekOfCode": "class ForgotPasswordMobileResetView(View):\n    template_name = \"registration/forgot_mobile_reset.html\"\n    def get(self, request):\n        if not request.session.get(\"reset_user_id\"):\n            messages.error(request, \"لطفا ابتدا کد را تایید کنید\")\n            return redirect(\"apps.accounts:password_forgot_view\")\n        return render(request, self.template_name)\n    def post(self, request):\n        user_id = request.session.get(\"reset_user_id\")\n        if not user_id:",
-        "detail": "src.apps.accounts.views.auth_views",
-        "documentation": {}
-    },
-    {
-        "label": "PasswordResetConfirmView",
-        "kind": 6,
-        "importPath": "src.apps.accounts.views.auth_views",
-        "description": "src.apps.accounts.views.auth_views",
-        "peekOfCode": "class PasswordResetConfirmView(View):\n    template_name = \"registration/password_reset_confirm.html\"\n    def get(self, request, uid, token):\n        user = self._get_user(uid)\n        if not user or not default_token_generator.check_token(user, token):\n            messages.error(request, \"لینک نامعتبر است\")\n            return redirect(\"apps.accounts:password_forgot_view\")\n        request.session[\"reset_user_id\"] = str(user.id)\n        return render(request, self.template_name)\n    def post(self, request, uid, token):",
         "detail": "src.apps.accounts.views.auth_views",
         "documentation": {}
     },
@@ -7612,7 +7612,25 @@
         "kind": 6,
         "importPath": "src.apps.accounts.forms",
         "description": "src.apps.accounts.forms",
-        "peekOfCode": "class ClassicLoginForm(forms.Form):\n    identifier = forms.CharField(\n        label=\"ایمیل، موبایل یا نام کاربری\",\n        widget=forms.TextInput(\n            attrs={\n                \"class\": \"form-control\",\n                \"placeholder\": \"example@email.com یا 09123456789 یا username\",\n                \"autofocus\": True,\n            },\n        ),",
+        "peekOfCode": "class ClassicLoginForm(Form):\n    identifier = forms.CharField(\n        label=\"ایمیل، موبایل یا نام کاربری\",\n        widget=forms.TextInput(\n            attrs={\n                \"class\": \"form-control\",\n                \"placeholder\": \"example@email.com یا 09123456789 یا username\",\n                \"autofocus\": True,\n            },\n        ),",
+        "detail": "src.apps.accounts.forms",
+        "documentation": {}
+    },
+    {
+        "label": "ForgotPasswordForm",
+        "kind": 6,
+        "importPath": "src.apps.accounts.forms",
+        "description": "src.apps.accounts.forms",
+        "peekOfCode": "class ForgotPasswordForm(Form):\n    identifier = forms.CharField(\n        label=\"ایمیل یا شماره موبایل\",\n        max_length=100,\n        widget=forms.TextInput(\n            attrs={\n                \"class\": \"form-control\",\n                \"placeholder\": \"example@email.com یا 09123456789\",\n                \"autofocus\": True,\n            }",
+        "detail": "src.apps.accounts.forms",
+        "documentation": {}
+    },
+    {
+        "label": "ForgotPasswordResetForm",
+        "kind": 6,
+        "importPath": "src.apps.accounts.forms",
+        "description": "src.apps.accounts.forms",
+        "peekOfCode": "class ForgotPasswordResetForm(Form):\n    password = forms.CharField(\n        widget=forms.PasswordInput(\n            attrs={\n                \"placeholder\": \"رمز جدید (حداقل ۸ کاراکتر)\",\n                 \"class\": \"form-control\",\n            },\n        ),\n        validators=[\n            validators.MinLengthValidator(8),",
         "detail": "src.apps.accounts.forms",
         "documentation": {}
     },
@@ -7676,15 +7694,6 @@
         "importPath": "src.apps.accounts.forms",
         "description": "src.apps.accounts.forms",
         "peekOfCode": "class UserAccountEditForm(Form):\n    first_name = forms.CharField(\n        validators=[\n            validators.MinLengthValidator(3),\n            validators.MaxLengthValidator(20),\n        ],\n        label=\"نام\",\n        required=True,\n        widget=forms.TextInput(attrs={\"placeholder\": \"نام\", \"class\": \"form-control\"}),\n    )",
-        "detail": "src.apps.accounts.forms",
-        "documentation": {}
-    },
-    {
-        "label": "ForgotPasswordForm",
-        "kind": 6,
-        "importPath": "src.apps.accounts.forms",
-        "description": "src.apps.accounts.forms",
-        "peekOfCode": "class ForgotPasswordForm(forms.Form):\n    identifier = forms.CharField(\n        label=\"ایمیل یا شماره موبایل\",\n        max_length=100,\n        widget=forms.TextInput(\n            attrs={\n                \"class\": \"form-control\",\n                \"placeholder\": \"example@email.com یا 09123456789\",\n                \"autofocus\": True,\n            }",
         "detail": "src.apps.accounts.forms",
         "documentation": {}
     },
