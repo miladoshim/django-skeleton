@@ -366,30 +366,31 @@ class PasswordResetConfirmView(FormView):
     success_url = reverse_lazy("apps.accounts:login_classic")
 
     def dispatch(self, request, *args, **kwargs):
-        if 'uid' in kwargs:
-            self.user = self._get_user(kwargs['uid'])
-            if not self.user or not default_token_generator.check_token(self.user, kwargs['token']):
-                messages.error(request, "لینک نامعتبر است")
+        self.uid, self.token = kwargs.get('uid'), kwargs.get('token')
+
+        if self.uid:
+            result = AuthService(request=request).reset_password_confirm(self.uid, self.token)
+            if not result['success']:
+                messages.error(request, result['error'])
                 return redirect("apps.accounts:password_forgot_view")
-            request.session["reset_user_id"] = str(self.user.id)
+            request.session["reset_user_id"] = force_str(urlsafe_base64_decode(self.uid))
+
             return super().dispatch(request, *args, **kwargs)
 
-    @transaction.atomic
     def form_valid(self, form):
         user_id = self.request.session.get("reset_user_id")
         if not user_id:
-            messages.error(self.request, "مشکل سیستمی پیش آمده.")
             return redirect("apps.accounts:password_forgot_view")
 
-        
-        user = User.objects.get(id=user_id)
-        user.set_password(form.cleaned_data['password'])
-        user.save()
-        
-        self.request.session.pop("reset_user_id", None)
+        result = AuthService(request=self.request).reset_password_confirm(self.uid, self.token, form.cleaned_data['password'])
 
-        messages.success(self.request, "رمز تغییر کرد")
-        return redirect(self.success_url)
+        if result['success']:
+            self.request.session.pop("reset_user_id", None)
+            messages.success(self.request, result['message'])
+            return super().form_valid(form)
+
+        messages.error(self.request, result['error'])
+        return self.form_invalid(form)
         
     def form_invalid(self, form):
         for error in form.errors.values():

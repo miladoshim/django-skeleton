@@ -1039,6 +1039,14 @@
         "documentation": {}
     },
     {
+        "label": "AccessToken",
+        "importPath": "rest_framework_simplejwt.tokens",
+        "description": "rest_framework_simplejwt.tokens",
+        "isExtraImport": true,
+        "detail": "rest_framework_simplejwt.tokens",
+        "documentation": {}
+    },
+    {
         "label": "RefreshToken",
         "importPath": "rest_framework_simplejwt.tokens",
         "description": "rest_framework_simplejwt.tokens",
@@ -3568,22 +3576,6 @@
         "documentation": {}
     },
     {
-        "label": "EmailMobileUsernameBackend",
-        "importPath": "apps.accounts.backends",
-        "description": "apps.accounts.backends",
-        "isExtraImport": true,
-        "detail": "apps.accounts.backends",
-        "documentation": {}
-    },
-    {
-        "label": "EmailMobileUsernameBackend",
-        "importPath": "apps.accounts.backends",
-        "description": "apps.accounts.backends",
-        "isExtraImport": true,
-        "detail": "apps.accounts.backends",
-        "documentation": {}
-    },
-    {
         "label": "BaseService",
         "importPath": "apps.core.services.base_service",
         "description": "apps.core.services.base_service",
@@ -4626,6 +4618,14 @@
         "description": "django.forms",
         "isExtraImport": true,
         "detail": "django.forms",
+        "documentation": {}
+    },
+    {
+        "label": "EmailMobileUsernameBackend",
+        "importPath": "apps.accounts.backends",
+        "description": "apps.accounts.backends",
+        "isExtraImport": true,
+        "detail": "apps.accounts.backends",
         "documentation": {}
     },
     {
@@ -7063,7 +7063,7 @@
         "kind": 6,
         "importPath": "src.apps.accounts.services.forgot_password_service",
         "description": "src.apps.accounts.services.forgot_password_service",
-        "peekOfCode": "class ForgotPasswordService:\n    @staticmethod\n    def send_email_reset_link(request, user):\n        token = default_token_generator.make_token(user)\n        uid = urlsafe_base64_encode(force_bytes(user.pk))\n        domain = get_current_site(request).domain\n        protocol = \"https\" if request.is_secure() else \"http\"\n        reset_link = f\"{protocol}://{domain}{reverse('apps.accounts:password_reset_confirm', kwargs={'uidb64': uid, 'token': token})}\"\n        subject = \"بازیابی رمز عبور\"\n        message = f\"\"\"",
+        "peekOfCode": "class ForgotPasswordService:\n    pass",
         "detail": "src.apps.accounts.services.forgot_password_service",
         "documentation": {}
     },
@@ -7108,7 +7108,7 @@
         "kind": 6,
         "importPath": "src.apps.accounts.services.user_service",
         "description": "src.apps.accounts.services.user_service",
-        "peekOfCode": "class UserService(BaseService):\n    model = User\n    @transaction.atomic\n    def update_profile2(self, user: User, **validated_data) -> User:\n        allowed_fields = [\n            \"first_name\",\n            \"last_name\",\n            \"phone\",\n            \"avatar\",\n            \"bio\",",
+        "peekOfCode": "class UserService(BaseService):\n    model = User\n    def __init__(self, request=None):\n        super().__init__(request=request)\n    @transaction.atomic\n    def change_password(self, user, old_password, new_password):\n        if not user.check_password(old_password):\n            return {\"success\": False, \"error\": \"رمز فعلی اشتباه است\"}\n        user.set_password(new_password)\n        self.update(user)  # استفاده از متد BaseService",
         "detail": "src.apps.accounts.services.user_service",
         "documentation": {}
     },
@@ -7117,7 +7117,7 @@
         "kind": 5,
         "importPath": "src.apps.accounts.services.user_service",
         "description": "src.apps.accounts.services.user_service",
-        "peekOfCode": "User = get_user_model()\nclass UserService(BaseService):\n    model = User\n    @transaction.atomic\n    def update_profile2(self, user: User, **validated_data) -> User:\n        allowed_fields = [\n            \"first_name\",\n            \"last_name\",\n            \"phone\",\n            \"avatar\",",
+        "peekOfCode": "User = get_user_model()\nclass UserService(BaseService):\n    model = User\n    def __init__(self, request=None):\n        super().__init__(request=request)\n    @transaction.atomic\n    def change_password(self, user, old_password, new_password):\n        if not user.check_password(old_password):\n            return {\"success\": False, \"error\": \"رمز فعلی اشتباه است\"}\n        user.set_password(new_password)",
         "detail": "src.apps.accounts.services.user_service",
         "documentation": {}
     },
@@ -7378,7 +7378,7 @@
         "kind": 6,
         "importPath": "src.apps.accounts.views.auth_views",
         "description": "src.apps.accounts.views.auth_views",
-        "peekOfCode": "class ForgotPasswordDoneView(View):\n    template_name = \"registration/forgot_password_done.html\"\n    def get(self, request):\n        return render(request, self.template_name)\nclass PasswordResetConfirmView(FormView):\n    template_name = \"registration/password_reset_confirm.html\"\n    form_class = ForgotPasswordResetForm\n    success_url = reverse_lazy(\"apps.accounts:login_classic\")\n    def dispatch(self, request, *args, **kwargs):\n        if 'uid' in kwargs:",
+        "peekOfCode": "class ForgotPasswordDoneView(View):\n    template_name = \"registration/forgot_password_done.html\"\n    def get(self, request):\n        return render(request, self.template_name)\nclass PasswordResetConfirmView(FormView):\n    template_name = \"registration/password_reset_confirm.html\"\n    form_class = ForgotPasswordResetForm\n    success_url = reverse_lazy(\"apps.accounts:login_classic\")\n    def dispatch(self, request, *args, **kwargs):\n        self.uid, self.token = kwargs.get('uid'), kwargs.get('token')",
         "detail": "src.apps.accounts.views.auth_views",
         "documentation": {}
     },
@@ -7387,7 +7387,7 @@
         "kind": 6,
         "importPath": "src.apps.accounts.views.auth_views",
         "description": "src.apps.accounts.views.auth_views",
-        "peekOfCode": "class PasswordResetConfirmView(FormView):\n    template_name = \"registration/password_reset_confirm.html\"\n    form_class = ForgotPasswordResetForm\n    success_url = reverse_lazy(\"apps.accounts:login_classic\")\n    def dispatch(self, request, *args, **kwargs):\n        if 'uid' in kwargs:\n            self.user = self._get_user(kwargs['uid'])\n            if not self.user or not default_token_generator.check_token(self.user, kwargs['token']):\n                messages.error(request, \"لینک نامعتبر است\")\n                return redirect(\"apps.accounts:password_forgot_view\")",
+        "peekOfCode": "class PasswordResetConfirmView(FormView):\n    template_name = \"registration/password_reset_confirm.html\"\n    form_class = ForgotPasswordResetForm\n    success_url = reverse_lazy(\"apps.accounts:login_classic\")\n    def dispatch(self, request, *args, **kwargs):\n        self.uid, self.token = kwargs.get('uid'), kwargs.get('token')\n        if self.uid:\n            result = AuthService(request=request).reset_password_confirm(self.uid, self.token)\n            if not result['success']:\n                messages.error(request, result['error'])",
         "detail": "src.apps.accounts.views.auth_views",
         "documentation": {}
     },

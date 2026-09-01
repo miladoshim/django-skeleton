@@ -11,7 +11,20 @@ User = get_user_model()
 
 class UserService(BaseService):
     model = User
+    
+    def __init__(self, request=None):
+        super().__init__(request=request)
+    
+    @transaction.atomic
+    def change_password(self, user, old_password, new_password):
+        if not user.check_password(old_password):
+            return {"success": False, "error": "رمز فعلی اشتباه است"}
 
+        user.set_password(new_password)
+        self.update(user)  # استفاده از متد BaseService
+
+        return {"success": True, "message": "رمز عبور تغییر کرد"}
+    
     @transaction.atomic
     def update_profile2(self, user: User, **validated_data) -> User:
 
@@ -59,7 +72,7 @@ class UserService(BaseService):
         }
 
     def _request_email_change(self, user: User, new_email: str):
-        
+        pass
         
   
     def update_profile(self, user, **data):

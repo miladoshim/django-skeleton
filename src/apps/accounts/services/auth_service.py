@@ -18,8 +18,8 @@ from django.db import transaction
 from django.urls import reverse
 from django.contrib.sites.models import Site
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken
 from apps.accounts.api.serializers import UserSerializer
-from apps.accounts.backends import EmailMobileUsernameBackend
 from apps.accounts.models import OtpChannel, OtpRequest
 from apps.accounts.tasks import send_activation_email, send_otp_password
 from apps.core.services.base_service import BaseService
@@ -130,10 +130,9 @@ class AuthService(BaseService):
             return {"success": False, "message": f"خطا در خروج {str(e)}"}
 
     @transaction.atomic
-    def activate_email(self, uidb64, token):
-        """فعال‌سازی حساب با ایمیل"""
+    def activate_email(self, uid, token):
         try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
+            uid = force_str(urlsafe_base64_decode(uid))
             user = self.get(uid)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             return {"success": False, "error": "لینک نامعتبر است"}
@@ -141,61 +140,10 @@ class AuthService(BaseService):
         if not default_token_generator.check_token(user, token):
             return {"success": False, "error": "لینک منقضی شده است"}
 
-        # استفاده از متد update از BaseService
         self.update(user, is_active=True, is_email_verified=True)
 
         return {"success": True, "message": "حساب شما فعال شد"}
-
-    # ============================
-    #     CHANGE PASSWORD
-    # ============================
-    @transaction.atomic
-    def change_password(self, user, old_password, new_password):
-        """تغییر رمز عبور"""
-        if not user.check_password(old_password):
-            return {"success": False, "error": "رمز فعلی اشتباه است"}
-
-        user.set_password(new_password)
-        self.update(user)  # استفاده از متد BaseService
-
-        return {"success": True, "message": "رمز عبور تغییر کرد"}
-
    
-    @transaction.atomic
-    def reset_password_confirm(self, uidb64, token, new_password):
-        """تایید بازنشانی رمز"""
-        try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = self.get(uid)
-        except:
-            return {"success": False, "error": "لینک نامعتبر است"}
-
-        if not default_token_generator.check_token(user, token):
-            return {"success": False, "error": "لینک منقضی شده است"}
-
-        user.set_password(new_password)
-        user.save()
-
-        # غیرفعال کردن توکن
-        self._invalidate_token(user)
-
-        return {"success": True, "message": "رمز عبور با موفقیت تغییر کرد"}
-
-    # ============================
-    #      VERIFY OTP (MOBILE)
-    # ============================
-    def verify_otp(self, mobile, otp_code):
-        """تایید کد یکبار مصرف موبایل"""
-        mobile = self._clean_mobile(mobile)
-        cache_key = f"otp_{mobile}"
-        saved_otp = cache.get(cache_key)
-
-        if saved_otp == otp_code:
-            cache.delete(cache_key)
-            return {"success": True, "message": "کد تایید شد"}
-
-        return {"success": False, "error": "کد اشتباه است"}
-
     @transaction.atomic
     def _create_user(
         self,
@@ -246,34 +194,11 @@ class AuthService(BaseService):
 
             return True
         except Exception as e:
-            print(f"❌ Error in sending email: {str(e)}")  # ← این خط را اضافه کن
-
+            print(f"❌ Error in sending email: {str(e)}")
             return False
 
-    def _send_password_reset_email(self, user):
-        """ارسال ایمیل بازنشانی رمز"""
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-
-        reset_url = self._build_url("apps.accounts:password_reset_confirm", uid, token)
-
-        send_mail(
-            subject="بازنشانی رمز عبور",
-            message=f"برای تغییر رمز روی لینک کلیک کنید: {reset_url}",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-        )
-
-    def _send_password_reset_sms(self, user):
-        """ارسال SMS بازنشانی رمز"""
-        otp = str(random.randint(100000, 999999))
-        cache.set(f"otp_{user.mobile}", otp, timeout=300)
-
-        # اینجا سرویس SMS خود را فراخوانی کنید
-        # Kavenegar.send_otp(receptor=user.mobile, otp=otp)
-
+    
     def _invalidate_token(self, user):
-        """غیرفعال کردن توکن‌های قبلی"""
         user.last_login = timezone.now()
         user.save(update_fields=["last_login"])
 
@@ -314,13 +239,9 @@ class AuthService(BaseService):
 
     def forgot_password(self, identifier: str) -> bool:
         identifier = identifier.strip().lower()
-        print('-------------------------------')
-        print(identifier)
         if "@" in identifier:
-            print('email')
             return self._handle_email(email=identifier)
         else:
-            print('mobile')
             return self._handle_mobile(mobile=identifier)
 
     def _handle_email(self, email: str):
@@ -391,27 +312,39 @@ class AuthService(BaseService):
         except Exception as e:
             print(str(e))
             return {"success": False, "message": f"خطا در ارسال کد: {str(e)}"}
-
+    
     @transaction.atomic
-    def reset_password(self, uid: str, token: str, new_password: str) -> bool:
-
+    def reset_password_confirm(self, uid, token, new_password=None):
         try:
             user_id = force_str(urlsafe_base64_decode(uid))
-            user = User.objects.get(pk=user_id)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            raise ValueError("لینک بازیابی نامعتبر است")
+            user = self.get(user_id)
+        except:
+            return {"success": False, "error": "لینک نامعتبر است"}
 
         if not default_token_generator.check_token(user, token):
-            raise ValueError("لینک بازیابی منقضی شده است")
+            return {"success": False, "error": "لینک منقضی شده است"}
 
-        user.set_password(new_password)
-        user.save(update_fields=["password"])
+        if new_password:
+            user.set_password(new_password)
+            user.save()
+            self._invalidate_token(user)
+            return {"success": True, "message": "رمز عبور با موفقیت تغییر کرد"}
 
-        return True
+        return {"success": True, "message": "لینک معتبر است"}
+
+    def verify_otp(self, mobile, otp_code):
+        mobile = self._clean_mobile(mobile)
+        cache_key = f"otp_{mobile}"
+        saved_otp = cache.get(cache_key)
+
+        if saved_otp == otp_code:
+            cache.delete(cache_key)
+            return {"success": True, "message": "کد تایید شد"}
+
+        return {"success": False, "error": "کد اشتباه است"}
 
     def get_user_by_token(self, token: str) -> Optional[User]:
         try:
-            from rest_framework_simplejwt.tokens import AccessToken
 
             access_token = AccessToken(token)
             user = User.objects.get(id=access_token["user_id"])
