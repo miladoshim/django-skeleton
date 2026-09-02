@@ -70,14 +70,14 @@ class UserClassicRegisterView(IsUnAuthenticatedMixin, FormView):
 
         if result is None:
             messages.error(self.request, "خطای ناشناخته. لطفا دوباره تلاش کنید.")
-            return redirect(reverse_lazy('apps.accounts:register_classic'))
-        
-        if result.get('success'):
+            return redirect(reverse_lazy("apps.accounts:register_classic"))
+
+        if result.get("success"):
             messages.success(self.request, result["message"])
             return redirect(self.success_url)
         else:
             messages.error(self.request, result["message"])
-            return redirect(reverse_lazy('apps.accounts:register_classic'))
+            return redirect(reverse_lazy("apps.accounts:register_classic"))
 
     def form_invalid(self, form):
 
@@ -323,35 +323,26 @@ class ForgotPasswordView(IsUnAuthenticatedMixin, FormView):
     form_class = ForgotPasswordForm
 
     def form_valid(self, form):
-        identifier = form.cleaned_data.get("identifier").strip()
-        
-        result = AuthService(request=self.request).forgot_password(identifier=identifier)
+        identifier = form.cleaned_data.get("identifier")
+        result = AuthService(request=self.request).forgot_password(
+            identifier=identifier
+        )
         if result["success"]:
             messages.success(self.request, result["message"])
-            return redirect(reverse("apps.accounts:password_forgot_done_view"))
-        else:
-            messages.error(self.request, result["message"])
-            return redirect(reverse("apps.accounts:password_forgot_view"))
-
+            return redirect(reverse(result["redirect_url"], args=[result['reqid']]))
+        
+        messages.error(self.request, result["message"])
+        return redirect(reverse("apps.accounts:password_forgot_view"))
 
     def form_invalid(self, form):
-        if form.non_field_errors():
-            for error in form.non_field_errors():
+        for error in form.non_field_errors():
+            messages.error(self.request, error)
+
+        for field, errors in form.errors.items():
+            for error in errors:
                 messages.error(self.request, error)
 
-                for field_name, errors in form.errors.items():
-                    for error in errors:
-                        field_label = (
-                            form.fields[field_name].label
-                            if field_name in form.fields
-                            else field_name
-                        )
-                        messages.error(self.request, f"{field_label}: {error}")
-
-                        return super().form_invalid(form)
-  
-
-
+        return self.render_to_response(self.get_context_data(form=form))
 
 class ForgotPasswordDoneView(View):
     template_name = "registration/forgot_password_done.html"
@@ -366,14 +357,18 @@ class PasswordResetConfirmView(FormView):
     success_url = reverse_lazy("apps.accounts:login_classic")
 
     def dispatch(self, request, *args, **kwargs):
-        self.uid, self.token = kwargs.get('uid'), kwargs.get('token')
+        self.uid, self.token = kwargs.get("uid"), kwargs.get("token")
 
         if self.uid:
-            result = AuthService(request=request).reset_password_confirm(self.uid, self.token)
-            if not result['success']:
-                messages.error(request, result['error'])
+            result = AuthService(request=request).reset_password_confirm(
+                self.uid, self.token
+            )
+            if not result["success"]:
+                messages.error(request, result["error"])
                 return redirect("apps.accounts:password_forgot_view")
-            request.session["reset_user_id"] = force_str(urlsafe_base64_decode(self.uid))
+            request.session["reset_user_id"] = force_str(
+                urlsafe_base64_decode(self.uid)
+            )
 
             return super().dispatch(request, *args, **kwargs)
 
@@ -382,26 +377,80 @@ class PasswordResetConfirmView(FormView):
         if not user_id:
             return redirect("apps.accounts:password_forgot_view")
 
-        result = AuthService(request=self.request).reset_password_confirm(self.uid, self.token, form.cleaned_data['password'])
+        result = AuthService(request=self.request).reset_password_confirm(
+            self.uid, self.token, form.cleaned_data["password"]
+        )
 
-        if result['success']:
+        if result["success"]:
             self.request.session.pop("reset_user_id", None)
-            messages.success(self.request, result['message'])
+            messages.success(self.request, result["message"])
             return super().form_valid(form)
 
-        messages.error(self.request, result['error'])
+        messages.error(self.request, result["error"])
         return self.form_invalid(form)
-        
+
     def form_invalid(self, form):
         for error in form.errors.values():
             messages.error(self.request, error)
             return super().form_invalid(form)
-        
+
     def _get_user(self, uid):
         try:
             return User.objects.get(pk=force_str(urlsafe_base64_decode(uid)))
         except:
             return None
+
+
+class PasswordResetMobileConfirmView(FormView):
+    template_name = "registration/forgot_password_mobile_verify.html"
+    form_class = ResetPasswordMobileForm
+    success_url = reverse_lazy("apps.accounts:login_view")
+
+    def get_initial(self):
+        return {
+            "mobile": self.request.session.get("reset_mobile"),
+            "reqid": self.request.session.get("reset_reqid"),
+        }
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["mobile"] = self.request.session.get("reset_mobile")
+        context["reqid"] = self.request.session.get("reset_reqid")
+        return context
+
+    def form_valid(self, form):
+        mobile = form.cleaned_data["mobile"]
+        reqid = form.cleaned_data["reqid"]
+        otp_code = form.cleaned_data["otp_code"]
+        new_password = form.cleaned_data["password"]
+
+        result = AuthService().verify_otp_and_reset_password(
+            mobile=mobile,
+            reqid=reqid,
+            otp_code=otp_code,
+            new_password=new_password,
+        )
+
+        if result["success"]:
+            self.request.session.pop("reset_mobile", None)
+            self.request.session.pop("reset_reqid", None)
+
+            messages.success(self.request, result["message"])
+            return super().form_valid(form)
+
+        messages.error(self.request, result["error"])
+        return self.form_invalid(form)
+    
+    def form_invalid(self, form):
+        for error in form.non_field_errors():
+            messages.error(self.request, error)
+
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, error)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
 
 class ForgotPasswordMobileVerifyView(View):
 
@@ -497,7 +546,6 @@ class ForgotPasswordMobileResetView(View):
             return redirect("apps.accounts:password_forgot_view")
 
 
-
 class ResendOtpView(View):
     """ارسال مجدد کد"""
 
@@ -523,61 +571,6 @@ class ResendOtpView(View):
 
         messages.success(request, "کد جدید ارسال شد")
         return redirect("apps.accounts:password_forgot_mobile_verify_view")
-
-
-@transaction.atomic
-def forgot_password_mobile_reset(request, *args, **kwargs):
-    if request.method == "POST":
-        form = ResetPasswordMobileForm(request.POST)
-        if form.is_valid():
-            receiver = form.data.get("receiver")
-            reqid = form.data.get("request_id")
-            code = form.data.get("code")
-            password = form.data.get("password")
-
-            user = User.objects.filter(mobile=receiver, is_active=True).first()
-            if not user:
-                messages.error(request, "همچین کاربری یافت نشد")
-                return redirect(reverse("apps.accounts:password_forgot_mobile_view"))
-
-            if OtpRequest.objects.is_valid(
-                receiver=receiver, request_id=reqid, password=code
-            ):
-                user.set_password(password)
-                user.save()
-                user.meta.password_changed_at = datetime.datetime.now()
-                user.meta.save()
-
-                OtpRequest.objects.filter(request_id=reqid).delete()
-
-                messages.success(request, "رمز عبور شما با موفقیت تغییر کرد")
-
-                return redirect(reverse("apps.accounts:login_classic"))
-            else:
-                messages.error(request, "کد تایید وارد شده صحیح نمی باشد.")
-
-        else:
-            for key, error in list(form.errors.items()):
-                messages.error(request, error)
-
-    mobile = kwargs.get("mobile")
-    request_id = kwargs.get("reqid")
-    form = ResetPasswordMobileForm
-    context = {"form": form, "mobile": mobile, "request_id": request_id}
-
-    return render(request, "registration/forgot_mobile_reset.html", context=context)
-
-
-class PasswordChangeView(IsUnAuthenticatedMixin, BasePasswordChangeView):
-    pass
-
-
-class PasswordChangeDoneView(TemplateView):
-    pass
-
-
-class PasswordResetView(BasePasswordResetView):
-    success_url = reverse_lazy("apps.accounts:password_reset_done")
 
 
 def get_authorize_url(provider):

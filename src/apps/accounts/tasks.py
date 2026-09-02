@@ -44,7 +44,11 @@ def send_activation_email(email: str):
 @shared_task(bind=True)
 def send_otp_password(self, receiver: str, otp: str):
     try:
-        Kavenegar.send_otp(receptor=receiver, otp=otp)
+        print("--------OTPCode---------")
+        print(otp)
+        print("--------OTPCode---------")
+
+        # Kavenegar.send_otp(receptor=receiver, otp=otp)
     except Exception as exc:
         print(f"Exception : {str(exc)}")
         raise self.retry(exc, countdown=5)

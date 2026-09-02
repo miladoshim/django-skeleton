@@ -169,34 +169,34 @@ class ForgotPasswordForm(Form):
             }
         ),
     )
-
-    def clean_identifier(self):
-        identifier = self.cleaned_data["identifier"].strip()
-
-        if not identifier:
-            raise ValidationError("این فیلد الزامی است")
-
-        return identifier
-
+    
     def clean(self):
         cleaned_data = super().clean()
-        identifier = cleaned_data.get("identifier")
+        identifier = cleaned_data.get("identifier", "").strip().lower()
 
         if not identifier:
+            self.add_error("identifier", "این فیلد الزامی است")
             return cleaned_data
 
+        # ایمیل
         if "@" in identifier:
-            user = User.objects.filter(email__iexact=identifier).first()
-            error_msg = "کاربری با این ایمیل یافت نشد"
-        else:
-            mobile = validate_phone_number(identifier)
-            user = User.objects.filter(mobile=mobile).first()
-            error_msg = "کاربری با این شماره موبایل یافت نشد"
+            if not User.objects.filter(email__iexact=identifier).exists():
+                self.add_error("identifier", "کاربری با این ایمیل یافت نشد")
+                return cleaned_data
 
-            if not user:
-                raise ValidationError(error_msg)
-
+        # موبایل
+        try:
+            validate_phone_number(identifier)
+        except:
+            self.add_error("identifier", "شماره موبایل معتبر نیست")
             return cleaned_data
+
+        if not User.objects.filter(mobile=identifier).exists():
+            self.add_error("identifier", "کاربری با این شماره موبایل یافت نشد")
+            return cleaned_data
+
+        cleaned_data['identifier'] = identifier
+        return cleaned_data
 
 
 class ForgotPasswordResetForm(Form):
@@ -204,7 +204,7 @@ class ForgotPasswordResetForm(Form):
         widget=forms.PasswordInput(
             attrs={
                 "placeholder": "رمز جدید (حداقل ۸ کاراکتر)",
-                 "class": "form-control",
+                "class": "form-control",
             },
         ),
         validators=[
@@ -230,6 +230,57 @@ class ForgotPasswordResetForm(Form):
 
         if password and password_confirmation and password != password_confirmation:
             raise ValidationError("رمز عبور ها یکی نیستند")
+        return password_confirmation
+
+
+class ResetPasswordMobileForm(Form):
+    mobile = forms.CharField(widget=forms.HiddenInput())
+    reqid = forms.CharField(widget=forms.HiddenInput())
+
+    code = forms.CharField(
+        min_length=6,
+        max_length=6,
+        label="کد تایید",
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "کد 6 رقمی ارسال شده به شماره موبایل",
+                "class": "form-control",
+            },
+        ),
+    )
+
+    password = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={"placeholder": "رمز عبور", "class": "form-control"},
+        ),
+        label="رمز عبور",
+        validators=[
+            validators.MinLengthValidator(8),
+        ],
+    )
+    password_confirmation = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={"placeholder": "تایید رمز عبور", "class": "form-control"},
+        ),
+        label="تایید رمز عبور",
+        validators=[
+            validators.MinLengthValidator(8),
+        ],
+    )
+
+    def clean_code(self):
+        code = self.cleaned_data.get("code")
+        if not code or len(code) != 6:
+            raise forms.ValidationError("کد باید ۶ رقم باشد")
+        return code
+
+    def clean_password_confirmation(self):
+        password = self.cleaned_data.get("password")
+        password_confirmation = self.cleaned_data["password_confirmation"]
+
+        if password != password_confirmation:
+            raise forms.ValidationError("رمز عبور ها یکی نیستند")
         return password_confirmation
 
 
@@ -306,50 +357,6 @@ class UserOtpCompleteForm(Form):
         ],
         label="رمز عبور",
     )
-
-
-class ResetPasswordMobileForm(Form):
-    receiver = forms.HiddenInput()
-    request_id = forms.HiddenInput()
-    code = forms.CharField(
-        min_length=6,
-        max_length=6,
-        label="کد تایید",
-        required=True,
-        widget=forms.TextInput(
-            attrs={
-                "placeholder": "کد ۴ رقمی ارسال شده به شماره موبایل",
-                "class": "form-control",
-            },
-        ),
-    )
-
-    password = forms.CharField(
-        widget=forms.PasswordInput(
-            attrs={"placeholder": "رمز عبور", "class": "form-control"},
-        ),
-        label="رمز عبور",
-        validators=[
-            validators.MinLengthValidator(8),
-        ],
-    )
-    password2 = forms.CharField(
-        widget=forms.PasswordInput(
-            attrs={"placeholder": "تایید رمز عبور", "class": "form-control"},
-        ),
-        label="تایید رمز عبور",
-        validators=[
-            validators.MinLengthValidator(8),
-        ],
-    )
-
-    def clean_password_confirmation(self):
-        password = self.cleaned_data.get("password")
-        password2 = self.cleaned_data["password2"]
-
-        if password != password2:
-            raise forms.ValidationError("رمز عبور ها یکی نیستند")
-        return password2
 
 
 class ChangePasswordForm(Form):

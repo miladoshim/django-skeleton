@@ -2,10 +2,8 @@ from django.urls import path
 
 from apps.accounts.views.auth_views import (
     ForgotPasswordDoneView,
-    ForgotPasswordMobileResetView,
-    ForgotPasswordMobileVerifyView,
     PasswordResetConfirmView,
-    ResendOtpView,
+    PasswordResetMobileConfirmView,
     SocialAccountsListView,
     SocialCallbackView,
     SocialDisconnectView,
@@ -59,19 +57,9 @@ urlpatterns = [
         name="password_reset_confirm",
     ),
     path(
-        "password/forgot/mobile/verify/",
-        ForgotPasswordMobileVerifyView.as_view(),
-        name="password_forgot_mobile_verify_view",
-    ),
-    path(
-        "password/forgot/mobile/reset/",
-        ForgotPasswordMobileResetView.as_view(),
-        name="password_forgot_mobile_reset_view",
-    ),
-    path(
-        "password/forgot/mobile/resend/",
-        ResendOtpView.as_view(),
-        name="password_forgot_mobile_resend",
+        "password/forgot/mobile/verify/<str:reqid>/",
+        PasswordResetMobileConfirmView.as_view(),
+        name="password_reset_mobile_confirm_view",
     ),
     path("login/<str:provider>/", SocialLoginView.as_view(), name="social_login"),
     path(

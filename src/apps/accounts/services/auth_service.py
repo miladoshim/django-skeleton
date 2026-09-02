@@ -143,7 +143,7 @@ class AuthService(BaseService):
         self.update(user, is_active=True, is_email_verified=True)
 
         return {"success": True, "message": "حساب شما فعال شد"}
-   
+
     @transaction.atomic
     def _create_user(
         self,
@@ -196,11 +196,6 @@ class AuthService(BaseService):
         except Exception as e:
             print(f"❌ Error in sending email: {str(e)}")
             return False
-
-    
-    def _invalidate_token(self, user):
-        user.last_login = timezone.now()
-        user.save(update_fields=["last_login"])
 
     def _get_tokens(self, user):
         refresh = RefreshToken.for_user(user)
@@ -269,7 +264,11 @@ class AuthService(BaseService):
                 recipient_list=[user.email],
             )
 
-            return {"success": True, "message": "لینک بازنشانی رمز ارسال شد"}
+            return {
+                "success": True,
+                "message": "لینک بازنشانی رمز ارسال شد",
+                "redirect_url": "apps.accounts:password_forgot_done_view",
+            }
 
         except Exception as e:
             print(str(e))
@@ -278,41 +277,6 @@ class AuthService(BaseService):
                 "message": "خطا در ارسال ایمیل. لطفا بعدا تلاش کنید",
             }
 
-    @transaction.atomic
-    def _handle_mobile(self, mobile: str):
-        user = User.objects.filter(mobile=mobile, is_active=True).first()
-
-        otp = OtpRequest.objects.generate_otp(
-            {
-                "channel": OtpChannel.MOBILE,
-                "receiver": mobile,
-            }
-        )
-
-        cache.set(f"otp_{mobile}", otp.password, timeout=300)
-
-        try:
-            task = send_otp_password.apply_async(
-                kwargs={"receiver": mobile, "otp": otp.password},
-            )
-
-            if task.status in ["PENDING", "SUCCESS"]:
-                return {
-                    "success": True,
-                    "message": "کد یکبار مصرف برای شما ارسال شد.",
-                    "mobile": mobile,
-                    "reqid": otp.request_id,
-                }
-            else:
-                return {
-                    "success": False,
-                    "message": "خطا در ارسال کد یکبار مصرف. لطفا دوباره تلاش کنید.",
-                }
-
-        except Exception as e:
-            print(str(e))
-            return {"success": False, "message": f"خطا در ارسال کد: {str(e)}"}
-    
     @transaction.atomic
     def reset_password_confirm(self, uid, token, new_password=None):
         try:
@@ -327,21 +291,89 @@ class AuthService(BaseService):
         if new_password:
             user.set_password(new_password)
             user.save()
-            self._invalidate_token(user)
             return {"success": True, "message": "رمز عبور با موفقیت تغییر کرد"}
 
         return {"success": True, "message": "لینک معتبر است"}
 
-    def verify_otp(self, mobile, otp_code):
+    @transaction.atomic
+    def _handle_mobile(self, mobile: str):
+        try:
+            otp = OtpRequest.objects.generate_otp(
+                {
+                    "channel": OtpChannel.MOBILE,
+                    "receiver": mobile,
+                }
+            )
+
+            cache.set(f"otp_{mobile}", otp.password, timeout=300)
+            cache.set(f"otp_token_{mobile}", otp.request_id, timeout=300)
+            self.request.session['reset_mobile'] = mobile
+            self.request.session['reset_reqid'] = otp.request_id
+            task = send_otp_password.apply_async(
+                kwargs={"receiver": mobile, "otp": otp.password},
+            )
+
+            if task.status in ["PENDING", "SUCCESS"]:
+                return {
+                    "success": True,
+                    "message": "کد یکبار مصرف برای شما ارسال شد.",
+                    "mobile": mobile,
+                    "reqid": otp.request_id,
+                    "redirect_url": "apps.accounts:password_reset_mobile_confirm_view",
+                }
+            else:
+                return {
+                    "success": False,
+                    "message": "خطا در ارسال کد یکبار مصرف. لطفا دوباره تلاش کنید.",
+                }
+
+        except Exception as e:
+            print(str(e))
+            return {"success": False, "message": f"خطا در ارسال کد: {str(e)}"}
+
+    @transaction.atomic
+    def verify_otp_and_reset_password(
+        self,
+        mobile: str,
+        otp_code: str,
+        reqid: str,
+        new_password: str,
+    ) -> dict:
         mobile = self._clean_mobile(mobile)
-        cache_key = f"otp_{mobile}"
-        saved_otp = cache.get(cache_key)
+        saved_otp = cache.get(f"otp_{mobile}")
 
-        if saved_otp == otp_code:
-            cache.delete(cache_key)
-            return {"success": True, "message": "کد تایید شد"}
+        if not saved_otp:
+            return {"success": False, "error": "کد منقضی شده است. لطفا دوباره درخواست دهید."}
 
-        return {"success": False, "error": "کد اشتباه است"}
+        if saved_otp != otp_code:
+            return {"success": False, "error": "کد وارد شده صحیح نیست."}
+
+        # ۲. بررسی در دیتابیس
+        otp_valid = OtpRequest.objects.is_valid(
+            receiver=mobile,
+            request_id=reqid,
+            password=otp_code,
+        )
+
+        if not otp_valid:
+            return {"success": False, "error": "کد نامعتبر است."}
+
+        # ۳. تغییر رمز عبور
+        user = User.objects.filter(mobile=mobile, is_active=True).first()
+
+        if not user:
+            return {"success": False, "error": "کاربر یافت نشد."}
+
+        user.set_password(new_password)
+        user.save()
+
+        # ۴. پاکسازی کد از کش
+        cache.delete(f"otp_{mobile}")
+
+        # ۵. حذف درخواست OTP
+        OtpRequest.objects.filter(request_id=reqid).delete()
+
+        return {"success": True, "message": "رمز عبور با موفقیت تغییر کرد."}
 
     def get_user_by_token(self, token: str) -> Optional[User]:
         try:

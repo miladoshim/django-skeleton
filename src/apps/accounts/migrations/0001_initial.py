@@ -51,7 +51,6 @@ class Migration(migrations.Migration):
             name='User',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
                 ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
                 ('uuid', models.UUIDField(db_index=True, default=utils.helpers.generate_unique_uuid, editable=False, unique=True)),
                 ('first_name', models.CharField(blank=True, max_length=150, null=True, verbose_name='نام')),

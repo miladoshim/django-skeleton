@@ -3843,22 +3843,6 @@
         "documentation": {}
     },
     {
-        "label": "ForgotPasswordMobileResetView",
-        "importPath": "apps.accounts.views.auth_views",
-        "description": "apps.accounts.views.auth_views",
-        "isExtraImport": true,
-        "detail": "apps.accounts.views.auth_views",
-        "documentation": {}
-    },
-    {
-        "label": "ForgotPasswordMobileVerifyView",
-        "importPath": "apps.accounts.views.auth_views",
-        "description": "apps.accounts.views.auth_views",
-        "isExtraImport": true,
-        "detail": "apps.accounts.views.auth_views",
-        "documentation": {}
-    },
-    {
         "label": "PasswordResetConfirmView",
         "importPath": "apps.accounts.views.auth_views",
         "description": "apps.accounts.views.auth_views",
@@ -3867,7 +3851,7 @@
         "documentation": {}
     },
     {
-        "label": "ResendOtpView",
+        "label": "PasswordResetMobileConfirmView",
         "importPath": "apps.accounts.views.auth_views",
         "description": "apps.accounts.views.auth_views",
         "isExtraImport": true,
@@ -7369,7 +7353,7 @@
         "kind": 6,
         "importPath": "src.apps.accounts.views.auth_views",
         "description": "src.apps.accounts.views.auth_views",
-        "peekOfCode": "class ForgotPasswordView(IsUnAuthenticatedMixin, FormView):\n    template_name = \"registration/forgot_password.html\"\n    form_class = ForgotPasswordForm\n    def form_valid(self, form):\n        identifier = form.cleaned_data.get(\"identifier\").strip()\n        result = AuthService(request=self.request).forgot_password(identifier=identifier)\n        if result[\"success\"]:\n            messages.success(self.request, result[\"message\"])\n            return redirect(reverse(\"apps.accounts:password_forgot_done_view\"))\n        else:",
+        "peekOfCode": "class ForgotPasswordView(IsUnAuthenticatedMixin, FormView):\n    template_name = \"registration/forgot_password.html\"\n    form_class = ForgotPasswordForm\n    def form_valid(self, form):\n        identifier = form.cleaned_data.get(\"identifier\")\n        result = AuthService(request=self.request).forgot_password(\n            identifier=identifier\n        )\n        if result[\"success\"]:\n            messages.success(self.request, result[\"message\"])",
         "detail": "src.apps.accounts.views.auth_views",
         "documentation": {}
     },
@@ -7378,7 +7362,7 @@
         "kind": 6,
         "importPath": "src.apps.accounts.views.auth_views",
         "description": "src.apps.accounts.views.auth_views",
-        "peekOfCode": "class ForgotPasswordDoneView(View):\n    template_name = \"registration/forgot_password_done.html\"\n    def get(self, request):\n        return render(request, self.template_name)\nclass PasswordResetConfirmView(FormView):\n    template_name = \"registration/password_reset_confirm.html\"\n    form_class = ForgotPasswordResetForm\n    success_url = reverse_lazy(\"apps.accounts:login_classic\")\n    def dispatch(self, request, *args, **kwargs):\n        self.uid, self.token = kwargs.get('uid'), kwargs.get('token')",
+        "peekOfCode": "class ForgotPasswordDoneView(View):\n    template_name = \"registration/forgot_password_done.html\"\n    def get(self, request):\n        return render(request, self.template_name)\nclass PasswordResetConfirmView(FormView):\n    template_name = \"registration/password_reset_confirm.html\"\n    form_class = ForgotPasswordResetForm\n    success_url = reverse_lazy(\"apps.accounts:login_classic\")\n    def dispatch(self, request, *args, **kwargs):\n        self.uid, self.token = kwargs.get(\"uid\"), kwargs.get(\"token\")",
         "detail": "src.apps.accounts.views.auth_views",
         "documentation": {}
     },
@@ -7387,7 +7371,16 @@
         "kind": 6,
         "importPath": "src.apps.accounts.views.auth_views",
         "description": "src.apps.accounts.views.auth_views",
-        "peekOfCode": "class PasswordResetConfirmView(FormView):\n    template_name = \"registration/password_reset_confirm.html\"\n    form_class = ForgotPasswordResetForm\n    success_url = reverse_lazy(\"apps.accounts:login_classic\")\n    def dispatch(self, request, *args, **kwargs):\n        self.uid, self.token = kwargs.get('uid'), kwargs.get('token')\n        if self.uid:\n            result = AuthService(request=request).reset_password_confirm(self.uid, self.token)\n            if not result['success']:\n                messages.error(request, result['error'])",
+        "peekOfCode": "class PasswordResetConfirmView(FormView):\n    template_name = \"registration/password_reset_confirm.html\"\n    form_class = ForgotPasswordResetForm\n    success_url = reverse_lazy(\"apps.accounts:login_classic\")\n    def dispatch(self, request, *args, **kwargs):\n        self.uid, self.token = kwargs.get(\"uid\"), kwargs.get(\"token\")\n        if self.uid:\n            result = AuthService(request=request).reset_password_confirm(\n                self.uid, self.token\n            )",
+        "detail": "src.apps.accounts.views.auth_views",
+        "documentation": {}
+    },
+    {
+        "label": "PasswordResetMobileConfirmView",
+        "kind": 6,
+        "importPath": "src.apps.accounts.views.auth_views",
+        "description": "src.apps.accounts.views.auth_views",
+        "peekOfCode": "class PasswordResetMobileConfirmView(FormView):\n    template_name = \"registration/forgot_password_mobile_verify.html\"\n    form_class = ResetPasswordMobileForm\n    success_url = reverse_lazy(\"apps.accounts:login_view\")\n    def get_initial(self):\n        return {\n            \"mobile\": self.request.session.get(\"reset_mobile\"),\n            \"reqid\": self.request.session.get(\"reset_reqid\"),\n        }\n    def get_context_data(self, **kwargs):",
         "detail": "src.apps.accounts.views.auth_views",
         "documentation": {}
     },
@@ -7415,33 +7408,6 @@
         "importPath": "src.apps.accounts.views.auth_views",
         "description": "src.apps.accounts.views.auth_views",
         "peekOfCode": "class ResendOtpView(View):\n    \"\"\"ارسال مجدد کد\"\"\"\n    def get(self, request):\n        mobile = request.session.get(\"reset_mobile\")\n        if not mobile:\n            return redirect(\"apps.accounts:password_forgot_view\")\n        # محدودیت ارسال مجدد (هر 60 ثانیه)\n        last_sent = cache.get(f\"otp_sent_{mobile}\")\n        if last_sent and time.time() - last_sent < 60:\n            messages.error(request, \"لطفا 60 ثانیه صبر کنید.\")",
-        "detail": "src.apps.accounts.views.auth_views",
-        "documentation": {}
-    },
-    {
-        "label": "PasswordChangeView",
-        "kind": 6,
-        "importPath": "src.apps.accounts.views.auth_views",
-        "description": "src.apps.accounts.views.auth_views",
-        "peekOfCode": "class PasswordChangeView(IsUnAuthenticatedMixin, BasePasswordChangeView):\n    pass\nclass PasswordChangeDoneView(TemplateView):\n    pass\nclass PasswordResetView(BasePasswordResetView):\n    success_url = reverse_lazy(\"apps.accounts:password_reset_done\")\ndef get_authorize_url(provider):\n    urls = {\n        \"github\": f\"https://github.com/login/oauth/authorize?client_id={settings.GITHUB_CLIENT_ID}&redirect_uri={settings.GITHUB_REDIRECT_URI}&scope=user:email\",\n        \"google\": f\"https://accounts.google.com/o/oauth2/v2/auth?client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.GOOGLE_REDIRECT_URI}&response_type=code&scope=openid email profile\",",
-        "detail": "src.apps.accounts.views.auth_views",
-        "documentation": {}
-    },
-    {
-        "label": "PasswordChangeDoneView",
-        "kind": 6,
-        "importPath": "src.apps.accounts.views.auth_views",
-        "description": "src.apps.accounts.views.auth_views",
-        "peekOfCode": "class PasswordChangeDoneView(TemplateView):\n    pass\nclass PasswordResetView(BasePasswordResetView):\n    success_url = reverse_lazy(\"apps.accounts:password_reset_done\")\ndef get_authorize_url(provider):\n    urls = {\n        \"github\": f\"https://github.com/login/oauth/authorize?client_id={settings.GITHUB_CLIENT_ID}&redirect_uri={settings.GITHUB_REDIRECT_URI}&scope=user:email\",\n        \"google\": f\"https://accounts.google.com/o/oauth2/v2/auth?client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.GOOGLE_REDIRECT_URI}&response_type=code&scope=openid email profile\",\n        \"gitlab\": f\"https://gitlab.com/oauth/authorize?client_id={settings.GITLAB_CLIENT_ID}&redirect_uri={settings.GITLAB_REDIRECT_URI}&scope=read_user\",\n    }",
-        "detail": "src.apps.accounts.views.auth_views",
-        "documentation": {}
-    },
-    {
-        "label": "PasswordResetView",
-        "kind": 6,
-        "importPath": "src.apps.accounts.views.auth_views",
-        "description": "src.apps.accounts.views.auth_views",
-        "peekOfCode": "class PasswordResetView(BasePasswordResetView):\n    success_url = reverse_lazy(\"apps.accounts:password_reset_done\")\ndef get_authorize_url(provider):\n    urls = {\n        \"github\": f\"https://github.com/login/oauth/authorize?client_id={settings.GITHUB_CLIENT_ID}&redirect_uri={settings.GITHUB_REDIRECT_URI}&scope=user:email\",\n        \"google\": f\"https://accounts.google.com/o/oauth2/v2/auth?client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.GOOGLE_REDIRECT_URI}&response_type=code&scope=openid email profile\",\n        \"gitlab\": f\"https://gitlab.com/oauth/authorize?client_id={settings.GITLAB_CLIENT_ID}&redirect_uri={settings.GITLAB_REDIRECT_URI}&scope=read_user\",\n    }\n    return urls.get(provider)\nclass SocialLoginView(View):",
         "detail": "src.apps.accounts.views.auth_views",
         "documentation": {}
     },
@@ -7478,15 +7444,6 @@
         "importPath": "src.apps.accounts.views.auth_views",
         "description": "src.apps.accounts.views.auth_views",
         "peekOfCode": "class SocialDisconnectView(LoginRequiredMixin, View):\n    login_url = \"apps.accounts:login_classic\"\n    def post(self, request, provider):\n        try:\n            service = SocialAuthService(provider)\n            service.disconnect(request.user)\n            messages.success(request, f\"حساب {provider} با موفقیت قطع شد\")\n            return redirect(\"apps.accounts:social_accounts\")\n        except Exception as e:\n            messages.error(request, f\"خطا در قطع اتصال: {str(e)}\")",
-        "detail": "src.apps.accounts.views.auth_views",
-        "documentation": {}
-    },
-    {
-        "label": "forgot_password_mobile_reset",
-        "kind": 2,
-        "importPath": "src.apps.accounts.views.auth_views",
-        "description": "src.apps.accounts.views.auth_views",
-        "peekOfCode": "def forgot_password_mobile_reset(request, *args, **kwargs):\n    if request.method == \"POST\":\n        form = ResetPasswordMobileForm(request.POST)\n        if form.is_valid():\n            receiver = form.data.get(\"receiver\")\n            reqid = form.data.get(\"request_id\")\n            code = form.data.get(\"code\")\n            password = form.data.get(\"password\")\n            user = User.objects.filter(mobile=receiver, is_active=True).first()\n            if not user:",
         "detail": "src.apps.accounts.views.auth_views",
         "documentation": {}
     },
@@ -7630,7 +7587,16 @@
         "kind": 6,
         "importPath": "src.apps.accounts.forms",
         "description": "src.apps.accounts.forms",
-        "peekOfCode": "class ForgotPasswordResetForm(Form):\n    password = forms.CharField(\n        widget=forms.PasswordInput(\n            attrs={\n                \"placeholder\": \"رمز جدید (حداقل ۸ کاراکتر)\",\n                 \"class\": \"form-control\",\n            },\n        ),\n        validators=[\n            validators.MinLengthValidator(8),",
+        "peekOfCode": "class ForgotPasswordResetForm(Form):\n    password = forms.CharField(\n        widget=forms.PasswordInput(\n            attrs={\n                \"placeholder\": \"رمز جدید (حداقل ۸ کاراکتر)\",\n                \"class\": \"form-control\",\n            },\n        ),\n        validators=[\n            validators.MinLengthValidator(8),",
+        "detail": "src.apps.accounts.forms",
+        "documentation": {}
+    },
+    {
+        "label": "ResetPasswordMobileForm",
+        "kind": 6,
+        "importPath": "src.apps.accounts.forms",
+        "description": "src.apps.accounts.forms",
+        "peekOfCode": "class ResetPasswordMobileForm(Form):\n    mobile = forms.CharField(widget=forms.HiddenInput())\n    reqid = forms.CharField(widget=forms.HiddenInput())\n    code = forms.CharField(\n        min_length=6,\n        max_length=6,\n        label=\"کد تایید\",\n        required=True,\n        widget=forms.TextInput(\n            attrs={",
         "detail": "src.apps.accounts.forms",
         "documentation": {}
     },
@@ -7658,15 +7624,6 @@
         "importPath": "src.apps.accounts.forms",
         "description": "src.apps.accounts.forms",
         "peekOfCode": "class UserOtpCompleteForm(Form):\n    receiver = forms.HiddenInput()\n    request_id = forms.HiddenInput()\n    first_name = forms.CharField(\n        validators=[\n            validators.MinLengthValidator(3),\n        ],\n        label=\"نام\",\n        required=True,\n        widget=forms.TextInput(attrs={\"placeholder\": \"نام\", \"class\": \"form-control\"}),",
-        "detail": "src.apps.accounts.forms",
-        "documentation": {}
-    },
-    {
-        "label": "ResetPasswordMobileForm",
-        "kind": 6,
-        "importPath": "src.apps.accounts.forms",
-        "description": "src.apps.accounts.forms",
-        "peekOfCode": "class ResetPasswordMobileForm(Form):\n    receiver = forms.HiddenInput()\n    request_id = forms.HiddenInput()\n    code = forms.CharField(\n        min_length=6,\n        max_length=6,\n        label=\"کد تایید\",\n        required=True,\n        widget=forms.TextInput(\n            attrs={",
         "detail": "src.apps.accounts.forms",
         "documentation": {}
     },
@@ -7918,7 +7875,7 @@
         "kind": 2,
         "importPath": "src.apps.accounts.tasks",
         "description": "src.apps.accounts.tasks",
-        "peekOfCode": "def send_activation_email(email: str):\n    pass\n@shared_task(bind=True)\ndef send_otp_password(self, receiver: str, otp: str):\n    try:\n        Kavenegar.send_otp(receptor=receiver, otp=otp)\n    except Exception as exc:\n        print(f\"Exception : {str(exc)}\")\n        raise self.retry(exc, countdown=5)\n@shared_task",
+        "peekOfCode": "def send_activation_email(email: str):\n    pass\n@shared_task(bind=True)\ndef send_otp_password(self, receiver: str, otp: str):\n    try:\n        print(\"--------OTPCode---------\")\n        print(otp)\n        print(\"--------OTPCode---------\")\n        # Kavenegar.send_otp(receptor=receiver, otp=otp)\n    except Exception as exc:",
         "detail": "src.apps.accounts.tasks",
         "documentation": {}
     },
@@ -7927,7 +7884,7 @@
         "kind": 2,
         "importPath": "src.apps.accounts.tasks",
         "description": "src.apps.accounts.tasks",
-        "peekOfCode": "def send_otp_password(self, receiver: str, otp: str):\n    try:\n        Kavenegar.send_otp(receptor=receiver, otp=otp)\n    except Exception as exc:\n        print(f\"Exception : {str(exc)}\")\n        raise self.retry(exc, countdown=5)\n@shared_task\ndef cleanup_expired_otp_requests():\n    now = timezone.now()\n    with transaction.atomic():",
+        "peekOfCode": "def send_otp_password(self, receiver: str, otp: str):\n    try:\n        print(\"--------OTPCode---------\")\n        print(otp)\n        print(\"--------OTPCode---------\")\n        # Kavenegar.send_otp(receptor=receiver, otp=otp)\n    except Exception as exc:\n        print(f\"Exception : {str(exc)}\")\n        raise self.retry(exc, countdown=5)\n@shared_task",
         "detail": "src.apps.accounts.tasks",
         "documentation": {}
     },
