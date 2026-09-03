@@ -92,7 +92,8 @@ class ClassicLoginForm(Form):
             user = backend.authenticate(self.request, identifier, password)
 
             if not user:
-                raise forms.ValidationError("اطلاعات وارد شده اشتباه است")
+                self.add_error("identifier","اطلاعات وارد شده اشتباه است")
+                return cleaned_data
 
             cleaned_data["user"] = user
 
@@ -108,54 +109,6 @@ class ClassicLoginForm(Form):
             raise ValidationError("رمز عبور حداقل ۸ کاراکتر باید باشد")
 
         return password
-
-    # def clean(self):
-
-    #     cleaned_data = super().clean()
-
-    #     username = cleaned_data.get("username")
-    #     password = cleaned_data.get("password")
-
-    #     # اگر هر دو فیلد معتبر بودند
-    #     if username and password:
-
-    #         # پیدا کردن کاربر
-    #         user = User.objects.filter(
-    #             Q(username__iexact=username) | Q(email__iexact=username)
-    #         ).first()
-
-    #         if user is not None:
-    #             # بررسی رمز عبور
-    #             if not user.check_password(password):
-    #                 # ثبت تلاش ناموفق
-    #                 self._handle_failed_login(user)
-    #                 raise ValidationError(
-    #                     _("رمز عبور اشتباه است"), code="invalid_password"
-    #                 )
-
-    #             # بررسی تعداد تلاش‌های ناموفق
-    #             if (
-    #                 hasattr(user, "failed_login_attempts")
-    #                 and user.failed_login_attempts >= 5
-    #             ):
-    #                 raise ValidationError(
-    #                     _(
-    #                         "تعداد تلاش‌های ناموفق بیش از حد مجاز است. لطفا بعدا تلاش کنید"
-    #                     )
-    #                 )
-    #         else:
-    #             raise ValidationError(_("کاربری با این مشخصات یافت نشد"))
-
-    #     return cleaned_data
-
-    # def _handle_failed_login(self, user):
-    #     """
-    #     ثبت تلاش ناموفق ورود
-    #     """
-    #     if hasattr(user, "failed_login_attempts"):
-    #         user.failed_login_attempts += 1
-    #         user.save(update_fields=["failed_login_attempts"])
-
 
 class ForgotPasswordForm(Form):
     identifier = forms.CharField(

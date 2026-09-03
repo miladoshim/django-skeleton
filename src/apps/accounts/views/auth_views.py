@@ -421,13 +421,13 @@ class PasswordResetMobileConfirmView(FormView):
     def form_valid(self, form):
         mobile = form.cleaned_data["mobile"]
         reqid = form.cleaned_data["reqid"]
-        otp_code = form.cleaned_data["otp_code"]
+        code = form.cleaned_data["code"]
         new_password = form.cleaned_data["password"]
 
         result = AuthService().verify_otp_and_reset_password(
             mobile=mobile,
             reqid=reqid,
-            otp_code=otp_code,
+            otp_code=code,
             new_password=new_password,
         )
 

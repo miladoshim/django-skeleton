@@ -305,8 +305,8 @@ class AuthService(BaseService):
                 }
             )
 
-            cache.set(f"otp_{mobile}", otp.password, timeout=300)
-            cache.set(f"otp_token_{mobile}", otp.request_id, timeout=300)
+            # cache.set(f"otp_{mobile}", otp.password, timeout=300)
+            # cache.set(f"otp_token_{mobile}", otp.request_id, timeout=300)
             self.request.session['reset_mobile'] = mobile
             self.request.session['reset_reqid'] = otp.request_id
             task = send_otp_password.apply_async(
@@ -339,7 +339,6 @@ class AuthService(BaseService):
         reqid: str,
         new_password: str,
     ) -> dict:
-        mobile = self._clean_mobile(mobile)
         saved_otp = cache.get(f"otp_{mobile}")
 
         if not saved_otp:
@@ -348,7 +347,6 @@ class AuthService(BaseService):
         if saved_otp != otp_code:
             return {"success": False, "error": "کد وارد شده صحیح نیست."}
 
-        # ۲. بررسی در دیتابیس
         otp_valid = OtpRequest.objects.is_valid(
             receiver=mobile,
             request_id=reqid,
@@ -358,7 +356,6 @@ class AuthService(BaseService):
         if not otp_valid:
             return {"success": False, "error": "کد نامعتبر است."}
 
-        # ۳. تغییر رمز عبور
         user = User.objects.filter(mobile=mobile, is_active=True).first()
 
         if not user:
@@ -367,10 +364,8 @@ class AuthService(BaseService):
         user.set_password(new_password)
         user.save()
 
-        # ۴. پاکسازی کد از کش
         cache.delete(f"otp_{mobile}")
 
-        # ۵. حذف درخواست OTP
         OtpRequest.objects.filter(request_id=reqid).delete()
 
         return {"success": True, "message": "رمز عبور با موفقیت تغییر کرد."}
